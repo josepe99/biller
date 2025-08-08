@@ -11,7 +11,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { LayoutDashboard, ShoppingCart, Package, Settings, Users, Tag, BarChart, ScanLine, Search, Plus, Edit, Trash2, Printer, Save, X, DollarSign, Clock, CalendarDays, AlertCircle, ChevronLeft } from 'lucide-react'
 import Image from 'next/image'
 
-// --- Módulos de la Aplicación ---
 
 interface Product {
   id: string
