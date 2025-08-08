@@ -1,13 +1,13 @@
 import { randomBytes, createHash } from 'crypto'
 import bcrypt from 'bcryptjs'
 import { prisma } from '../prisma'
+import { calculateRefreshBeforeDate } from './session'
 import type { LoginRequest, LoginResponse, AuthUser, Session } from '../types'
 
 // Constants for security
 const MAX_LOGIN_ATTEMPTS = 5
 const LOCK_TIME = 2 * 60 * 60 * 1000 // 2 hours in milliseconds
 const SESSION_DURATION = 60 * 60 * 1000 // 1 hour in milliseconds
-const REFRESH_BEFORE_DURATION = 15 * 60 * 1000 // 15 minutes before expiration
 
 /**
  * Hash a password using bcrypt
@@ -44,7 +44,7 @@ export async function createSession(
 ): Promise<Session> {
   const now = new Date()
   const expiresAt = new Date(now.getTime() + SESSION_DURATION)
-  const refreshBefore = new Date(expiresAt.getTime() - REFRESH_BEFORE_DURATION)
+  const refreshBefore = calculateRefreshBeforeDate() // 5 days from now
 
   const session = await prisma.session.create({
     data: {
@@ -257,7 +257,7 @@ export async function extendSession(sessionId: string): Promise<boolean> {
 
   const now = new Date()
   const newExpiresAt = new Date(now.getTime() + SESSION_DURATION)
-  const newRefreshBefore = new Date(newExpiresAt.getTime() - REFRESH_BEFORE_DURATION)
+  const newRefreshBefore = calculateRefreshBeforeDate() // 5 days from now
   
   await prisma.session.update({
     where: { id: session.id },

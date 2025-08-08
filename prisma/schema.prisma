@@ -9,39 +9,115 @@ datasource db {
 
 // User model for authentication and user management
 model User {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  email         String    @unique
+  name          String
+  password      String // Hashed password
+  role          UserRole  @default(CASHIER)
+  loginAttempts Int       @default(0) // Track failed login attempts
+  lockedUntil   DateTime? // Account lock expiration
+  lastLoginAt   DateTime? // Last successful login
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  // Relations
+  sales     Sale[]
+  sessions  Session[]
+  userRoles UserRoleAssignment[]
+}
+
+// Role model for defining user roles
+model Role {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  name        String    @unique
+  description String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  // Relations
+  userRoles       UserRoleAssignment[]
+  rolePermissions RolePermission[]
+}
+
+// Permission model for defining specific permissions
+model Permission {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  name        String    @unique
+  description String?
+  resource    String // e.g., "products", "sales", "users"
+  action      String // e.g., "create", "read", "update", "delete"
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  // Relations
+  rolePermissions RolePermission[]
+
+  @@unique([resource, action])
+}
+
+// Junction table for User-Role many-to-many relationship
+model UserRoleAssignment {
+  id         String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId     String    @db.ObjectId
+  roleId     String    @db.ObjectId
+  assignedAt DateTime  @default(now())
+  assignedBy String?   @db.ObjectId // Who assigned this role
+  isActive   Boolean   @default(true)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+  @@index([userId])
+  @@index([roleId])
+}
+
+// Junction table for Role-Permission many-to-many relationship
+model RolePermission {
   id           String    @id @default(auto()) @map("_id") @db.ObjectId
-  email        String    @unique
-  name         String
-  password     String    // Hashed password
-  role         UserRole  @default(CASHIER)
-  loginAttempts Int      @default(0) // Track failed login attempts
-  lockedUntil  DateTime? // Account lock expiration
-  lastLoginAt  DateTime? // Last successful login
+  roleId       String    @db.ObjectId
+  permissionId String    @db.ObjectId
+  grantedAt    DateTime  @default(now())
+  grantedBy    String?   @db.ObjectId // Who granted this permission
+  isActive     Boolean   @default(true)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   deletedAt    DateTime?
-  
+
   // Relations
-  sales    Sale[]
-  sessions Session[]
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@index([roleId])
+  @@index([permissionId])
 }
 
 // Session model for authentication without JWT
 model Session {
-  id           String   @id @default(auto()) @map("_id") @db.ObjectId
-  refreshBefore DateTime // Session must be refreshed before this time
-  userId       String   @db.ObjectId
-  loggedAt     DateTime @default(now()) // When the user logged in
-  expiresAt    DateTime // Session expiration (1 hour from creation)
-  isActive     Boolean  @default(true)
-  userAgent    String?  // Browser/device info for security
-  ipAddress    String?  // IP address for security tracking
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  refreshBefore DateTime // Session must be refreshed before this time (will be set to createdAt + 5 days in application code)
+  userId        String   @db.ObjectId
+  loggedAt      DateTime @default(now()) // When the user logged in
+  expiresAt     DateTime // Session expiration (1 hour from creation)
+  isActive      Boolean  @default(true)
+  userAgent     String? // Browser/device info for security
+  ipAddress     String? // IP address for security tracking
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
   // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@index([userId])
   @@index([expiresAt])
   @@index([refreshBefore])
@@ -62,9 +138,9 @@ model Product {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   deletedAt   DateTime?
-  
+
   // Relations
-  category  Category?   @relation(fields: [categoryId], references: [id])
+  category  Category?  @relation(fields: [categoryId], references: [id])
   saleItems SaleItem[]
 }
 
@@ -76,28 +152,28 @@ model Category {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
-  
+
   // Relations
   products Product[]
 }
 
 // Sale model for transactions
 model Sale {
-  id              String    @id @default(auto()) @map("_id") @db.ObjectId
-  saleNumber      String    @unique // Invoice/Sale number
+  id              String     @id @default(auto()) @map("_id") @db.ObjectId
+  saleNumber      String     @unique // Invoice/Sale number
   total           Float
   subtotal        Float
-  tax             Float     @default(0)
-  discount        Float     @default(0)
+  tax             Float      @default(0)
+  discount        Float      @default(0)
   status          SaleStatus @default(COMPLETED)
-  paymentMethodId String    @db.ObjectId
-  userId          String    @db.ObjectId
-  customerId      String?   @db.ObjectId
+  paymentMethodId String     @db.ObjectId
+  userId          String     @db.ObjectId
+  customerId      String?    @db.ObjectId
   notes           String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
   deletedAt       DateTime?
-  
+
   // Relations
   user          User          @relation(fields: [userId], references: [id])
   customer      Customer?     @relation(fields: [customerId], references: [id])
@@ -117,7 +193,7 @@ model SaleItem {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
-  
+
   // Relations
   product Product @relation(fields: [productId], references: [id])
   sale    Sale    @relation(fields: [saleId], references: [id])
@@ -125,15 +201,15 @@ model SaleItem {
 
 // Sale payment model for tracking multiple payment methods per sale
 model SalePayment {
-  id              String        @id @default(auto()) @map("_id") @db.ObjectId
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
   amount          Float
-  paymentMethodId String        @db.ObjectId
-  saleId          String        @db.ObjectId
-  paidAt          DateTime      @default(now())
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  paymentMethodId String    @db.ObjectId
+  saleId          String    @db.ObjectId
+  paidAt          DateTime  @default(now())
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
   deletedAt       DateTime?
-  
+
   // Relations
   sale          Sale          @relation(fields: [saleId], references: [id])
   paymentMethod PaymentMethod @relation(fields: [paymentMethodId], references: [id])
@@ -150,7 +226,7 @@ model Customer {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
-  
+
   // Relations
   sales Sale[]
 }
@@ -164,7 +240,7 @@ model PaymentMethod {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   deletedAt   DateTime?
-  
+
   // Relations
   sales        Sale[]
   salePayments SalePayment[]

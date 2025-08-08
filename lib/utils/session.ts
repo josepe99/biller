@@ -5,6 +5,15 @@ import type { AuthUser } from '../types'
 
 const SESSION_COOKIE_NAME = 'session_id'
 const COOKIE_MAX_AGE = 60 * 60 // 1 hour
+const REFRESH_BEFORE_DAYS = 5 // Session must be refreshed before 5 days
+
+/**
+ * Calculate refresh before date (5 days from now)
+ */
+export function calculateRefreshBeforeDate(): Date {
+  const now = new Date()
+  return new Date(now.getTime() + REFRESH_BEFORE_DAYS * 24 * 60 * 60 * 1000)
+}
 
 /**
  * Set session cookie
