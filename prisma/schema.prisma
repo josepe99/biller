@@ -1,0 +1,159 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// User model for authentication and user management
+model User {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  email     String    @unique
+  name      String
+  role      UserRole  @default(CASHIER)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  
+  // Relations
+  sales Sale[]
+}
+
+// Product model for inventory management
+model Product {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String?
+  price       Float
+  cost        Float?
+  sku         String    @unique
+  barcode     String?   @unique
+  stock       Int       @default(0)
+  categoryId  String?   @db.ObjectId
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  
+  // Relations
+  category  Category?   @relation(fields: [categoryId], references: [id])
+  saleItems SaleItem[]
+}
+
+// Category model for product organization
+model Category {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  name      String    @unique
+  color     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  
+  // Relations
+  products Product[]
+}
+
+// Sale model for transactions
+model Sale {
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  saleNumber      String    @unique // Invoice/Sale number
+  total           Float
+  subtotal        Float
+  tax             Float     @default(0)
+  discount        Float     @default(0)
+  status          SaleStatus @default(COMPLETED)
+  paymentMethodId String    @db.ObjectId
+  userId          String    @db.ObjectId
+  customerId      String?   @db.ObjectId
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
+  
+  // Relations
+  user          User          @relation(fields: [userId], references: [id])
+  customer      Customer?     @relation(fields: [customerId], references: [id])
+  paymentMethod PaymentMethod @relation(fields: [paymentMethodId], references: [id])
+  saleItems     SaleItem[]
+  salePayments  SalePayment[]
+}
+
+// Sale item model for individual items in a sale
+model SaleItem {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  quantity  Int
+  unitPrice Float
+  total     Float
+  productId String    @db.ObjectId
+  saleId    String    @db.ObjectId
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  
+  // Relations
+  product Product @relation(fields: [productId], references: [id])
+  sale    Sale    @relation(fields: [saleId], references: [id])
+}
+
+// Sale payment model for tracking multiple payment methods per sale
+model SalePayment {
+  id              String        @id @default(auto()) @map("_id") @db.ObjectId
+  amount          Float
+  paymentMethodId String        @db.ObjectId
+  saleId          String        @db.ObjectId
+  paidAt          DateTime      @default(now())
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  deletedAt       DateTime?
+  
+  // Relations
+  sale          Sale          @relation(fields: [saleId], references: [id])
+  paymentMethod PaymentMethod @relation(fields: [paymentMethodId], references: [id])
+}
+
+// Customer model for customer management (optional)
+model Customer {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  email     String?   @unique
+  phone     String?
+  address   String?
+  ruc       String?   @unique // Tax identification number
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  
+  // Relations
+  sales Sale[]
+}
+
+// Payment method model for flexible payment options
+model PaymentMethod {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  name        String    @unique // e.g., "Cash", "Credit Card", "Mobile Payment"
+  description String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  
+  // Relations
+  sales        Sale[]
+  salePayments SalePayment[]
+}
+
+// Enums
+enum UserRole {
+  ADMIN
+  MANAGER
+  CASHIER
+}
+
+enum SaleStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+  REFUNDED
+}
