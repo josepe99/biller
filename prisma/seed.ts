@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client'
+import { hashPassword } from '../lib/utils/auth'
 
 const prisma = new PrismaClient()
 
@@ -33,14 +34,41 @@ async function main() {
     },
   })
 
-  // Create admin user
+  // Create users with hashed passwords
+  const adminPassword = await hashPassword('admin123')
+  const managerPassword = await hashPassword('manager123')
+  const cashierPassword = await hashPassword('cashier123')
+
   const adminUser = await prisma.user.upsert({
     where: { email: 'admin@pos.com' },
     update: {},
     create: {
       email: 'admin@pos.com',
       name: 'Admin User',
+      password: adminPassword,
       role: 'ADMIN',
+    },
+  })
+
+  const managerUser = await prisma.user.upsert({
+    where: { email: 'manager@pos.com' },
+    update: {},
+    create: {
+      email: 'manager@pos.com',
+      name: 'Manager User',
+      password: managerPassword,
+      role: 'MANAGER',
+    },
+  })
+
+  const cashierUser = await prisma.user.upsert({
+    where: { email: 'cashier@pos.com' },
+    update: {},
+    create: {
+      email: 'cashier@pos.com',
+      name: 'Cashier User',
+      password: cashierPassword,
+      role: 'CASHIER',
     },
   })
 
@@ -109,7 +137,30 @@ async function main() {
     },
   })
 
+  // Create payment methods
+  await prisma.paymentMethod.upsert({
+    where: { name: 'Cash' },
+    update: {},
+    create: {
+      name: 'Cash',
+      description: 'Cash payment',
+    },
+  })
+
+  await prisma.paymentMethod.upsert({
+    where: { name: 'Credit Card' },
+    update: {},
+    create: {
+      name: 'Credit Card',
+      description: 'Credit card payment',
+    },
+  })
+
   console.log('✅ Database seeded successfully!')
+  console.log('📝 Default users created:')
+  console.log('   - Admin: admin@pos.com / admin123')
+  console.log('   - Manager: manager@pos.com / manager123')
+  console.log('   - Cashier: cashier@pos.com / cashier123')
 }
 
 main()

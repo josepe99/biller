@@ -19,7 +19,44 @@ export interface CartItem extends Product {
 export interface User {
   id: string
   name: string
-  role: 'admin' | 'cashier'
+  email: string
+  role: 'ADMIN' | 'MANAGER' | 'CASHIER'
+  loginAttempts: number
+  lockedUntil?: Date
+  lastLoginAt?: Date
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface Session {
+  id: string
+  refreshBefore: Date
+  userId: string
+  loggedAt: Date
+  expiresAt: Date
+  isActive: boolean
+  userAgent?: string
+  ipAddress?: string
+  user?: User
+}
+
+export interface LoginRequest {
+  email: string
+  password: string
+}
+
+export interface LoginResponse {
+  success: boolean
+  user?: User
+  session?: Session
+  error?: string
+}
+
+export interface AuthUser {
+  id: string
+  name: string
+  email: string
+  role: 'ADMIN' | 'MANAGER' | 'CASHIER'
 }
 
 export interface Category {

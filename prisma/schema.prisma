@@ -9,16 +9,42 @@ datasource db {
 
 // User model for authentication and user management
 model User {
-  id        String    @id @default(auto()) @map("_id") @db.ObjectId
-  email     String    @unique
-  name      String
-  role      UserRole  @default(CASHIER)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  email        String    @unique
+  name         String
+  password     String    // Hashed password
+  role         UserRole  @default(CASHIER)
+  loginAttempts Int      @default(0) // Track failed login attempts
+  lockedUntil  DateTime? // Account lock expiration
+  lastLoginAt  DateTime? // Last successful login
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
   
   // Relations
-  sales Sale[]
+  sales    Sale[]
+  sessions Session[]
+}
+
+// Session model for authentication without JWT
+model Session {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  refreshBefore DateTime // Session must be refreshed before this time
+  userId       String   @db.ObjectId
+  loggedAt     DateTime @default(now()) // When the user logged in
+  expiresAt    DateTime // Session expiration (1 hour from creation)
+  isActive     Boolean  @default(true)
+  userAgent    String?  // Browser/device info for security
+  ipAddress    String?  // IP address for security tracking
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([expiresAt])
+  @@index([refreshBefore])
 }
 
 // Product model for inventory management
