@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { loginAction } from '@/lib/actions/auth'
 
 export function LoginForm() {
   const [email, setEmail] = useState('')
@@ -21,39 +22,43 @@ export function LoginForm() {
     setIsLoading(true)
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      })
+      // Call server action
+      const result = await loginAction(email, password)
 
-      const data = await response.json()
+      if (result.success && result.session && result.user) {
+        // Save session ID to localStorage
+        localStorage.setItem('sessionId', result.session.id)
+        
+        // Save user data to localStorage
+        localStorage.setItem('user', JSON.stringify(result.user))
 
-      if (data.success) {
         // Get redirect URL from query params or default to home
         const urlParams = new URLSearchParams(window.location.search)
         const redirectTo = urlParams.get('redirect') || '/'
-        router.push(redirectTo)
-        router.refresh()
+        
+        // Use window.location.href for full page refresh to ensure auth state is updated
+        window.location.href = redirectTo
       } else {
-        setError(data.error || 'Login failed')
+        setError(result.error || 'Login failed')
       }
     } catch (err) {
       setError('An error occurred. Please try again.')
+      console.error('Login error:', err)
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Login</CardTitle>
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <Card className="w-full max-w-md shadow-lg">
+        <CardHeader className="text-center">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
+            <div className="h-8 w-8 rounded bg-blue-600"></div>
+          </div>
+          <CardTitle className="text-2xl">POS System</CardTitle>
           <CardDescription>
-            Enter your credentials to access the POS system
+            Enter your credentials to access the system
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -74,6 +79,7 @@ export function LoginForm() {
                 placeholder="admin@pos.com"
                 required
                 disabled={isLoading}
+                className="h-11"
               />
             </div>
             
@@ -87,25 +93,35 @@ export function LoginForm() {
                 placeholder="••••••••"
                 required
                 disabled={isLoading}
+                className="h-11"
               />
             </div>
             
             <Button 
               type="submit" 
-              className="w-full" 
+              className="w-full h-11" 
               disabled={isLoading}
             >
               {isLoading ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>
           
-          <div className="mt-4 text-sm text-gray-600">
-            <p>Default accounts:</p>
-            <ul className="mt-1 space-y-1">
-              <li>• Admin: admin@pos.com / admin123</li>
-              <li>• Manager: manager@pos.com / manager123</li>
-              <li>• Cashier: cashier@pos.com / cashier123</li>
-            </ul>
+          <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+            <h4 className="text-sm font-medium text-gray-900 mb-2">Demo Accounts:</h4>
+            <div className="space-y-2 text-xs text-gray-600">
+              <div className="flex justify-between">
+                <span className="font-medium">Admin:</span>
+                <span>admin@pos.com / admin123</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-medium">Manager:</span>
+                <span>manager@pos.com / manager123</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-medium">Cashier:</span>
+                <span>cashier@pos.com / cashier123</span>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>

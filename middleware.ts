@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth } from '@/lib/utils/session'
+import { requireAuthEdge, hasRoleEdge, isAdminEdge, isManagerOrAdminEdge } from '@/lib/utils/session-edge'
 
 // Define public routes that don't require authentication
 const publicRoutes = [
@@ -43,10 +43,15 @@ export async function middleware(request: NextRequest) {
   }
 
   // Check authentication
-  const { user, sessionId } = await requireAuth(request)
+  const { user, response: authResponse } = await requireAuthEdge(request)
 
-  if (!user || !sessionId) {
-    // Redirect to login for protected routes
+  if (!user || authResponse) {
+    // If there's an auth response (redirect), use it
+    if (authResponse) {
+      return authResponse
+    }
+    
+    // Otherwise handle API vs page routes
     if (pathname.startsWith('/api/')) {
       return NextResponse.json(
         { success: false, error: 'Authentication required' },
@@ -68,7 +73,7 @@ export async function middleware(request: NextRequest) {
     pathname === route || pathname.startsWith(route + '/')
   )
 
-  if (isAdminRoute && user.role !== 'ADMIN') {
+  if (isAdminRoute && !isAdminEdge(user)) {
     if (pathname.startsWith('/api/')) {
       return NextResponse.json(
         { success: false, error: 'Admin access required' },
@@ -78,7 +83,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/unauthorized', request.url))
   }
 
-  if (isManagerRoute && !['ADMIN', 'MANAGER'].includes(user.role)) {
+  if (isManagerRoute && !isManagerOrAdminEdge(user)) {
     if (pathname.startsWith('/api/')) {
       return NextResponse.json(
         { success: false, error: 'Manager access required' },
@@ -92,7 +97,6 @@ export async function middleware(request: NextRequest) {
   const response = NextResponse.next()
   response.headers.set('x-user-id', user.id)
   response.headers.set('x-user-role', user.role)
-  response.headers.set('x-session-id', sessionId)
 
   return response
 }

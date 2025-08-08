@@ -1,8 +1,8 @@
 import { randomBytes, createHash } from 'crypto'
 import bcrypt from 'bcryptjs'
+import { prisma } from '../prisma'
 import { calculateRefreshBeforeDate } from './session'
 import { userController } from '../controllers/user.controller'
-import { sessionController } from '../controllers/session.controller'
 import type { LoginRequest, LoginResponse, AuthUser, Session } from '../types'
 
 // Constants for security
@@ -43,22 +43,39 @@ export async function getUserByEmail(email: string): Promise<any> {
  * Increment login attempts
  */
 export async function incrementLoginAttempts(userId: string): Promise<void> {
-  const userResponse = await userController.getById(userId, { loginAttempts: true })
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { loginAttempts: true }
+  })
 
-  if (!userResponse.success || !userResponse.data) return
+  if (!user) return
 
-  const user = userResponse.data as any
   const newAttempts = user.loginAttempts + 1
+  const updateData: any = { loginAttempts: newAttempts }
 
   // Lock account if max attempts reached
-  await userController.updateLoginAttempts(userId, newAttempts, newAttempts >= MAX_LOGIN_ATTEMPTS ? LOCK_TIME : undefined)
+  if (newAttempts >= MAX_LOGIN_ATTEMPTS) {
+    updateData.lockedUntil = new Date(Date.now() + LOCK_TIME)
+  }
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: updateData
+  })
 }
 
 /**
  * Reset login attempts
  */
 export async function resetLoginAttempts(userId: string): Promise<void> {
-  await userController.resetLoginAttempts(userId)
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      loginAttempts: 0,
+      lockedUntil: null,
+      lastLoginAt: new Date()
+    }
+  })
 }
 
 /**
@@ -73,35 +90,101 @@ export async function createSession(
   const expiresAt = new Date(now.getTime() + SESSION_DURATION)
   const refreshBefore = calculateRefreshBeforeDate() // 5 days from now
 
-  return await sessionController.createSession(userId, expiresAt, refreshBefore, userAgent, ipAddress)
+  const session = await prisma.session.create({
+    data: {
+      userId,
+      expiresAt,
+      refreshBefore,
+      userAgent,
+      ipAddress,
+    },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          lastLoginAt: true,
+          createdAt: true,
+          updatedAt: true,
+        }
+      }
+    }
+  })
+
+  return session as Session
 }
 
 /**
  * Validate and get session by ID
  */
 export async function getSessionById(sessionId: string): Promise<Session | null> {
-  return await sessionController.getSessionById(sessionId)
+  const session = await prisma.session.findUnique({
+    where: { id: sessionId },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          lastLoginAt: true,
+          createdAt: true,
+          updatedAt: true,
+        }
+      }
+    }
+  })
+
+  if (!session || !session.isActive || session.expiresAt < new Date()) {
+    if (session) {
+      // Deactivate expired session
+      await prisma.session.update({
+        where: { id: session.id },
+        data: { isActive: false }
+      })
+    }
+    return null
+  }
+
+  return session as Session
 }
 
 /**
  * Invalidate a session (logout)
  */
 export async function invalidateSession(sessionId: string): Promise<void> {
-  await sessionController.deactivateSession(sessionId)
+  await prisma.session.updateMany({
+    where: { id: sessionId },
+    data: { isActive: false }
+  })
 }
 
 /**
  * Invalidate all sessions for a user
  */
 export async function invalidateAllUserSessions(userId: string): Promise<void> {
-  await sessionController.deactivateAllUserSessions(userId)
+  await prisma.session.updateMany({
+    where: { userId },
+    data: { isActive: false }
+  })
 }
 
 /**
  * Clean up expired sessions
  */
 export async function cleanupExpiredSessions(): Promise<number> {
-  return await sessionController.cleanupExpiredSessions()
+  const result = await prisma.session.deleteMany({
+    where: {
+      OR: [
+        { expiresAt: { lt: new Date() } },
+        { isActive: false }
+      ]
+    }
+  })
+  
+  return result.count
 }
 
 /**
@@ -136,9 +219,17 @@ export async function loginUser(
     if (!isPasswordValid) {
       // Increment login attempts
       const newAttempts = user.loginAttempts + 1
+      const updateData: any = { loginAttempts: newAttempts }
 
-      // Update login attempts and potentially lock account
-      await userController.updateLoginAttempts(user.id, newAttempts, LOCK_TIME)
+      // Lock account if max attempts reached
+      if (newAttempts >= MAX_LOGIN_ATTEMPTS) {
+        updateData.lockedUntil = new Date(Date.now() + LOCK_TIME)
+      }
+
+      await prisma.user.update({
+        where: { id: user.id },
+        data: updateData
+      })
 
       if (newAttempts >= MAX_LOGIN_ATTEMPTS) {
         return { 
@@ -154,7 +245,14 @@ export async function loginUser(
     }
 
     // Reset login attempts and update last login
-    await userController.updateSuccessfulLogin(user.id)
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        loginAttempts: 0,
+        lockedUntil: null,
+        lastLoginAt: new Date()
+      }
+    })
 
     // Create session
     const session = await createSession(user.id, userAgent, ipAddress)
@@ -192,14 +290,28 @@ export async function extendSession(sessionId: string): Promise<boolean> {
   const newExpiresAt = new Date(now.getTime() + SESSION_DURATION)
   const newRefreshBefore = calculateRefreshBeforeDate() // 5 days from now
   
-  return await sessionController.extendSession(session.id, newExpiresAt, newRefreshBefore)
+  await prisma.session.update({
+    where: { id: session.id },
+    data: { 
+      expiresAt: newExpiresAt,
+      refreshBefore: newRefreshBefore
+    }
+  })
+
+  return true
 }
 
 /**
  * Check if session needs refresh
  */
 export async function needsRefresh(sessionId: string): Promise<boolean> {
-  return await sessionController.needsRefresh(sessionId)
+  const session = await getSessionById(sessionId)
+  
+  if (!session) {
+    return false
+  }
+
+  return session.refreshBefore <= new Date()
 }
 
 /**

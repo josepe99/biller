@@ -6,6 +6,11 @@ export { default as AdminModule } from './features/admin/admin-module'
 // Layout Components
 export { default as DashboardLayout } from './layout/dashboard-layout'
 
+// Auth Components
+export { LoginForm } from './auth/login-form'
+export { LogoutButton } from './auth/logout-button'
+export { AuthProvider, useAuth } from './auth/auth-provider'
+
 // Sub-components
 export { default as ProductSearchModal } from './features/billing/product-search-modal'
 export { default as UserManagement } from './features/admin/user-management'

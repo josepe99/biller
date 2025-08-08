@@ -1,3 +1,5 @@
+import { UserRole } from '@prisma/client'
+
 export interface Product {
   id: string
   name: string
@@ -20,7 +22,7 @@ export interface User {
   id: string
   name: string
   email: string
-  role: 'ADMIN' | 'MANAGER' | 'CASHIER'
+  role: UserRole
   loginAttempts: number
   lockedUntil?: Date
   lastLoginAt?: Date
@@ -35,8 +37,8 @@ export interface Session {
   loggedAt: Date
   expiresAt: Date
   isActive: boolean
-  userAgent?: string
-  ipAddress?: string
+  userAgent?: string | null
+  ipAddress?: string | null
   user?: User
 }
 
@@ -47,7 +49,7 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   success: boolean
-  user?: User
+  user?: AuthUser
   session?: Session
   error?: string
 }
@@ -56,7 +58,7 @@ export interface AuthUser {
   id: string
   name: string
   email: string
-  role: 'ADMIN' | 'MANAGER' | 'CASHIER'
+  role: UserRole
 }
 
 export interface Category {
