@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -14,7 +13,6 @@ export function LoginForm() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -39,10 +37,10 @@ export function LoginForm() {
         // Use window.location.href for full page refresh to ensure auth state is updated
         window.location.href = redirectTo
       } else {
-        setError(result.error || 'Login failed')
+        setError(result.error || 'Algó salió mal. Por favor, inténtalo de nuevo.')
       }
     } catch (err) {
-      setError('An error occurred. Please try again.')
+      setError('Ocurrió un error. Por favor, inténtalo de nuevo.')
       console.error('Login error:', err)
     } finally {
       setIsLoading(false)
@@ -58,7 +56,7 @@ export function LoginForm() {
           </div>
           <CardTitle className="text-2xl">POS System</CardTitle>
           <CardDescription>
-            Enter your credentials to access the system
+            Ingresa tus credenciales para acceder al sistema
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -76,7 +74,7 @@ export function LoginForm() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@pos.com"
+                placeholder="Ingrese su correo electrónico "
                 required
                 disabled={isLoading}
                 className="h-11"
@@ -84,13 +82,13 @@ export function LoginForm() {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">Contraseña</Label>
               <Input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder="Ingrese su contraseña"
                 required
                 disabled={isLoading}
                 className="h-11"
@@ -102,27 +100,9 @@ export function LoginForm() {
               className="w-full h-11" 
               disabled={isLoading}
             >
-              {isLoading ? 'Signing in...' : 'Sign In'}
+              {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
             </Button>
           </form>
-          
-          <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-            <h4 className="text-sm font-medium text-gray-900 mb-2">Demo Accounts:</h4>
-            <div className="space-y-2 text-xs text-gray-600">
-              <div className="flex justify-between">
-                <span className="font-medium">Admin:</span>
-                <span>admin@pos.com / admin123</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-medium">Manager:</span>
-                <span>manager@pos.com / manager123</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-medium">Cashier:</span>
-                <span>cashier@pos.com / cashier123</span>
-              </div>
-            </div>
-          </div>
         </CardContent>
       </Card>
     </div>

@@ -13,7 +13,7 @@ const COOKIE_MAX_AGE = 60 * 60 // 1 hour
 export async function loginAction(email: string, password: string): Promise<LoginResponse> {
   try {
     if (!email || !password) {
-      return { success: false, error: 'Email and password are required' }
+      return { success: false, error: 'Correo electrónico y contraseña son requeridos' }
     }
 
     // Login user

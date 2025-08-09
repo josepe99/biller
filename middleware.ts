@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAuthEdge, hasRoleEdge, isAdminEdge, isManagerOrAdminEdge } from '@/lib/utils/session-edge'
+import { requireAuthEdge, hasRoleEdge, isAdminEdge, isManagerOrAdminEdge, setSessionCookie, clearSessionCookie } from '@/lib/utils/session-edge'
+import { extendSessionEdge } from '@/lib/utils/auth-edge'
 
 // Define public routes that don't require authentication
 const publicRoutes = [
   '/api/auth/login',
+  '/welcome',
   '/login',
   '/register',
-  '/',
+  '/unauthorized'
 ]
 
 // Define admin-only routes
@@ -19,6 +21,7 @@ const adminRoutes = [
 const managerRoutes = [
   '/api/categories',
   '/api/products',
+  '/stock'
 ]
 
 export async function middleware(request: NextRequest) {
@@ -42,7 +45,17 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Check authentication
+  // Special handling for root path - redirect unauthenticated users to welcome
+  if (pathname === '/') {
+    const { user } = await requireAuthEdge(request)
+    if (!user) {
+      return NextResponse.redirect(new URL('/welcome', request.url))
+    }
+    // If authenticated, continue to dashboard
+    return NextResponse.next()
+  }
+
+  // Check authentication for protected routes
   const { user, response: authResponse } = await requireAuthEdge(request)
 
   if (!user || authResponse) {
@@ -93,7 +106,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/unauthorized', request.url))
   }
 
-  // Add user info to headers for API routes
+  // Create response and add user info to headers for API routes
   const response = NextResponse.next()
   response.headers.set('x-user-id', user.id)
   response.headers.set('x-user-role', user.role)

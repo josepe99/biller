@@ -3,6 +3,7 @@ import { Roboto } from 'next/font/google'; // Import Roboto from next/font/googl
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/components/auth/auth-provider";
+import { AuthWrapper } from "@/components/auth/auth-wrapper";
 
 // Configure Roboto font
 const roboto = Roboto({
@@ -31,7 +32,9 @@ export default function RootLayout({
         disableTransitionOnChange
       >
         <AuthProvider>
-          {children}
+          <AuthWrapper>
+            {children}
+          </AuthWrapper>
         </AuthProvider>
       </ThemeProvider>
     </body></html>

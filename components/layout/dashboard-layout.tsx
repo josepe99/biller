@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { LayoutDashboard, ShoppingCart, Package, Clock, CalendarDays } from 'lucide-react'
+import { Clock } from '@/components/ui/clock'
+import { LayoutDashboard, ShoppingCart, Package } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -14,15 +15,7 @@ interface DashboardLayoutProps {
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
-  const [currentTime, setCurrentTime] = useState(new Date())
   const pathname = usePathname()
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date())
-    }, 1000)
-    return () => clearInterval(timer)
-  }, [])
 
   const lowStockCount = sampleProducts.filter(p => p.stock <= 5).length
 
@@ -89,14 +82,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             <h1 className="text-xl font-semibold text-orange-500">r1760 POS</h1>
           </div>
           <div className="flex items-center space-x-4 text-gray-600">
-            <div className="flex items-center">
-              <Clock className="h-4 w-4 mr-1" />
-              <span>{currentTime.toLocaleTimeString()}</span>
-            </div>
-            <div className="flex items-center">
-              <CalendarDays className="h-4 w-4 mr-1" />
-              <span>{currentTime.toLocaleDateString()}</span>
-            </div>
+            <Clock showDate={true} />
           </div>
         </header>
 

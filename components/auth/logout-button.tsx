@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { logoutAction } from '@/lib/actions/auth'
+import { useAuth } from './auth-provider'
 import { LogOut } from 'lucide-react'
 
 interface LogoutButtonProps {
@@ -23,17 +24,17 @@ export function LogoutButton({
 }: LogoutButtonProps) {
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+  const { clearAuth } = useAuth()
 
   const handleLogout = async () => {
     setIsLoading(true)
     
     try {
-      // Call server action
-      await logoutAction()
+      // Clear auth context and localStorage first
+      clearAuth()
       
-      // Clear localStorage
-      localStorage.removeItem('sessionId')
-      localStorage.removeItem('user')
+      // Call server action to invalidate session
+      await logoutAction()
       
       // Redirect to login page
       window.location.href = '/login'

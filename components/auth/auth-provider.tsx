@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import type { AuthUser, Session } from '@/lib/types'
+import { validateSessionAction } from '@/lib/actions/session'
 
 interface AuthContextType {
   user: AuthUser | null
@@ -11,6 +12,7 @@ interface AuthContextType {
   isAuthenticated: boolean
   setAuthData: (user: AuthUser, sessionId: string) => void
   clearAuth: () => void
+  refreshAuth: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -22,26 +24,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Load auth data from localStorage on mount
-    try {
-      const storedSessionId = localStorage.getItem('sessionId')
-      const storedUser = localStorage.getItem('user')
+    // Load auth data from localStorage on mount and validate session
+    const initializeAuth = async () => {
+      try {
+        const storedSessionId = localStorage.getItem('sessionId')
+        const storedUser = localStorage.getItem('user')
 
-      if (storedSessionId) {
-        setSessionId(storedSessionId)
+        if (storedSessionId && storedUser) {
+          // Validate stored session
+          const validationResult = await validateSessionAction(storedSessionId)
+          
+          if (validationResult.success && validationResult.user) {
+            setSessionId(storedSessionId)
+            setUser(validationResult.user)
+            // Update stored user data in case it changed
+            localStorage.setItem('user', JSON.stringify(validationResult.user))
+          } else {
+            // Clear invalid session data
+            localStorage.removeItem('sessionId')
+            localStorage.removeItem('user')
+          }
+        }
+      } catch (error) {
+        console.error('Error validating session on mount:', error)
+        // Clear invalid data on error
+        localStorage.removeItem('sessionId')
+        localStorage.removeItem('user')
+      } finally {
+        setIsLoading(false)
       }
-
-      if (storedUser) {
-        setUser(JSON.parse(storedUser))
-      }
-    } catch (error) {
-      console.error('Error loading auth data from localStorage:', error)
-      // Clear invalid data
-      localStorage.removeItem('sessionId')
-      localStorage.removeItem('user')
-    } finally {
-      setIsLoading(false)
     }
+
+    initializeAuth()
   }, [])
 
   const setAuthData = (userData: AuthUser, sessionIdData: string) => {
@@ -59,6 +73,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('user')
   }
 
+  const refreshAuth = async () => {
+    if (sessionId) {
+      try {
+        const validationResult = await validateSessionAction(sessionId)
+        
+        if (validationResult.success && validationResult.user) {
+          setUser(validationResult.user)
+          localStorage.setItem('user', JSON.stringify(validationResult.user))
+        } else {
+          clearAuth()
+        }
+      } catch (error) {
+        console.error('Error refreshing auth:', error)
+        clearAuth()
+      }
+    }
+  }
+
   const isAuthenticated = !!sessionId && !!user
 
   const value: AuthContextType = {
@@ -68,7 +100,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isLoading,
     isAuthenticated,
     setAuthData,
-    clearAuth
+    clearAuth,
+    refreshAuth
   }
 
   return (

@@ -12,6 +12,7 @@ model User {
   id            String    @id @default(auto()) @map("_id") @db.ObjectId
   email         String    @unique
   name          String
+  lastname      String
   password      String // Hashed password
   role          UserRole  @default(CASHIER)
   loginAttempts Int       @default(0) // Track failed login attempts

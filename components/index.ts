@@ -10,6 +10,8 @@ export { default as DashboardLayout } from './layout/dashboard-layout'
 export { LoginForm } from './auth/login-form'
 export { LogoutButton } from './auth/logout-button'
 export { AuthProvider, useAuth } from './auth/auth-provider'
+export { ProtectedRoute, withProtectedRoute } from './auth/protected-route'
+export { AuthWrapper } from './auth/auth-wrapper'
 
 // Sub-components
 export { default as ProductSearchModal } from './features/billing/product-search-modal'
