@@ -9,6 +9,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { sampleProducts } from '@/lib/data/sample-data'
+import { SessionValidator } from '@/components/auth/session-validator'
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -28,7 +29,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const activeModule = getActiveModule()
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <>
+      <SessionValidator />
+      <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
       <aside className="w-20 bg-white border-r shadow-md flex flex-col items-center py-6 space-y-6">
         <div className="mb-6">
@@ -92,5 +95,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </main>
       </div>
     </div>
+    </>
   )
 }

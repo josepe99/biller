@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/auth/auth-provider'
-import { useSessionValidation } from '@/hooks/use-session-validation'
+import { sessionManager } from '@/lib/utils/session-manager'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
@@ -22,7 +22,6 @@ export function ProtectedRoute({
   loadingComponent
 }: ProtectedRouteProps) {
   const { user, isAuthenticated, isLoading } = useAuth()
-  const { validateSession } = useSessionValidation()
   const router = useRouter()
   const [isValidating, setIsValidating] = useState(true)
 
@@ -37,12 +36,12 @@ export function ProtectedRoute({
       }
 
       // Validate session on mount
-      await validateSession()
+      await sessionManager.validateSession()
       setIsValidating(false)
     }
 
     checkAuth()
-  }, [isLoading, isAuthenticated, validateSession, router])
+  }, [isLoading, isAuthenticated, router])
 
   useEffect(() => {
     // Check role-based access

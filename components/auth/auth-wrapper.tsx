@@ -2,7 +2,6 @@
 
 import { usePathname } from 'next/navigation'
 import { ProtectedRoute } from './protected-route'
-import { useSessionValidation } from '@/hooks/use-session-validation'
 
 // Define public routes that don't require authentication
 const PUBLIC_ROUTES = [
@@ -32,8 +31,8 @@ interface AuthWrapperProps {
 export function AuthWrapper({ children }: AuthWrapperProps) {
   const pathname = usePathname()
   
-  // Initialize session validation for authenticated users
-  useSessionValidation()
+  // Removed session validation from here to prevent global excessive calls
+  // Session validation is now handled by individual protected components
 
   // Check if current route is public
   const isPublicRoute = PUBLIC_ROUTES.some(route => 

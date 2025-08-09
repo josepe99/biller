@@ -4,7 +4,7 @@ import { extendSessionEdge } from '@/lib/utils/auth-edge'
 
 // Define public routes that don't require authentication
 const publicRoutes = [
-  '/api/auth/login',
+  '/api/auth', // Exclude all auth API routes to prevent circular dependencies
   '/welcome',
   '/login',
   '/register',

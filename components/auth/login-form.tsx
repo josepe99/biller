@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { loginAction } from '@/lib/actions/auth'
+import { setSessionCookie } from '@/lib/utils/client-cookies'
 
 export function LoginForm() {
   const [email, setEmail] = useState('')
@@ -22,6 +23,7 @@ export function LoginForm() {
     try {
       // Call server action
       const result = await loginAction(email, password)
+      console.log('Login result: ', result)
 
       if (result.success && result.session && result.user) {
         // Save session ID to localStorage
@@ -29,6 +31,10 @@ export function LoginForm() {
         
         // Save user data to localStorage
         localStorage.setItem('user', JSON.stringify(result.user))
+
+        // Set session cookie for middleware compatibility
+        // This is crucial because server actions don't set cookies properly for immediate use
+        setSessionCookie(result.session.id)
 
         // Get redirect URL from query params or default to home
         const urlParams = new URLSearchParams(window.location.search)
@@ -40,8 +46,8 @@ export function LoginForm() {
         setError(result.error || 'Algó salió mal. Por favor, inténtalo de nuevo.')
       }
     } catch (err) {
-      setError('Ocurrió un error. Por favor, inténtalo de nuevo.')
       console.error('Login error:', err)
+      setError('Ocurrió un error. Por favor, inténtalo de nuevo.')
     } finally {
       setIsLoading(false)
     }
