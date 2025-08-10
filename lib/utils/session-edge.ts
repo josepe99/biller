@@ -41,7 +41,6 @@ export async function requireAuthEdge(request: NextRequest): Promise<{
   response: NextResponse | null
 }> {
   const sessionId = getSessionIdFromRequest(request)
-  console.log('asdfasfdasfasfdafsdFADS: ', sessionId  )
   
   if (!sessionId) {
     return {
