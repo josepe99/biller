@@ -1,49 +1,10 @@
-import { randomBytes, createHash } from 'crypto'
 import { prismaEdge } from '../prisma-edge'
+import { SessionController } from '../controllers/session.controller'
 import type { AuthUser, Session } from '../types'
 
 // Constants for security
 const SESSION_DURATION = 60 * 60 * 1000 // 1 hour in milliseconds
-
-/**
- * Get user by session ID - Edge runtime compatible
- * Uses standard Prisma queries without extensions
- */
-export async function getUserBySessionIdEdge(sessionId: string): Promise<AuthUser | null> {
-  try {
-    const session = await prismaEdge.session.findUnique({
-      where: { 
-        id: sessionId,
-        expiresAt: { gt: new Date() }
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-            name: true,
-            role: true,
-            deletedAt: true
-          }
-        }
-      }
-    })
-
-    if (!session || !session.user || session.user.deletedAt) {
-      return null
-    }
-
-    return {
-      id: session.user.id,
-      name: session.user.name,
-      email: session.user.email,
-      role: session.user.role
-    }
-  } catch (error) {
-    console.error('Error getting user by session ID:', error)
-    return null
-  }
-}
+const sessionController = new SessionController()
 
 /**
  * Check if session needs refresh - Edge runtime compatible
@@ -85,4 +46,28 @@ export async function extendSessionEdge(sessionId: string): Promise<boolean> {
 export function calculateRefreshBeforeDateEdge(): Date {
   const now = new Date()
   return new Date(now.getTime() + (SESSION_DURATION * 0.8))
+}
+
+/**
+ * Get user by session ID - Edge runtime compatible
+ */
+export async function getUserBySessionIdEdge(sessionId: string): Promise<AuthUser | null> {
+  try {
+    const sessionWithUser = await sessionController.getById(sessionId)
+    
+    if (!sessionWithUser) {
+      return null
+    }
+
+    // Return just the user data in AuthUser format
+    return {
+      id: sessionWithUser.user.id,
+      name: sessionWithUser.user.name || '',
+      email: sessionWithUser.user.email,
+      role: sessionWithUser.user.role
+    }
+  } catch (error) {
+    console.error('Error getting user by session ID:', error)
+    return null
+  }
 }

@@ -48,6 +48,7 @@ export async function middleware(request: NextRequest) {
   // Special handling for root path - redirect unauthenticated users to welcome
   if (pathname === '/') {
     const { user } = await requireAuthEdge(request)
+    console.log('🔥🔥🔥🔥🔥🔥: ', user)
     if (!user) {
       return NextResponse.redirect(new URL('/welcome', request.url))
     }

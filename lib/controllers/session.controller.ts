@@ -1,8 +1,8 @@
-import { Session } from '@prisma/client'
+import { Session, UserRole } from '@prisma/client'
 import { 
   sessionDatasource, 
   CreateSessionData, 
-  SessionFilters, 
+  SessionFilters,
 } from '@/lib/datasources/session.datasource'
 
 export interface SessionResponse {
@@ -13,6 +13,22 @@ export interface SessionResponse {
 }
 
 export class SessionController {
+  /**
+   * Get session by ID with user data
+   */
+  async getById(sessionId: string) {
+    try {
+      if (!sessionId || sessionId.trim() === '') {
+        return null
+      }
+
+      return await sessionDatasource.getByIdWithUserAndValidation(sessionId.trim())
+    } catch (error) {
+      console.error('Error fetching session with user:', error)
+      return null
+    }
+  }
+
   /**
    * Create a new session
    */
@@ -240,6 +256,3 @@ export class SessionController {
     }
   }
 }
-
-// Export a singleton instance
-export const sessionController = new SessionController()

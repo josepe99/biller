@@ -1,8 +1,10 @@
 'use server'
 
-import { cookies } from 'next/headers'
+import { SessionController } from '@/lib/controllers/session.controller'
 import { loginUser, invalidateSession } from '@/lib/utils/auth'
 import type { LoginRequest, LoginResponse } from '@/lib/types'
+import type { AuthUser } from '@/lib/types'
+import { cookies } from 'next/headers'
 
 const SESSION_COOKIE_NAME = 'session_id'
 const COOKIE_MAX_AGE = 60 * 60 // 1 hour
@@ -69,5 +71,31 @@ export async function logoutAction(): Promise<{ success: boolean }> {
   } catch (error) {
     console.error('Logout action error:', error)
     return { success: false }
+  }
+}
+
+/**
+ * Get user by session ID - Edge runtime compatible
+ * Uses the edge-compatible session controller
+ */
+export async function getUserBySessionIdEdge(sessionId: string): Promise<AuthUser | null> {
+  try {
+    const sessionController = new SessionController()
+    const session = await sessionController.getById(sessionId)
+    console.log('0️⃣0️⃣0️⃣0️⃣0️⃣0️⃣: ', session)
+
+    if (!session || !session.user) {
+      return null
+    }
+
+    return {
+      id: session.user.id,
+      name: session.user.name,
+      email: session.user.email,
+      role: session.user.role
+    }
+  } catch (error) {
+    console.error('Error getting user by session ID:', error)
+    return null
   }
 }

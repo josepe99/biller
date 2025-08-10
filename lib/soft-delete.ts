@@ -49,59 +49,6 @@ export function restoreRecord() {
   }
 }
 
-// Prisma extension for automatic soft delete filtering
-export const softDeleteExtension = Prisma.defineExtension({
-  model: {
-    $allModels: {
-      // Soft delete method
-      async softDelete<T>(this: T, where: Prisma.Args<T, 'update'>['where']) {
-        const context = Prisma.getExtensionContext(this)
-        return (context as any).update({
-          where,
-          data: {
-            deletedAt: new Date(),
-          },
-        })
-      },
-      
-      // Find many excluding deleted
-      async findManyActive<T>(this: T, args?: Prisma.Args<T, 'findMany'>) {
-        const context = Prisma.getExtensionContext(this)
-        return (context as any).findMany({
-          ...args,
-          where: {
-            ...args?.where,
-            deletedAt: null,
-          },
-        })
-      },
-      
-      // Find first excluding deleted
-      async findFirstActive<T>(this: T, args?: Prisma.Args<T, 'findFirst'>) {
-        const context = Prisma.getExtensionContext(this)
-        return (context as any).findFirst({
-          ...args,
-          where: {
-            ...args?.where,
-            deletedAt: null,
-          },
-        })
-      },
-      
-      // Restore soft deleted record
-      async restore<T>(this: T, where: Prisma.Args<T, 'update'>['where']) {
-        const context = Prisma.getExtensionContext(this)
-        return (context as any).update({
-          where,
-          data: {
-            deletedAt: null,
-          },
-        })
-      },
-    },
-  },
-})
-
 // Types for queries that might include deleted records
 export type QueryWithDeleted<T> = T & {
   includeDeleted?: boolean

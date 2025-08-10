@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getUserBySessionIdEdge, extendSessionEdge, needsRefreshEdge, calculateRefreshBeforeDateEdge } from './auth-edge'
+import { getUserBySessionIdEdge } from '@/lib/actions/auth'
+import { extendSessionEdge } from './auth-edge'
 import type { AuthUser } from '../types'
 
 const SESSION_COOKIE_NAME = 'session_id'
@@ -11,7 +12,7 @@ const COOKIE_MAX_AGE = 60 * 60 // 1 hour
 export function setSessionCookie(response: NextResponse, sessionId: string): void {
   response.cookies.set(SESSION_COOKIE_NAME, sessionId, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: true,
     sameSite: 'lax',
     maxAge: COOKIE_MAX_AGE,
     path: '/'
@@ -40,6 +41,7 @@ export async function requireAuthEdge(request: NextRequest): Promise<{
   response: NextResponse | null
 }> {
   const sessionId = getSessionIdFromRequest(request)
+  console.log('asdfasfdasfasfdafsdFADS: ', sessionId  )
   
   if (!sessionId) {
     return {

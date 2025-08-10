@@ -1,4 +1,12 @@
-import { Session, Prisma } from '@prisma/client'
+/**
+ * Session Datasource - Server Runtime Only
+ * 
+ * WARNING: This file uses Prisma extensions and CANNOT be imported in Edge Runtime contexts
+ * (middleware, edge API routes, etc.). For edge runtime compatibility, use:
+ * @/lib/datasources/session-edge.datasource instead
+ */
+
+import { Session, Prisma, UserRole } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 
 export interface CreateSessionData {
@@ -63,6 +71,47 @@ export class SessionDatasource {
         }
       }
     })
+  }
+
+  /**
+   * Get session by ID with user data and expiration check
+   * This method validates the session is not expired and user is not soft deleted
+   */
+  async getByIdWithUserAndValidation(sessionId: string): Promise<Session & { user: { id: string, name: string, email: string, role: UserRole, deletedAt: Date | null } } | null> {
+    try {
+      if (!sessionId || sessionId.trim() === '') {
+        return null
+      }
+
+      // Get session with user data and ensure it's not expired
+      const session = await prisma.session.findUnique({
+        where: { 
+          id: sessionId.trim(),
+          expiresAt: { gt: new Date() }
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true,
+              deletedAt: true
+            }
+          }
+        }
+      })
+
+      // Check if session exists and user is not soft deleted
+      if (!session || !session.user || session.user.deletedAt) {
+        return null
+      }
+
+      return session
+    } catch (error) {
+      console.error('Error fetching session with user:', error)
+      return null
+    }
   }
 
   /**

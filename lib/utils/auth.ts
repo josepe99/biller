@@ -1,9 +1,11 @@
-import { randomBytes, createHash } from 'crypto'
-import bcrypt from 'bcryptjs'
-import { calculateRefreshBeforeDate } from './session'
-import { userController } from '../controllers/user.controller'
-import { sessionController } from '../controllers/session.controller'
 import type { LoginRequest, LoginResponse, AuthUser, Session } from '../types'
+import { SessionController } from '@/lib/controllers/session.controller'
+import { UserController } from '../controllers/user.controller'
+import { calculateRefreshBeforeDate } from './session'
+import bcrypt from 'bcryptjs'
+
+const sessionController = new SessionController()
+const userController = new UserController()
 
 // Constants for security
 const MAX_LOGIN_ATTEMPTS = 5
