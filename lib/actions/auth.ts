@@ -6,7 +6,7 @@ import type { LoginRequest, LoginResponse } from '@/lib/types'
 import type { AuthUser } from '@/lib/types'
 import { cookies } from 'next/headers'
 
-const SESSION_COOKIE_NAME = 'session_id'
+const SESSION_COOKIE_NAME = 'sessionId'
 const COOKIE_MAX_AGE = 60 * 60 // 1 hour
 
 /**

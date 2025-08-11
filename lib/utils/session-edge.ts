@@ -3,7 +3,7 @@ import { getUserBySessionId } from './auth-edge'
 import { extendSession } from './auth-edge'
 import type { AuthUser } from '../types'
 
-const SESSION_COOKIE_NAME = 'session_id'
+const SESSION_COOKIE_NAME = 'sessionId'
 const COOKIE_MAX_AGE = 60 * 60 // 1 hour
 
 /**

@@ -8,14 +8,14 @@ export function setSessionCookie(sessionId: string) {
   // Set cookie that expires in 1 hour
   const expires = new Date()
   expires.setTime(expires.getTime() + (60 * 60 * 1000)) // 1 hour
-  document.cookie = `session_id=${sessionId}; expires=${expires.toUTCString()}; path=/; SameSite=Lax`
+  document.cookie = `sessionId=${sessionId}; expires=${expires.toUTCString()}; path=/; SameSite=Lax`
 }
 
 /**
  * Utility to clear session cookie from client side
  */
 export function clearSessionCookie() {
-  document.cookie = 'session_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax'
+  document.cookie = 'sessionId=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax'
 }
 
 /**
@@ -23,6 +23,6 @@ export function clearSessionCookie() {
  */
 export function getSessionCookie(): string | null {
   const cookies = document.cookie.split(';').map(c => c.trim())
-  const sessionCookie = cookies.find(c => c.startsWith('session_id='))
+  const sessionCookie = cookies.find(c => c.startsWith('sessionId='))
   return sessionCookie ? sessionCookie.split('=')[1] : null
 }

@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth, hasRole, isAdmin, isManagerOrAdmin, setSessionCookie, clearSessionCookie } from '@/lib/utils/session'
-import { extendSession } from '@/lib/utils/auth'
 
 // Define public routes that don't require authentication
 const publicRoutes = [
@@ -8,19 +6,6 @@ const publicRoutes = [
   '/login',
   '/register',
   '/unauthorized'
-]
-
-// Define admin-only routes
-const adminRoutes = [
-  '/admin',
-  '/api/admin',
-]
-
-// Define manager+ routes (manager and admin)
-const managerRoutes = [
-  '/api/categories',
-  '/api/products',
-  '/stock'
 ]
 
 export async function middleware(request: NextRequest) {
@@ -44,74 +29,17 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Special handling for root path - redirect unauthenticated users to welcome
-  if (pathname === '/') {
-    const { user } = await requireAuth(request)
-    console.log('🔥🔥🔥🔥🔥🔥 user: ', user)
-    if (!user) {
-      return NextResponse.redirect(new URL('/welcome', request.url))
-    }
-    // If authenticated, continue to dashboard
-    return NextResponse.next()
+  // Check if sessionId exists in cookies
+  const sessionId = request.cookies.get('sessionId')?.value
+  console.log('Session ID from cookies: ', sessionId)
+
+  // If no sessionId, redirect to welcome
+  if (!sessionId) {
+    return NextResponse.redirect(new URL('/welcome', request.url))
   }
 
-  // Check authentication for protected routes
-  const { user, response: authResponse } = await requireAuth(request)
-
-  if (!user || authResponse) {
-    // If there's an auth response (redirect), use it
-    if (authResponse) {
-      return authResponse
-    }
-    
-    // Otherwise handle API vs page routes
-    if (pathname.startsWith('/api/')) {
-      return NextResponse.json(
-        { success: false, error: 'Authentication required' },
-        { status: 401 }
-      )
-    }
-    
-    const loginUrl = new URL('/login', request.url)
-    loginUrl.searchParams.set('redirect', pathname)
-    return NextResponse.redirect(loginUrl)
-  }
-
-  // Check role-based access
-  const isAdminRoute = adminRoutes.some(route => 
-    pathname === route || pathname.startsWith(route + '/')
-  )
-  
-  const isManagerRoute = managerRoutes.some(route => 
-    pathname === route || pathname.startsWith(route + '/')
-  )
-
-  if (isAdminRoute && !isAdmin(user)) {
-    if (pathname.startsWith('/api/')) {
-      return NextResponse.json(
-        { success: false, error: 'Admin access required' },
-        { status: 403 }
-      )
-    }
-    return NextResponse.redirect(new URL('/unauthorized', request.url))
-  }
-
-  if (isManagerRoute && !isManagerOrAdmin(user)) {
-    if (pathname.startsWith('/api/')) {
-      return NextResponse.json(
-        { success: false, error: 'Manager access required' },
-        { status: 403 }
-      )
-    }
-    return NextResponse.redirect(new URL('/unauthorized', request.url))
-  }
-
-  // Create response and add user info to headers for API routes
-  const response = NextResponse.next()
-  response.headers.set('x-user-id', user.id)
-  response.headers.set('x-user-role', user.role)
-
-  return response
+  // If sessionId exists, allow access
+  return NextResponse.next()
 }
 
 export const config = {

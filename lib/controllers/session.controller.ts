@@ -13,17 +13,21 @@ export interface SessionResponse {
 }
 
 export class SessionController {
+  private sessionDatasource: SessionDatasource
+  constructor() {
+    this.sessionDatasource = new SessionDatasource()
+  }
+
   /**
    * Get session by ID with user data
    */
   async getById(sessionId: string) {
-    const sessionDatasource = new SessionDatasource()
     try {
       if (!sessionId || sessionId.trim() === '') {
         return null
       }
 
-      return await sessionDatasource.getById(sessionId.trim())
+      return await this.sessionDatasource.getById(sessionId.trim())
     } catch (error) {
       console.error('Error fetching session with user:', error)
       return null
@@ -53,7 +57,7 @@ export class SessionController {
         ipAddress,
       }
 
-      return await sessionDatasource.create(sessionData)
+      return await this.sessionDatasource.create(sessionData)
     } catch (error) {
       console.error('Error creating session:', error)
       throw error
@@ -69,7 +73,7 @@ export class SessionController {
         return null
       }
 
-      const session = await sessionDatasource.getById(sessionId.trim())
+      const session = await this.sessionDatasource.getById(sessionId.trim())
 
       // Check if session is valid (active and not expired)
       if (session && (!session.isActive || session.expiresAt < new Date())) {
@@ -123,7 +127,7 @@ export class SessionController {
         }
       }
 
-      await sessionDatasource.deactivate(sessionId.trim())
+      await this.sessionDatasource.deactivate(sessionId.trim())
 
       return {
         success: true,
@@ -150,7 +154,7 @@ export class SessionController {
         }
       }
 
-      const count = await sessionDatasource.deactivateAllUserSessions(userId.trim())
+      const count = await this.sessionDatasource.deactivateAllUserSessions(userId.trim())
 
       return {
         success: true,
@@ -170,7 +174,7 @@ export class SessionController {
    */
   async cleanupExpiredSessions(): Promise<number> {
     try {
-      return await sessionDatasource.deleteExpiredSessions()
+      return await this.sessionDatasource.deleteExpiredSessions()
     } catch (error) {
       console.error('Error cleaning up expired sessions:', error)
       return 0
@@ -188,7 +192,7 @@ export class SessionController {
         return false
       }
 
-      await sessionDatasource.updateExpiration(session.id, expiresAt, refreshBefore)
+      await this.sessionDatasource.updateExpiration(session.id, expiresAt, refreshBefore)
       return true
     } catch (error) {
       console.error('Error extending session:', error)
@@ -226,7 +230,7 @@ export class SessionController {
         }
       }
 
-      const sessions = await sessionDatasource.getAllByUserId(userId.trim(), filters)
+      const sessions = await this.sessionDatasource.getAllByUserId(userId.trim(), filters)
 
       return {
         success: true,
@@ -250,7 +254,7 @@ export class SessionController {
         return false
       }
 
-      return await sessionDatasource.exists(sessionId.trim())
+      return await this.sessionDatasource.exists(sessionId.trim())
     } catch (error) {
       console.error('Error checking session existence:', error)
       return false

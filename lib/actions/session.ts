@@ -4,7 +4,7 @@ import { cookies } from 'next/headers'
 import { getUserBySessionId, extendSession } from '@/lib/utils/auth'
 import type { AuthUser } from '@/lib/types'
 
-const SESSION_COOKIE_NAME = 'session_id'
+const SESSION_COOKIE_NAME = 'sessionId'
 
 /**
  * Validate session server action

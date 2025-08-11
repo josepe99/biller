@@ -3,7 +3,7 @@ import { getUserBySessionId } from './auth'
 import { extendSession } from './auth'
 import type { AuthUser } from '../types'
 
-const SESSION_COOKIE_NAME = 'session_id'
+const SESSION_COOKIE_NAME = 'sessionId'
 const COOKIE_MAX_AGE = 60 * 60 // 1 hour
 
 /**
