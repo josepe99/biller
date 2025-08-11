@@ -23,6 +23,7 @@ export function LoginForm() {
     try {
       // Call server action
       const result = await loginAction(email, password)
+      console.log('result after login: ', result)
 
       if (result.success && result.session && result.user) {
         // Save session ID to localStorage

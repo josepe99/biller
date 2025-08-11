@@ -1,5 +1,6 @@
-import { prismaEdge } from '../prisma-edge'
 import { SessionController } from '../controllers/session.controller'
+import { getUserBySessionIdFetch } from './session-fetch'
+import { extendSessionAction } from '@/lib/actions/auth'
 import type { AuthUser, Session } from '../types'
 
 // Constants for security
@@ -16,24 +17,12 @@ export function needsRefreshEdge(session: Session): boolean {
 
 /**
  * Extend session - Edge runtime compatible
+ * Uses server action to handle the database update
  */
 export async function extendSessionEdge(sessionId: string): Promise<boolean> {
   try {
-    const newExpiresAt = new Date(Date.now() + SESSION_DURATION)
-    const refreshBefore = new Date(Date.now() + (SESSION_DURATION * 0.8)) // Refresh at 80% of session time
-
-    await prismaEdge.session.update({
-      where: { 
-        id: sessionId
-      },
-      data: {
-        expiresAt: newExpiresAt,
-        refreshBefore,
-        updatedAt: new Date()
-      }
-    })
-
-    return true
+    const result = await extendSessionAction(sessionId)
+    return result.success || false
   } catch (error) {
     console.error('Error extending session:', error)
     return false
@@ -50,24 +39,8 @@ export function calculateRefreshBeforeDateEdge(): Date {
 
 /**
  * Get user by session ID - Edge runtime compatible
+ * Uses fetch to call API route that handles the database query
  */
 export async function getUserBySessionIdEdge(sessionId: string): Promise<AuthUser | null> {
-  try {
-    const sessionWithUser = await sessionController.getById(sessionId)
-    
-    if (!sessionWithUser) {
-      return null
-    }
-
-    // Return just the user data in AuthUser format
-    return {
-      id: sessionWithUser.user.id,
-      name: sessionWithUser.user.name || '',
-      email: sessionWithUser.user.email,
-      role: sessionWithUser.user.role
-    }
-  } catch (error) {
-    console.error('Error getting user by session ID:', error)
-    return null
-  }
+  return getUserBySessionIdFetch(sessionId)
 }

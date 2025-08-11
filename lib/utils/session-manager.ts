@@ -1,5 +1,7 @@
 'use client'
 
+import { validateSessionAction } from '@/lib/actions/auth'
+
 /**
  * Session Manager - Handles client-side session validation and refresh
  */
@@ -67,36 +69,7 @@ export class SessionManager {
       console.log(`Session validation #${this.validationCount} starting...`)
 
       try {
-        const response = await fetch('/api/auth/validate-session', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ sessionId }),
-          credentials: 'include'
-        })
-
-        // Check if response is OK and has JSON content type
-        if (!response.ok) {
-          console.error('Session validation failed with status:', response.status, response.statusText)
-          if (response.status === 401) {
-            // Unauthorized - clear session
-            this.clearSession()
-            onSessionInvalid?.()
-          }
-          return
-        }
-
-        // Check content type to ensure it's JSON
-        const contentType = response.headers.get('content-type')
-        if (!contentType || !contentType.includes('application/json')) {
-          console.error('Session validation returned non-JSON response:', contentType)
-          const text = await response.text()
-          console.error('Response body:', text.substring(0, 200) + '...')
-          return
-        }
-
-        const result = await response.json()
+        const result = await validateSessionAction(sessionId)
 
         console.log(`Session validation #${this.validationCount} completed:`, result.success ? 'SUCCESS' : 'FAILED')
 
@@ -152,16 +125,7 @@ export class SessionManager {
     }
 
     try {
-      const response = await fetch('/api/auth/validate-session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ sessionId }),
-        credentials: 'include'
-      })
-
-      const result = await response.json()
+      const result = await validateSessionAction(sessionId)
 
       if (result.success && result.user) {
         localStorage.setItem('user', JSON.stringify(result.user))

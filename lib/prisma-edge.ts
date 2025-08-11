@@ -7,7 +7,7 @@ const globalForPrismaEdge = globalThis as unknown as {
 }
 
 export const prismaEdge = globalForPrismaEdge.prismaEdge ?? new PrismaClient({
-  log: process.env.NODE_ENV === 'development' ? ['query'] : [],
+  log: [],
 })
 
 if (process.env.NODE_ENV !== 'production') {

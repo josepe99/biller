@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getUserBySessionIdEdge } from '@/lib/actions/auth'
+import { getUserBySessionIdEdge } from './auth-edge'
 import { extendSessionEdge } from './auth-edge'
 import type { AuthUser } from '../types'
 

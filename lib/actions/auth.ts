@@ -75,27 +75,105 @@ export async function logoutAction(): Promise<{ success: boolean }> {
 }
 
 /**
- * Get user by session ID - Edge runtime compatible
- * Uses the edge-compatible session controller
+ * Server action for getting session by ID
  */
-export async function getUserBySessionIdEdge(sessionId: string): Promise<AuthUser | null> {
+export async function getSessionByIdAction(sessionId: string): Promise<{ success: boolean; user?: AuthUser; error?: string }> {
   try {
+    if (!sessionId) {
+      return { success: false, error: 'Session ID is required' }
+    }
+
     const sessionController = new SessionController()
     const session = await sessionController.getById(sessionId)
-    console.log('0️⃣0️⃣0️⃣0️⃣0️⃣0️⃣: ', session)
 
     if (!session || !session.user) {
-      return null
+      return { success: false, error: 'Session not found or expired' }
     }
 
     return {
-      id: session.user.id,
-      name: session.user.name,
-      email: session.user.email,
-      role: session.user.role
+      success: true,
+      user: {
+        id: session.user.id,
+        name: session.user.name,
+        email: session.user.email,
+        role: session.user.role
+      }
     }
   } catch (error) {
-    console.error('Error getting user by session ID:', error)
-    return null
+    console.error('Error getting session:', error)
+    return { success: false, error: 'Internal server error' }
+  }
+}
+
+/**
+ * Server action for validating session
+ */
+export async function validateSessionAction(sessionId: string): Promise<{ success: boolean; user?: AuthUser; sessionExtended?: boolean; error?: string }> {
+  try {
+    if (!sessionId) {
+      return { success: false, error: 'Session ID is required' }
+    }
+
+    const sessionController = new SessionController()
+    const session = await sessionController.getById(sessionId)
+
+    if (!session || !session.user) {
+      return { success: false, error: 'Session not found or expired' }
+    }
+
+    // Check if session needs to be extended (if it expires within the next 15 minutes)
+    const now = new Date()
+    const expiresAt = new Date(session.expiresAt)
+    const timeUntilExpiry = expiresAt.getTime() - now.getTime()
+    const fifteenMinutes = 15 * 60 * 1000
+    const SESSION_DURATION = 60 * 60 * 1000 // 1 hour in milliseconds
+    
+    let sessionExtended = false
+    
+    if (timeUntilExpiry < fifteenMinutes) {
+      // Extend the session
+      const newExpiresAt = new Date(Date.now() + SESSION_DURATION)
+      const refreshBefore = new Date(Date.now() + (SESSION_DURATION * 0.8))
+      
+      await sessionController.extendSession(sessionId, newExpiresAt, refreshBefore)
+      sessionExtended = true
+    }
+
+    return {
+      success: true,
+      user: {
+        id: session.user.id,
+        name: session.user.name,
+        email: session.user.email,
+        role: session.user.role
+      },
+      sessionExtended
+    }
+  } catch (error) {
+    console.error('Error validating session:', error)
+    return { success: false, error: 'Internal server error' }
+  }
+}
+
+/**
+ * Server action for extending session
+ */
+export async function extendSessionAction(sessionId: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    if (!sessionId) {
+      return { success: false, error: 'Session ID is required' }
+    }
+
+    const SESSION_DURATION = 60 * 60 * 1000 // 1 hour in milliseconds
+    const newExpiresAt = new Date(Date.now() + SESSION_DURATION)
+    const refreshBefore = new Date(Date.now() + (SESSION_DURATION * 0.8)) // Refresh at 80% of session time
+
+    const sessionController = new SessionController()
+    await sessionController.extendSession(sessionId, newExpiresAt, refreshBefore)
+
+    return { success: true }
+  } catch (error) {
+    console.error('Error extending session:', error)
+    return { success: false, error: 'Internal server error' }
   }
 }
