@@ -1,10 +1,11 @@
 import { Product, CartItem } from '@/lib/types'
 
 export const calculateItemDetails = (product: Product, quantity: number) => {
-  const ivaRate = product.ivaType === '5%' ? 0.05 : 0.10
-  const unitPriceWithIVA = product.price * (1 + ivaRate)
-  const unitIVAAmount = product.price * ivaRate
-  const subtotal = quantity * product.price // Base subtotal without IVA
+  const ivaRate = product.iva === 5 ? 0.05 : 0.10
+  const unitPriceWithIVA = product.price // El precio almacenado ya incluye IVA
+  const unitPriceWithoutIVA = product.price / (1 + ivaRate) // Calculamos el precio sin IVA
+  const unitIVAAmount = unitPriceWithIVA - unitPriceWithoutIVA
+  const subtotal = quantity * unitPriceWithoutIVA // Base subtotal without IVA
   const lineIVAAmount = quantity * unitIVAAmount
   const lineTotalWithIVA = quantity * unitPriceWithIVA
 
@@ -21,10 +22,10 @@ export const calculateItemDetails = (product: Product, quantity: number) => {
 export const calculateCartTotals = (cart: CartItem[]) => {
   const subtotalWithoutIva = cart.reduce((sum, item) => sum + item.subtotal, 0)
   const iva5PercentAmount = cart
-    .filter(item => item.ivaType === '5%')
+    .filter(item => item.iva === 5)
     .reduce((sum, item) => sum + (item.subtotal * 0.05), 0)
   const iva10PercentAmount = cart
-    .filter(item => item.ivaType === '10%')
+    .filter(item => item.iva === 10)
     .reduce((sum, item) => sum + (item.subtotal * 0.10), 0)
   const totalIvaAmount = iva5PercentAmount + iva10PercentAmount
   const total = subtotalWithoutIva + totalIvaAmount

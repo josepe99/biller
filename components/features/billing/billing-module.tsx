@@ -527,8 +527,8 @@ export default function BillingModule() {
             {displayData.isCurrentSale ? (
               <>
                 <div className="flex justify-between">
-                  <span>Subtotal (sin IVA):</span>
-                  <span className="font-medium">{formatParaguayanCurrency(subtotalWithoutIva)}</span>
+                  <span>Subtotal:</span>
+                  <span className="font-medium">{formatParaguayanCurrency(cart.reduce((sum, item) => sum + item.lineTotalWithIVA, 0))}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Descuento:</span>

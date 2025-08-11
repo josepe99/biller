@@ -1,9 +1,9 @@
 'use client'
 
+import { PriceInput } from '@/components/ui/price-input'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { PriceInput } from '@/components/ui/price-input'
 import { Product } from '@/lib/types'
 import {
   Dialog,
@@ -71,7 +71,7 @@ export function ProductForm({
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="price">Precio (sin IVA)</Label>
+            <Label htmlFor="price">Precio (con IVA)</Label>
             <PriceInput 
               id="price"
               name="price" 

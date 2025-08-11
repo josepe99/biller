@@ -4,7 +4,7 @@ export interface Product {
   id: string
   barcode: number
   name: string
-  price: number // Precio sin IVA
+  price: number // Precio con IVA incluido
   stock: number
   category: string
   iva: number
@@ -12,8 +12,8 @@ export interface Product {
 
 export interface CartItem extends Product {
   quantity: number
-  subtotal: number // Subtotal de este item (cantidad * precio sin IVA)
-  unitPriceWithIVA: number // Precio por unidad incluyendo IVA
+  subtotal: number // Subtotal de este item (cantidad * precio sin IVA - calculado desde precio con IVA)
+  unitPriceWithIVA: number // Precio por unidad incluyendo IVA (igual al price del producto)
   unitIVAAmount: number // Monto de IVA por unidad
   lineTotalWithIVA: number // Total de esta línea incluyendo IVA
   lineIVAAmount: number // Total de IVA para esta línea

@@ -30,7 +30,7 @@ export function ProductTable({
           <TableRow>
             <TableHead>Código de barras</TableHead>
             <TableHead>Nombre</TableHead>
-            <TableHead className="text-right">Precio (sin IVA)</TableHead>
+            <TableHead className="text-right">Precio (con IVA)</TableHead>
             <TableHead className="text-center">Stock</TableHead>
             <TableHead>Categoría</TableHead>
             <TableHead>IVA</TableHead>
