@@ -2,6 +2,8 @@
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { PriceInput } from '@/components/ui/price-input'
 import { Product } from '@/lib/types'
 import {
   Dialog,
@@ -47,49 +49,70 @@ export function ProductForm({
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={onSubmit} className="grid gap-4 py-4">
-          <Input
-            name="barcode"
-            type="number"
-            placeholder="Código de Barras"
-            defaultValue={editingProduct?.barcode || ''}
-            required
-          />
-          <Input 
-            name="name" 
-            placeholder="Nombre del Producto" 
-            defaultValue={editingProduct?.name || ''} 
-            required 
-          />
-          <Input 
-            name="price" 
-            type="number" 
-            step="1" 
-            placeholder="Precio (sin IVA)" 
-            defaultValue={editingProduct?.price || ''} 
-            required 
-          />
-          <Input 
-            name="stock" 
-            type="number" 
-            placeholder="Stock" 
-            defaultValue={editingProduct?.stock || ''} 
-            required 
-          />
-          <Input 
-            name="category" 
-            placeholder="Categoría" 
-            defaultValue={editingProduct?.category || ''} 
-            required 
-          />
-          <Select name="iva" defaultValue={editingProduct?.iva?.toString() || '10'}>
-            <SelectTrigger>
-              <SelectValue placeholder="Tipo de IVA" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="5">5%</SelectItem>
-              <SelectItem value="10">10%</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="grid gap-2">
+            <Label htmlFor="barcode">Código de Barras</Label>
+            <Input
+              id="barcode"
+              name="barcode"
+              type="number"
+              placeholder="Código de Barras"
+              defaultValue={editingProduct?.barcode || ''}
+              required
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="name">Nombre del Producto</Label>
+            <Input 
+              id="name"
+              name="name" 
+              placeholder="Nombre del Producto" 
+              defaultValue={editingProduct?.name || ''} 
+              required 
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="price">Precio (sin IVA)</Label>
+            <PriceInput 
+              id="price"
+              name="price" 
+              placeholder="Ej: 100.000 (Guaraníes)" 
+              defaultValue={editingProduct?.price || ''} 
+              required 
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="stock">Stock</Label>
+            <Input 
+              id="stock"
+              name="stock" 
+              type="number" 
+              placeholder="Stock" 
+              defaultValue={editingProduct?.stock || ''} 
+              required 
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="category">Categoría</Label>
+            <Input 
+              id="category"
+              name="category" 
+              placeholder="Categoría" 
+              defaultValue={editingProduct?.category || ''} 
+              required 
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="iva">Tipo de IVA</Label>
+            <Select name="iva" defaultValue={editingProduct?.iva?.toString() || '10'}>
+              <SelectTrigger id="iva">
+                <SelectValue placeholder="Tipo de IVA" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="5">5%</SelectItem>
+                <SelectItem value="10">10%</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <DialogFooter>
             <Button 
               variant="outline" 

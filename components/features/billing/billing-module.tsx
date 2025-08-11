@@ -14,6 +14,7 @@ import { Product, CartItem } from '@/lib/types'
 import { sampleProducts } from '@/lib/data/sample-data'
 import { calculateItemDetails, calculateCartTotals } from '@/lib/utils/cart-calculations'
 import { generateInvoiceData } from '@/lib/utils/invoice-generator'
+import { formatParaguayanCurrency, formatNumberWithDots } from '@/lib/utils'
 import { useAuth } from '@/hooks/use-auth'
 import { getCustomerByRucAction } from '@/lib/actions/customers'
 import ProductSearchModal from './product-search-modal'
@@ -447,7 +448,7 @@ export default function BillingModule() {
                         {item.name}
                       </TableCell>
                       <TableCell className="text-right">
-                        Gs {item.unitPriceWithIVA ? item.unitPriceWithIVA.toFixed(0) : item.unitPrice?.toFixed(0)}
+                        {formatParaguayanCurrency(item.unitPriceWithIVA || item.unitPrice || 0)}
                       </TableCell>
                       <TableCell className="text-center">
                         <Badge variant={item.ivaType === 'IVA 10%' ? 'default' : 'secondary'} className="text-xs">
@@ -527,7 +528,7 @@ export default function BillingModule() {
               <>
                 <div className="flex justify-between">
                   <span>Subtotal (sin IVA):</span>
-                  <span className="font-medium">Gs {subtotalWithoutIva.toFixed(0)}</span>
+                  <span className="font-medium">{formatParaguayanCurrency(subtotalWithoutIva)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Descuento:</span>
@@ -535,11 +536,11 @@ export default function BillingModule() {
                 </div>
                 <div className="flex justify-between">
                   <span>IVA 5%:</span>
-                  <span className="font-medium">Gs {iva5PercentAmount.toFixed(0)}</span>
+                  <span className="font-medium">{formatParaguayanCurrency(iva5PercentAmount)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>IVA 10%:</span>
-                  <span className="font-medium">Gs {iva10PercentAmount.toFixed(0)}</span>
+                  <span className="font-medium">{formatParaguayanCurrency(iva10PercentAmount)}</span>
                 </div>
               </>
             ) : (
@@ -562,7 +563,7 @@ export default function BillingModule() {
             <Separator className="my-2" />
             <div className="flex justify-between text-2xl font-bold text-orange-500 pt-2">
               <span>Total:</span>
-              <span>Gs {displayData.total.toFixed(0)}</span>
+              <span>{formatParaguayanCurrency(displayData.total)}</span>
             </div>
           </div>
           {displayData.isCurrentSale && (
@@ -580,7 +581,7 @@ export default function BillingModule() {
                   <DialogHeader>
                     <DialogTitle>Confirmar Pago</DialogTitle>
                     <DialogDescription>
-                      ¿Estás seguro de que deseas procesar el pago por un total de **Gs {total.toFixed(0)}**?
+                      ¿Estás seguro de que deseas procesar el pago por un total de **{formatParaguayanCurrency(total)}**?
                       <br />
                       <strong>Factura: {currentInvoiceNumber}</strong>
                     </DialogDescription>

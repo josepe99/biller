@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table'
 import { Product } from '@/lib/types'
 import { sampleProducts } from '@/lib/data/sample-data'
+import { formatParaguayanCurrency } from '@/lib/utils'
 
 interface ProductSearchModalProps {
   isOpen: boolean
@@ -101,9 +102,9 @@ export default function ProductSearchModal({
                       onClick={() => handleProductSelection(product)}
                     >
                       <TableCell className="font-medium">{product.name}</TableCell>
-                      <TableCell className="text-right">Gs {product.price.toFixed(0)}</TableCell>
+                      <TableCell className="text-right">{formatParaguayanCurrency(product.price)}</TableCell>
                       <TableCell className="text-center">
-                        <Badge variant="outline">{product.ivaType}</Badge>
+                        <Badge variant="outline">IVA {product.iva}%</Badge>
                       </TableCell>
                     </TableRow>
                   ))}
