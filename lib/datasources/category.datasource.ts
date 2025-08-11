@@ -60,7 +60,7 @@ export class CategoryDatasource {
         },
       })
     } else {
-      return await prisma.category.findManyActive({
+      return await prisma.category.findMany({
         where,
         include: {
           _count: {
@@ -92,7 +92,7 @@ export class CategoryDatasource {
         },
       })
     } else {
-      return await prisma.category.findFirstActive({
+      return await prisma.category.findFirst({
         where: { id },
         include: {
           _count: {
@@ -123,8 +123,11 @@ export class CategoryDatasource {
    * Soft delete a category
    */
   async delete(id: string): Promise<Category> {
-    return await prisma.category.softDelete({
-      id,
+    return await prisma.category.update({
+      where: { id },
+      data: {
+        deletedAt: new Date(),
+      },
     })
   }
 
@@ -132,8 +135,11 @@ export class CategoryDatasource {
    * Restore a soft deleted category
    */
   async restore(id: string): Promise<Category> {
-    return await prisma.category.restore({
-      id,
+    return await prisma.category.update({
+      where: { id },
+      data: {
+        deletedAt: null,
+      },
     })
   }
 
@@ -166,7 +172,7 @@ export class CategoryDatasource {
    * Get categories with product count
    */
   async getCategoriesWithProductCount(): Promise<Array<Category & { productCount: number }>> {
-    const categories = await prisma.category.findManyActive({
+    const categories = await prisma.category.findMany({
       include: {
         _count: {
           select: {

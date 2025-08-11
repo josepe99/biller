@@ -11,7 +11,7 @@ export class ProductDatasource {
     // Transform the data to match the frontend Product type
     return products.map(product => ({
       id: product.id,
-      barcode: parseInt(product.barcode || product.sku), // Use barcode if available, fallback to sku
+      barcode: product.barcode || '', // Keep as string
       name: product.name,
       price: product.price,
       stock: product.stock,
@@ -33,7 +33,7 @@ export class ProductDatasource {
     // Transform the data to match the frontend Product type
     return {
       id: product.id,
-      barcode: parseInt(product.barcode || product.sku), // Use barcode if available, fallback to sku
+      barcode: product.barcode || '', // Keep as string
       name: product.name,
       price: product.price,
       stock: product.stock,
@@ -53,7 +53,7 @@ export class ProductDatasource {
     // Transform the data to match the frontend Product type
     return {
       id: product.id,
-      barcode: parseInt(product.barcode || product.sku), // Use barcode if available, fallback to sku
+      barcode: product.barcode || '', // Keep as string
       name: product.name,
       price: product.price,
       stock: product.stock,
@@ -74,7 +74,7 @@ export class ProductDatasource {
     // Transform the data to match the frontend Product type
     return {
       id: product.id,
-      barcode: parseInt(product.barcode || product.sku), // Use barcode if available, fallback to sku
+      barcode: product.barcode || '', // Keep as string
       name: product.name,
       price: product.price,
       stock: product.stock,

@@ -59,96 +59,62 @@ export class CategoryController {
   /**
    * Get all categories
    */
-  async getAll(filters: CategoryFilters = {}): Promise<CategoryResponse> {
+  async getAll(filters: CategoryFilters = {}): Promise<Category[]> {
     try {
-      const categories = await categoryDatasource.getAll(filters)
-
-      return {
-        success: true,
-        data: categories,
-      }
+      return categoryDatasource.getAll(filters);
     } catch (error) {
-      console.error('Error fetching categories:', error)
-      return {
-        success: false,
-        error: 'Failed to fetch categories',
-      }
+      return [];
     }
   }
 
   /**
    * Get a category by ID
    */
-  async getById(id: string, includeDeleted = false): Promise<CategoryResponse> {
+  async getById(id: string, includeDeleted = false): Promise<Category | null> {
     try {
       // Validate ID
       if (!id || id.trim() === '') {
-        return {
-          success: false,
-          error: 'Category ID is required',
-        }
+        return null;
       }
 
-      const category = await categoryDatasource.getById(id, includeDeleted)
+      const category = await categoryDatasource.getById(id, includeDeleted);
 
       if (!category) {
-        return {
-          success: false,
-          error: 'Category not found',
-        }
+        return null;
       }
 
-      return {
-        success: true,
-        data: category,
-      }
+      return category;
     } catch (error) {
-      console.error('Error fetching category:', error)
-      return {
-        success: false,
-        error: 'Failed to fetch category',
-      }
+      return null;
     }
   }
 
   /**
    * Update a category
    */
-  async update(id: string, data: UpdateCategoryData): Promise<CategoryResponse> {
+  async update(id: string, data: UpdateCategoryData): Promise<Category | null> {
     try {
       // Validate ID
       if (!id || id.trim() === '') {
-        return {
-          success: false,
-          error: 'Category ID is required',
-        }
+        return null;
       }
 
       // Check if category exists and is not deleted
       const existingCategory = await categoryDatasource.getById(id)
       if (!existingCategory) {
-        return {
-          success: false,
-          error: 'Category not found',
-        }
+        return null;
       }
 
       // Validate name if provided
       if (data.name !== undefined) {
         if (!data.name || data.name.trim() === '') {
-          return {
-            success: false,
-            error: 'Category name cannot be empty',
-          }
+          return null;
         }
 
         // Check if the new name already exists (excluding current category)
         const nameExists = await categoryDatasource.existsByName(data.name.trim(), id)
         if (nameExists) {
-          return {
-            success: false,
-            error: 'A category with this name already exists',
-          }
+          return null;
         }
       }
 
@@ -162,19 +128,9 @@ export class CategoryController {
       }
 
       // Update the category
-      const updatedCategory = await categoryDatasource.update(id, updateData)
-
-      return {
-        success: true,
-        data: updatedCategory,
-        message: 'Category updated successfully',
-      }
+      return categoryDatasource.update(id, updateData)
     } catch (error) {
-      console.error('Error updating category:', error)
-      return {
-        success: false,
-        error: 'Failed to update category',
-      }
+      return null;
     }
   }
 

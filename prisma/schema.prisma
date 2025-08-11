@@ -131,10 +131,10 @@ model Product {
   description String?
   price       Float
   cost        Float?
-  sku         String    @unique
   barcode     String?   @unique
   stock       Int       @default(0)
   categoryId  String?   @db.ObjectId
+  discount    Float     @default(0)
   isActive    Boolean   @default(true)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt

@@ -31,6 +31,7 @@ export function ProductTable({
             <TableHead>Código de barras</TableHead>
             <TableHead>Nombre</TableHead>
             <TableHead className="text-right">Precio (con IVA)</TableHead>
+            <TableHead className="text-center">Descuento</TableHead>
             <TableHead className="text-center">Stock</TableHead>
             <TableHead>Categoría</TableHead>
             <TableHead>IVA</TableHead>
@@ -40,7 +41,7 @@ export function ProductTable({
         <TableBody>
           {products.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+              <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                 No se encontraron productos.
               </TableCell>
             </TableRow>
@@ -50,6 +51,13 @@ export function ProductTable({
                 <TableCell className="font-medium">{product.barcode}</TableCell>
                 <TableCell>{product.name}</TableCell>
                 <TableCell className="text-right">Gs {product.price.toFixed(0)}</TableCell>
+                <TableCell className="text-center">
+                  {product.discount ? (
+                    <Badge variant="secondary">{product.discount}%</Badge>
+                  ) : (
+                    <span className="text-muted-foreground">-</span>
+                  )}
+                </TableCell>
                 <TableCell className="text-center">
                   <Badge variant={product.stock <= 5 ? 'destructive' : 'secondary'}>
                     {product.stock}

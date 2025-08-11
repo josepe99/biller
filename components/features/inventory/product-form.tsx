@@ -1,9 +1,12 @@
 'use client'
 
+import { getCategoriesAction } from '@/lib/actions/categories'
 import { PriceInput } from '@/components/ui/price-input'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { useEffect, useState } from 'react'
+import { Category } from '@prisma/client'
 import { Product } from '@/lib/types'
 import {
   Dialog,
@@ -34,6 +37,27 @@ export function ProductForm({
   editingProduct,
   onSubmit
 }: ProductFormProps) {
+  const [categories, setCategories] = useState<Category[]>([])
+  const [isLoadingCategories, setIsLoadingCategories] = useState(false)
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      setIsLoadingCategories(true)
+      try {
+        const categoriesData = await getCategoriesAction()
+        setCategories(categoriesData)
+      } catch (error) {
+        console.error('Error fetching categories:', error)
+        setCategories([])
+      } finally {
+        setIsLoadingCategories(false)
+      }
+    }
+
+    if (isOpen) {
+      fetchCategories()
+    }
+  }, [isOpen])
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -54,7 +78,7 @@ export function ProductForm({
             <Input
               id="barcode"
               name="barcode"
-              type="number"
+              type="text"
               placeholder="Código de Barras"
               defaultValue={editingProduct?.barcode || ''}
               required
@@ -81,6 +105,19 @@ export function ProductForm({
             />
           </div>
           <div className="grid gap-2">
+            <Label htmlFor="discount">Descuento (%) - Opcional</Label>
+            <Input 
+              id="discount"
+              name="discount" 
+              type="number" 
+              min="0"
+              max="100"
+              step="0.01"
+              placeholder="Ej: 10" 
+              defaultValue={editingProduct?.discount || ''} 
+            />
+          </div>
+          <div className="grid gap-2">
             <Label htmlFor="stock">Stock</Label>
             <Input 
               id="stock"
@@ -93,13 +130,22 @@ export function ProductForm({
           </div>
           <div className="grid gap-2">
             <Label htmlFor="category">Categoría</Label>
-            <Input 
-              id="category"
+            <Select 
               name="category" 
-              placeholder="Categoría" 
-              defaultValue={editingProduct?.category || ''} 
-              required 
-            />
+              defaultValue={editingProduct?.category || ''}
+              disabled={isLoadingCategories}
+            >
+              <SelectTrigger id="category">
+                <SelectValue placeholder={isLoadingCategories ? "Cargando categorías..." : "Selecciona una categoría"} />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((category) => (
+                  <SelectItem key={category.id} value={category.name}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="grid gap-2">
             <Label htmlFor="iva">Tipo de IVA</Label>

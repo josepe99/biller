@@ -1,14 +1,15 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
-import { Product } from '@/lib/types'
+import { Product, Category } from '@/lib/types'
 import { Save } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   addProductAction,
   editProductAction,
   removeProductAction
 } from '@/lib/actions/products'
+import { getCategoriesAction } from '@/lib/actions/categories'
 import {
   Card,
   CardContent,
@@ -31,6 +32,20 @@ export default function InventoryModule({ initialProducts }: { initialProducts: 
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [productToDelete, setProductToDelete] = useState<Product | null>(null)
+  const [categoriesData, setCategoriesData] = useState<Category[]>([])
+
+  // Load categories on component mount
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const categories = await getCategoriesAction()
+        setCategoriesData(categories)
+      } catch (error) {
+        console.error('Error loading categories:', error)
+      }
+    }
+    loadCategories()
+  }, [])
 
   const categories = Array.from(new Set(initialProducts.map(p => typeof p.category === 'string' ? p.category : 'Sin categoría')))
 
@@ -50,28 +65,31 @@ export default function InventoryModule({ initialProducts }: { initialProducts: 
     
     const barcodeValue = formData.get('barcode') as string
     const ivaValue = formData.get('iva') as string
+    const discountValue = formData.get('discount') as string
+    const categoryName = formData.get('category') as string
+    
+    // Find the categoryId based on the category name
+    const selectedCategory = categoriesData.find(cat => cat.name === categoryName)
+    const categoryId = selectedCategory?.id || null
     
     const productData = {
-      barcode: parseInt(barcodeValue),
+      barcode: barcodeValue,
       name: formData.get('name') as string,
       price: parseFloat(formData.get('price') as string),
       stock: parseInt(formData.get('stock') as string),
-      category: formData.get('category') as string,
+      categoryId: categoryId, // Use categoryId instead of category
       iva: parseInt(ivaValue),
+      discount: discountValue ? parseFloat(discountValue) : undefined,
     }
 
     try {
       if (editingProduct) {
         // Update existing product using editProductAction
-        const result = await editProductAction(editingProduct.id, productData)
-        if (result.success) {
-          const updatedProduct: Product = {
-            ...productData,
-            id: editingProduct.id // Preserve the original database-generated ID
-          }
+        const updatedProduct = await editProductAction(editingProduct.id, productData)
+        if (updatedProduct) {
           setProducts(prev => prev.map(p => (p.id === editingProduct.id ? updatedProduct : p)))
         } else {
-          alert(`Error al actualizar producto: ${result.error || 'Error desconocido'}`)
+          alert('Error al actualizar producto')
           return
         }
       } else {
@@ -81,11 +99,11 @@ export default function InventoryModule({ initialProducts }: { initialProducts: 
           return
         }
         // Create new product using addProductAction
-        const result = await addProductAction(productData)
-        if (result.success && result.product) {
-          setProducts(prev => [...prev, result.product])
+        const newProduct = await addProductAction(productData)
+        if (newProduct) {
+          setProducts(prev => [...prev, newProduct])
         } else {
-          alert(`Error al crear producto: ${result.error || 'Error desconocido'}`)
+          alert('Error al crear producto')
           return
         }
       }

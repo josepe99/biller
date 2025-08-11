@@ -1,3 +1,4 @@
+"use server"
 
 import { ProductController } from '@/lib/controllers/product.controller';
 
@@ -11,7 +12,7 @@ export async function getProductsAction() {
   }
 }
 
-export function getProductByIdAction(id: string) {
+export async function getProductByIdAction(id: string) {
   try {
     return productController.getProductById(id);
   } catch (error) {
@@ -22,20 +23,20 @@ export function getProductByIdAction(id: string) {
 export async function addProductAction(data: any) {
   try {
     const product = await productController.createProduct(data);
-    return { success: true, product };
+    return product;
   } catch (error) {
     console.error('Error creating product:', error);
-    return { success: false, error: 'Failed to create product' };
+    return null;
   }
 }
 
 export async function editProductAction(id: string, data: any) {
   try {
     const product = await productController.updateProduct(id, data);
-    return { success: true, product };
+    return product;
   } catch (error) {
     console.error('Error updating product:', error);
-    return { success: false, error: 'Failed to update product' };
+    return null;
   }
 }
 
