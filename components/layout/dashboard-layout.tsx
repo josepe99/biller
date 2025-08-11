@@ -10,6 +10,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { sampleProducts } from '@/lib/data/sample-data'
 import { SessionValidator } from '@/components/auth/session-validator'
+import { LogoutButton } from '@/components/auth/logout-button'
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -86,6 +87,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
           <div className="flex items-center space-x-4 text-gray-600">
             <Clock showDate={true} />
+            <LogoutButton 
+              variant="outline" 
+              size="sm" 
+              className="border-orange-200 text-orange-600 hover:bg-orange-50"
+            >
+              Cerrar Sesión
+            </LogoutButton>
           </div>
         </header>
 
