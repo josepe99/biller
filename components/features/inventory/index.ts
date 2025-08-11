@@ -1,0 +1,5 @@
+export { ProductFilters } from './product-filters'
+export { ProductForm } from './product-form'
+export { ProductTable } from './product-table'
+export { ProductActions } from './product-actions'
+export { DeleteConfirmDialog } from './delete-confirm-dialog'
