@@ -1,11 +1,17 @@
 /**
- * Session Datasource - Server Runtime
+ * Session Datasource - Edge Runtime Compatible
  * 
- * This file uses Prisma and can be imported in both server and edge runtime contexts
+ * This is the edge-compatible version of SessionDatasource for use in:
+ * - Middleware
+ * - Edge API routes 
+ * - Other Edge Runtime contexts
+ * 
+ * For server-side usage with full Prisma features, use:
+ * @/lib/datasources/session.datasource instead
  */
 
 import { Session, Prisma } from '@prisma/client'
-import { prisma } from '@/lib/prisma'
+import { prismaEdge } from '@/lib/prisma-edge'
 
 export interface CreateSessionData {
   userId: string
@@ -41,56 +47,28 @@ export interface SessionSelectFields {
   updatedAt?: boolean
 }
 
-export class SessionDatasource {
+export class SessionEdgeDatasource {
   /**
    * Create a new session
    */
   async create(data: CreateSessionData): Promise<Session> {
-    return await prisma.session.create({
+    return await prismaEdge.session.create({
       data: {
         userId: data.userId,
         expiresAt: data.expiresAt,
         refreshBefore: data.refreshBefore,
         userAgent: data.userAgent,
         ipAddress: data.ipAddress,
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            role: true,
-            loginAttempts: true,
-            lastLoginAt: true,
-            createdAt: true,
-            updatedAt: true,
-          }
-        }
       }
     })
   }
 
   /**
-   * Get session by ID with user data
+   * Get session by ID (simplified for edge runtime)
    */
   async getById(sessionId: string): Promise<Session | null> {
-    return await prisma.session.findUnique({
-      where: { id: sessionId },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            role: true,
-            loginAttempts: true,
-            lastLoginAt: true,
-            createdAt: true,
-            updatedAt: true,
-          }
-        }
-      }
+    return await prismaEdge.session.findUnique({
+      where: { id: sessionId }
     })
   }
 
@@ -98,7 +76,7 @@ export class SessionDatasource {
    * Get session by ID with custom select
    */
   async getByIdWithSelect(sessionId: string, select?: SessionSelectFields): Promise<Session | null> {
-    return await prisma.session.findUnique({
+    return await prismaEdge.session.findUnique({
       where: { id: sessionId },
       select: select || undefined,
     })
@@ -116,7 +94,7 @@ export class SessionDatasource {
     if (data.userAgent) updateData.userAgent = data.userAgent
     if (data.ipAddress) updateData.ipAddress = data.ipAddress
 
-    return await prisma.session.update({
+    return await prismaEdge.session.update({
       where: { id: sessionId },
       data: updateData,
     })
@@ -126,7 +104,7 @@ export class SessionDatasource {
    * Deactivate session by ID
    */
   async deactivate(sessionId: string): Promise<Session> {
-    return await prisma.session.update({
+    return await prismaEdge.session.update({
       where: { id: sessionId },
       data: { isActive: false }
     })
@@ -136,7 +114,7 @@ export class SessionDatasource {
    * Deactivate sessions by IDs
    */
   async deactivateMany(sessionIds: string[]): Promise<number> {
-    const result = await prisma.session.updateMany({
+    const result = await prismaEdge.session.updateMany({
       where: { id: { in: sessionIds } },
       data: { isActive: false }
     })
@@ -147,7 +125,7 @@ export class SessionDatasource {
    * Deactivate all sessions for a user
    */
   async deactivateAllUserSessions(userId: string): Promise<number> {
-    const result = await prisma.session.updateMany({
+    const result = await prismaEdge.session.updateMany({
       where: { userId },
       data: { isActive: false }
     })
@@ -155,22 +133,7 @@ export class SessionDatasource {
   }
 
   /**
-   * Delete expired and inactive sessions
-   */
-  async deleteExpiredSessions(): Promise<number> {
-    const result = await prisma.session.deleteMany({
-      where: {
-        OR: [
-          { expiresAt: { lt: new Date() } },
-          { isActive: false }
-        ]
-      }
-    })
-    return result.count
-  }
-
-  /**
-   * Get all sessions for a user
+   * Get all sessions for a user (simplified for edge runtime)
    */
   async getAllByUserId(userId: string, filters: SessionFilters = {}): Promise<Session[]> {
     const { isActive, expired } = filters
@@ -188,7 +151,7 @@ export class SessionDatasource {
       }
     }
 
-    return await prisma.session.findMany({
+    return await prismaEdge.session.findMany({
       where,
       orderBy: { createdAt: 'desc' },
     })
@@ -198,7 +161,7 @@ export class SessionDatasource {
    * Check if session exists and is active
    */
   async exists(sessionId: string): Promise<boolean> {
-    const session = await prisma.session.findUnique({
+    const session = await prismaEdge.session.findUnique({
       where: { id: sessionId },
       select: { id: true, isActive: true, expiresAt: true }
     })
@@ -210,12 +173,27 @@ export class SessionDatasource {
    * Update session expiration
    */
   async updateExpiration(sessionId: string, expiresAt: Date, refreshBefore: Date): Promise<Session> {
-    return await prisma.session.update({
+    return await prismaEdge.session.update({
       where: { id: sessionId },
       data: { 
         expiresAt,
         refreshBefore
       }
     })
+  }
+
+  /**
+   * Delete expired and inactive sessions (edge-optimized)
+   */
+  async deleteExpiredSessions(): Promise<number> {
+    const result = await prismaEdge.session.deleteMany({
+      where: {
+        OR: [
+          { expiresAt: { lt: new Date() } },
+          { isActive: false }
+        ]
+      }
+    })
+    return result.count
   }
 }

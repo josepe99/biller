@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getUserBySessionIdEdge } from './auth-edge'
-import { extendSessionEdge } from './auth-edge'
+import { getUserBySessionId } from './auth-edge'
+import { extendSession } from './auth-edge'
 import type { AuthUser } from '../types'
 
 const SESSION_COOKIE_NAME = 'session_id'
@@ -34,9 +34,9 @@ export function getSessionIdFromRequest(request: NextRequest): string | null {
 }
 
 /**
- * Require authentication middleware - Edge runtime compatible
+ * Require authentication middleware
  */
-export async function requireAuthEdge(request: NextRequest): Promise<{
+export async function requireAuth(request: NextRequest): Promise<{
   user: AuthUser | null
   response: NextResponse | null
 }> {
@@ -49,7 +49,7 @@ export async function requireAuthEdge(request: NextRequest): Promise<{
     }
   }
 
-  const user = await getUserBySessionIdEdge(sessionId)
+  const user = await getUserBySessionId(sessionId)
   
   if (!user) {
     const response = NextResponse.redirect(new URL('/login', request.url))
@@ -62,7 +62,7 @@ export async function requireAuthEdge(request: NextRequest): Promise<{
 
   // Extend session if needed
   try {
-    await extendSessionEdge(sessionId)
+    await extendSession(sessionId)
   } catch (error) {
     console.error('Failed to extend session:', error)
     // Continue without extending - session will expire naturally
@@ -75,22 +75,22 @@ export async function requireAuthEdge(request: NextRequest): Promise<{
 }
 
 /**
- * Check if user has required role - Edge runtime compatible
+ * Check if user has required role
  */
-export function hasRoleEdge(user: AuthUser, requiredRoles: string[]): boolean {
+export function hasRole(user: AuthUser, requiredRoles: string[]): boolean {
   return requiredRoles.includes(user.role)
 }
 
 /**
- * Check if user is admin - Edge runtime compatible
+ * Check if user is admin
  */
-export function isAdminEdge(user: AuthUser): boolean {
+export function isAdmin(user: AuthUser): boolean {
   return user.role === 'ADMIN'
 }
 
 /**
- * Check if user is manager or admin - Edge runtime compatible
+ * Check if user is manager or admin
  */
-export function isManagerOrAdminEdge(user: AuthUser): boolean {
+export function isManagerOrAdmin(user: AuthUser): boolean {
   return user.role === 'MANAGER' || user.role === 'ADMIN'
 }

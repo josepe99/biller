@@ -1,7 +1,7 @@
 'use server'
 
 import { cookies } from 'next/headers'
-import { getUserBySessionIdEdge, extendSessionEdge } from '@/lib/utils/auth-edge'
+import { getUserBySessionId, extendSession } from '@/lib/utils/auth'
 import type { AuthUser } from '@/lib/types'
 
 const SESSION_COOKIE_NAME = 'session_id'
@@ -28,7 +28,7 @@ export async function validateSessionAction(sessionId?: string): Promise<{
     }
 
     // Validate session against database
-    const user = await getUserBySessionIdEdge(activeSessionId)
+    const user = await getUserBySessionId(activeSessionId)
     
     if (!user) {
       // Clear invalid cookie if it exists
@@ -39,7 +39,7 @@ export async function validateSessionAction(sessionId?: string): Promise<{
     }
 
     // Try to extend session
-    const extended = await extendSessionEdge(activeSessionId)
+    const extended = await extendSession(activeSessionId)
     
     return {
       success: true,
@@ -61,13 +61,13 @@ export async function refreshSessionAction(sessionId: string): Promise<{
   error?: string
 }> {
   try {
-    const user = await getUserBySessionIdEdge(sessionId)
+    const user = await getUserBySessionId(sessionId)
     
     if (!user) {
       return { success: false, error: 'Invalid session' }
     }
 
-    const extended = await extendSessionEdge(sessionId)
+    const extended = await extendSession(sessionId)
     
     if (!extended) {
       return { success: false, error: 'Failed to refresh session' }

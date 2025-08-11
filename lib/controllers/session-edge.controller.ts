@@ -1,9 +1,21 @@
-import { Session, UserRole } from '@prisma/client'
+/**
+ * Session Controller - Edge Runtime Compatible
+ * 
+ * This is the edge-compatible version of SessionController for use in:
+ * - Middleware
+ * - Edge API routes 
+ * - Other Edge Runtime contexts
+ * 
+ * For server-side usage with full features, use:
+ * @/lib/controllers/session.controller instead
+ */
+
+import { Session } from '@prisma/client'
 import { 
-  SessionDatasource, 
+  SessionEdgeDatasource, 
   CreateSessionData, 
   SessionFilters,
-} from '@/lib/datasources/session.datasource'
+} from '@/lib/datasources/session-edge.datasource'
 
 export interface SessionResponse {
   success: boolean
@@ -12,20 +24,21 @@ export interface SessionResponse {
   error?: string
 }
 
-export class SessionController {
+export class SessionEdgeController {
+  private sessionDatasource = new SessionEdgeDatasource()
+
   /**
-   * Get session by ID with user data
+   * Get session by ID
    */
   async getById(sessionId: string) {
-    const sessionDatasource = new SessionDatasource()
     try {
       if (!sessionId || sessionId.trim() === '') {
         return null
       }
 
-      return await sessionDatasource.getById(sessionId.trim())
+      return await this.sessionDatasource.getById(sessionId.trim())
     } catch (error) {
-      console.error('Error fetching session with user:', error)
+      console.error('Error fetching session:', error)
       return null
     }
   }
@@ -53,7 +66,7 @@ export class SessionController {
         ipAddress,
       }
 
-      return await sessionDatasource.create(sessionData)
+      return await this.sessionDatasource.create(sessionData)
     } catch (error) {
       console.error('Error creating session:', error)
       throw error
@@ -61,7 +74,7 @@ export class SessionController {
   }
 
   /**
-   * Get session by ID with user data
+   * Get session by ID and validate it
    */
   async getSessionById(sessionId: string): Promise<Session | null> {
     try {
@@ -69,7 +82,7 @@ export class SessionController {
         return null
       }
 
-      const session = await sessionDatasource.getById(sessionId.trim())
+      const session = await this.sessionDatasource.getById(sessionId.trim())
 
       // Check if session is valid (active and not expired)
       if (session && (!session.isActive || session.expiresAt < new Date())) {
@@ -123,7 +136,7 @@ export class SessionController {
         }
       }
 
-      await sessionDatasource.deactivate(sessionId.trim())
+      await this.sessionDatasource.deactivate(sessionId.trim())
 
       return {
         success: true,
@@ -150,7 +163,7 @@ export class SessionController {
         }
       }
 
-      const count = await sessionDatasource.deactivateAllUserSessions(userId.trim())
+      const count = await this.sessionDatasource.deactivateAllUserSessions(userId.trim())
 
       return {
         success: true,
@@ -166,18 +179,6 @@ export class SessionController {
   }
 
   /**
-   * Clean up expired sessions
-   */
-  async cleanupExpiredSessions(): Promise<number> {
-    try {
-      return await sessionDatasource.deleteExpiredSessions()
-    } catch (error) {
-      console.error('Error cleaning up expired sessions:', error)
-      return 0
-    }
-  }
-
-  /**
    * Extend session expiration
    */
   async extendSession(sessionId: string, expiresAt: Date, refreshBefore: Date): Promise<boolean> {
@@ -188,7 +189,7 @@ export class SessionController {
         return false
       }
 
-      await sessionDatasource.updateExpiration(session.id, expiresAt, refreshBefore)
+      await this.sessionDatasource.updateExpiration(session.id, expiresAt, refreshBefore)
       return true
     } catch (error) {
       console.error('Error extending session:', error)
@@ -215,7 +216,23 @@ export class SessionController {
   }
 
   /**
-   * Get all sessions for a user
+   * Check if session exists and is valid
+   */
+  async sessionExists(sessionId: string): Promise<boolean> {
+    try {
+      if (!sessionId || sessionId.trim() === '') {
+        return false
+      }
+
+      return await this.sessionDatasource.exists(sessionId.trim())
+    } catch (error) {
+      console.error('Error checking session existence:', error)
+      return false
+    }
+  }
+
+  /**
+   * Get all sessions for a user (simplified for edge runtime)
    */
   async getUserSessions(userId: string, filters: SessionFilters = {}): Promise<SessionResponse> {
     try {
@@ -226,7 +243,7 @@ export class SessionController {
         }
       }
 
-      const sessions = await sessionDatasource.getAllByUserId(userId.trim(), filters)
+      const sessions = await this.sessionDatasource.getAllByUserId(userId.trim(), filters)
 
       return {
         success: true,
@@ -238,22 +255,6 @@ export class SessionController {
         success: false,
         error: 'Failed to fetch user sessions',
       }
-    }
-  }
-
-  /**
-   * Check if session exists and is valid
-   */
-  async sessionExists(sessionId: string): Promise<boolean> {
-    try {
-      if (!sessionId || sessionId.trim() === '') {
-        return false
-      }
-
-      return await sessionDatasource.exists(sessionId.trim())
-    } catch (error) {
-      console.error('Error checking session existence:', error)
-      return false
     }
   }
 }

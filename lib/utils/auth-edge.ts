@@ -8,18 +8,18 @@ const SESSION_DURATION = 60 * 60 * 1000 // 1 hour in milliseconds
 const sessionController = new SessionController()
 
 /**
- * Check if session needs refresh - Edge runtime compatible
+ * Check if session needs refresh
  */
-export function needsRefreshEdge(session: Session): boolean {
+export function needsRefresh(session: Session): boolean {
   const now = new Date()
   return session.refreshBefore && now >= session.refreshBefore
 }
 
 /**
- * Extend session - Edge runtime compatible
+ * Extend session
  * Uses server action to handle the database update
  */
-export async function extendSessionEdge(sessionId: string): Promise<boolean> {
+export async function extendSession(sessionId: string): Promise<boolean> {
   try {
     const result = await extendSessionAction(sessionId)
     return result.success || false
@@ -32,15 +32,15 @@ export async function extendSessionEdge(sessionId: string): Promise<boolean> {
 /**
  * Calculate refresh before date (80% of session duration)
  */
-export function calculateRefreshBeforeDateEdge(): Date {
+export function calculateRefreshBeforeDate(): Date {
   const now = new Date()
   return new Date(now.getTime() + (SESSION_DURATION * 0.8))
 }
 
 /**
- * Get user by session ID - Edge runtime compatible
+ * Get user by session ID
  * Uses fetch to call API route that handles the database query
  */
-export async function getUserBySessionIdEdge(sessionId: string): Promise<AuthUser | null> {
+export async function getUserBySessionId(sessionId: string): Promise<AuthUser | null> {
   return getUserBySessionIdFetch(sessionId)
 }

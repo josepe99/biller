@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAuthEdge, hasRoleEdge, isAdminEdge, isManagerOrAdminEdge, setSessionCookie, clearSessionCookie } from '@/lib/utils/session-edge'
-import { extendSessionEdge } from '@/lib/utils/auth-edge'
+import { requireAuth, hasRole, isAdmin, isManagerOrAdmin, setSessionCookie, clearSessionCookie } from '@/lib/utils/session'
+import { extendSession } from '@/lib/utils/auth'
 
 // Define public routes that don't require authentication
 const publicRoutes = [
@@ -46,7 +46,7 @@ export async function middleware(request: NextRequest) {
 
   // Special handling for root path - redirect unauthenticated users to welcome
   if (pathname === '/') {
-    const { user } = await requireAuthEdge(request)
+    const { user } = await requireAuth(request)
     console.log('🔥🔥🔥🔥🔥🔥 user: ', user)
     if (!user) {
       return NextResponse.redirect(new URL('/welcome', request.url))
@@ -56,7 +56,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Check authentication for protected routes
-  const { user, response: authResponse } = await requireAuthEdge(request)
+  const { user, response: authResponse } = await requireAuth(request)
 
   if (!user || authResponse) {
     // If there's an auth response (redirect), use it
@@ -86,7 +86,7 @@ export async function middleware(request: NextRequest) {
     pathname === route || pathname.startsWith(route + '/')
   )
 
-  if (isAdminRoute && !isAdminEdge(user)) {
+  if (isAdminRoute && !isAdmin(user)) {
     if (pathname.startsWith('/api/')) {
       return NextResponse.json(
         { success: false, error: 'Admin access required' },
@@ -96,7 +96,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/unauthorized', request.url))
   }
 
-  if (isManagerRoute && !isManagerOrAdminEdge(user)) {
+  if (isManagerRoute && !isManagerOrAdmin(user)) {
     if (pathname.startsWith('/api/')) {
       return NextResponse.json(
         { success: false, error: 'Manager access required' },
