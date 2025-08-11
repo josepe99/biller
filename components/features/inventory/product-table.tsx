@@ -15,7 +15,7 @@ import { ProductActions } from './product-actions'
 interface ProductTableProps {
   products: Product[]
   onEditProduct: (product: Product) => void
-  onDeleteProduct: (barcode: number) => void
+  onDeleteProduct: (productId: string) => void
 }
 
 export function ProductTable({ 

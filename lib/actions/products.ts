@@ -4,21 +4,47 @@ import { ProductController } from '@/lib/controllers/product.controller';
 const productController = new ProductController();
 
 export async function getProductsAction() {
-  return productController.getAllProducts();
+  try {
+    return productController.getAllProducts();
+  } catch (error) {
+    return [];
+  }
 }
 
-export async function getProductByIdAction(id: string) {
-  return productController.getProductById(id);
+export function getProductByIdAction(id: string) {
+  try {
+    return productController.getProductById(id);
+  } catch (error) {
+    return null;
+  }
 }
 
 export async function addProductAction(data: any) {
-  return productController.createProduct(data);
+  try {
+    const product = await productController.createProduct(data);
+    return { success: true, product };
+  } catch (error) {
+    console.error('Error creating product:', error);
+    return { success: false, error: 'Failed to create product' };
+  }
 }
 
 export async function editProductAction(id: string, data: any) {
-  return productController.updateProduct(id, data);
+  try {
+    const product = await productController.updateProduct(id, data);
+    return { success: true, product };
+  } catch (error) {
+    console.error('Error updating product:', error);
+    return { success: false, error: 'Failed to update product' };
+  }
 }
 
 export async function removeProductAction(id: string) {
-  return productController.deleteProduct(id);
+  try {
+    await productController.deleteProduct(id);
+    return { success: true };
+  } catch (error) {
+    console.error('Error deleting product:', error);
+    return { success: false, error: 'Failed to delete product' };
+  }
 }

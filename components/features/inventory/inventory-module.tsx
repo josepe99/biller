@@ -1,9 +1,14 @@
 'use client'
 
-import { Save } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Product } from '@/lib/types'
+import { Save } from 'lucide-react'
 import { useState } from 'react'
+import {
+  addProductAction,
+  editProductAction,
+  removeProductAction
+} from '@/lib/actions/products'
 import {
   Card,
   CardContent,
@@ -39,16 +44,15 @@ export default function InventoryModule({ initialProducts }: { initialProducts: 
     return matchesSearch && matchesCategory && matchesStock
   })
 
-  const handleAddEditProduct = (e: React.FormEvent) => {
+  const handleAddEditProduct = async (e: React.FormEvent) => {
     e.preventDefault()
     const formData = new FormData(e.target as HTMLFormElement)
     
     const barcodeValue = formData.get('barcode') as string
     const ivaValue = formData.get('iva') as string
     
-    const newProduct: Product = {
-      id: barcodeValue, // Use barcode as id
-      barcode: parseInt(barcodeValue), // Convert to number
+    const productData = {
+      barcode: parseInt(barcodeValue),
       name: formData.get('name') as string,
       price: parseFloat(formData.get('price') as string),
       stock: parseInt(formData.get('stock') as string),
@@ -56,25 +60,58 @@ export default function InventoryModule({ initialProducts }: { initialProducts: 
       iva: parseInt(ivaValue),
     }
 
-    if (editingProduct) {
-      setProducts(prev => prev.map(p => (p.barcode === newProduct.barcode ? newProduct : p)))
-    } else {
-      // Check for duplicate barcode when adding new product
-      if (products.some(p => p.barcode === newProduct.barcode)) {
-        alert('Error: Ya existe un producto con este código de barras.')
-        return
+    try {
+      if (editingProduct) {
+        // Update existing product using editProductAction
+        const result = await editProductAction(editingProduct.id, productData)
+        if (result.success) {
+          const updatedProduct: Product = {
+            ...productData,
+            id: editingProduct.id // Preserve the original database-generated ID
+          }
+          setProducts(prev => prev.map(p => (p.id === editingProduct.id ? updatedProduct : p)))
+        } else {
+          alert(`Error al actualizar producto: ${result.error || 'Error desconocido'}`)
+          return
+        }
+      } else {
+        // Check for duplicate barcode before creating
+        if (products.some(p => p.barcode === productData.barcode)) {
+          alert('Error: Ya existe un producto con este código de barras.')
+          return
+        }
+        // Create new product using addProductAction
+        const result = await addProductAction(productData)
+        if (result.success && result.product) {
+          setProducts(prev => [...prev, result.product])
+        } else {
+          alert(`Error al crear producto: ${result.error || 'Error desconocido'}`)
+          return
+        }
       }
-      setProducts(prev => [...prev, newProduct])
+      setIsProductModalOpen(false)
+      setEditingProduct(null)
+    } catch (error) {
+      console.error('Error saving product:', error)
+      alert('Error al guardar el producto. Por favor, intenta de nuevo.')
     }
-    setIsProductModalOpen(false)
-    setEditingProduct(null)
   }
 
-  const handleDeleteProduct = () => {
+  const handleDeleteProduct = async () => {
     if (productToDelete) {
-      setProducts(prev => prev.filter(p => p.barcode !== productToDelete.barcode))
-      setIsDeleteModalOpen(false)
-      setProductToDelete(null)
+      try {
+        const result = await removeProductAction(productToDelete.id)
+        if (result.success) {
+          setProducts(prev => prev.filter(p => p.id !== productToDelete.id))
+          setIsDeleteModalOpen(false)
+          setProductToDelete(null)
+        } else {
+          alert(`Error al eliminar producto: ${result.error || 'Error desconocido'}`)
+        }
+      } catch (error) {
+        console.error('Error deleting product:', error)
+        alert('Error al eliminar el producto. Por favor, intenta de nuevo.')
+      }
     }
   }
 
@@ -83,8 +120,8 @@ export default function InventoryModule({ initialProducts }: { initialProducts: 
     setIsProductModalOpen(true)
   }
 
-  const handleDeleteClick = (barcode: number) => {
-    const product = products.find(p => p.barcode === barcode)
+  const handleDeleteClick = (productId: string) => {
+    const product = products.find(p => p.id === productId)
     if (product) {
       setProductToDelete(product)
       setIsDeleteModalOpen(true)

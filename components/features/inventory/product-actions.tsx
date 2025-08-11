@@ -7,7 +7,7 @@ import { Product } from '@/lib/types'
 interface ProductActionsProps {
   product: Product
   onEdit: (product: Product) => void
-  onDelete: (barcode: number) => void
+  onDelete: (productId: string) => void
 }
 
 export function ProductActions({ product, onEdit, onDelete }: ProductActionsProps) {
@@ -23,7 +23,7 @@ export function ProductActions({ product, onEdit, onDelete }: ProductActionsProp
       <Button
         variant="ghost"
         size="icon"
-        onClick={() => onDelete(product.barcode)}
+        onClick={() => onDelete(product.id)}
       >
         <Trash2 className="h-4 w-4 text-red-500" />
       </Button>
