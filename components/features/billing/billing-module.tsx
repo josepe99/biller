@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Search, Trash2, DollarSign, X, History, ArrowLeft, User, Receipt } from 'lucide-react'
+import { Search, Trash2, DollarSign, X, History, ArrowLeft, ArrowRight, User, Receipt } from 'lucide-react'
 import { Product, CartItem } from '@/lib/types'
 import { sampleProducts } from '@/lib/data/sample-data'
 import { calculateItemDetails, calculateCartTotals } from '@/lib/utils/cart-calculations'
@@ -326,38 +326,8 @@ export default function BillingModule() {
           <div className="flex justify-between items-center">
             <CardTitle className="text-orange-500">Facturación</CardTitle>
             <div className="flex items-center gap-4">
-              {currentHistoryIndex > 0 && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={showNextInvoice}
-                  className="text-blue-600 hover:text-blue-700"
-                >
-                  <ArrowLeft className="h-4 w-4 mr-1" />
-                  Siguiente
-                </Button>
-              )}
-              {(currentHistoryIndex === 0 || currentHistoryIndex === -1) && invoiceHistory.length > 0 && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={currentHistoryIndex === -1 ? showPreviousInvoice : showNextInvoice}
-                  className="text-blue-600 hover:text-blue-700"
-                >
-                  {currentHistoryIndex === -1 ? (
-                    <>
-                      <ArrowLeft className="h-4 w-4 mr-1" />
-                      Anterior
-                    </>
-                  ) : (
-                    <>
-                      Actual
-                      <ArrowLeft className="h-4 w-4 ml-1 rotate-180" />
-                    </>
-                  )}
-                </Button>
-              )}
-              {currentHistoryIndex < invoiceHistory.length - 1 && currentHistoryIndex !== -1 && (
+              {/* Botón Anterior - siempre visible si hay historial y no estamos en la factura más antigua */}
+              {invoiceHistory.length > 0 && currentHistoryIndex < invoiceHistory.length - 1 && (
                 <Button
                   variant="outline"
                   size="sm"
@@ -368,6 +338,32 @@ export default function BillingModule() {
                   Anterior
                 </Button>
               )}
+              
+              {/* Botón Actual - siempre visible si hay historial y no estamos viendo la venta actual */}
+              {invoiceHistory.length > 0 && currentHistoryIndex !== -1 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentHistoryIndex(-1)}
+                  className="text-green-600 hover:text-green-700"
+                >
+                  Actual
+                </Button>
+              )}
+              
+              {/* Botón Siguiente - siempre visible si hay historial y no estamos en la venta actual */}
+              {invoiceHistory.length > 0 && currentHistoryIndex > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={showNextInvoice}
+                  className="text-blue-600 hover:text-blue-700"
+                >
+                  Siguiente
+                  <ArrowRight className="h-4 w-4 ml-1" />
+                </Button>
+              )}
+              
               <Button
                 variant="outline"
                 size="sm"
