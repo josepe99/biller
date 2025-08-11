@@ -4,7 +4,7 @@ import { getProductsAction } from '@/lib/actions/products';
 
 export default async function StockPage() {
   const products = await getProductsAction();
-  console.log(products);
+
   return (
     <DashboardLayout>
       <InventoryModule initialProducts={products} />

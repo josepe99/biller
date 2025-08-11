@@ -47,7 +47,7 @@ export default function InventoryModule({ initialProducts }: { initialProducts: 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [productToDelete, setProductToDelete] = useState<number | null>(null)
 
-  const categories = Array.from(new Set(initialProducts.map(p => p.category)))
+  const categories = Array.from(new Set(initialProducts.map(p => typeof p.category === 'string' ? p.category : 'Sin categoría')))
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -117,7 +117,7 @@ export default function InventoryModule({ initialProducts }: { initialProducts: 
             className="p-2 border rounded-md"
           >
             <option value="Todas">Todas las Categorías</option>
-            {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+            {categories.map((cat, index) => <option key={`category-${index}-${cat}`} value={cat}>{cat}</option>)}
           </select>
           <select
             value={filterStock}
@@ -197,8 +197,8 @@ export default function InventoryModule({ initialProducts }: { initialProducts: 
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredProducts.map((product) => (
-                  <TableRow key={product.barcode}>
+                filteredProducts.map((product, index) => (
+                  <TableRow key={`product-${product.id}-${product.barcode}-${index}`}>
                     <TableCell className="font-medium">{product.barcode}</TableCell>
                     <TableCell>{product.name}</TableCell>
                     <TableCell className="text-right">Gs {product.price.toFixed(0)}</TableCell>

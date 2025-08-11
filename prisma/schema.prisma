@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "mongodb"
-  url      = "mongodb://localhost:27017/pos-system"
+  url      = env("DATABASE_URL")
 }
 
 // User model for authentication and user management

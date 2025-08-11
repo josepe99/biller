@@ -31,7 +31,6 @@ export async function middleware(request: NextRequest) {
 
   // Check if sessionId exists in cookies
   const sessionId = request.cookies.get('sessionId')?.value
-  console.log('Session ID from cookies: ', sessionId)
 
   // If no sessionId, redirect to welcome
   if (!sessionId) {
