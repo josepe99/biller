@@ -2,11 +2,12 @@ import { UserRole } from '@prisma/client'
 
 export interface Product {
   id: string
+  barcode: number
   name: string
   price: number // Precio sin IVA
   stock: number
   category: string
-  ivaType: '5%' | '10%' // Tipo de IVA para el producto
+  iva: number
 }
 
 export interface CartItem extends Product {

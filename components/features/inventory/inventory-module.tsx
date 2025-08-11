@@ -1,32 +1,57 @@
 'use client'
 
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Badge } from '@/components/ui/badge'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Plus, Edit, Trash2, Save } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Product } from '@/lib/types'
-import { sampleProducts } from '@/lib/data/sample-data'
+import { useState } from 'react'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle
+} from '@/components/ui/card'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from '@/components/ui/table'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from '@/components/ui/dialog'
+import { Badge } from '@/components/ui/badge'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
 
-export default function InventoryModule() {
-  const [products, setProducts] = useState<Product[]>(sampleProducts)
+export default function InventoryModule({ initialProducts }: { initialProducts: Product[] }) {
+  const [products, setProducts] = useState<Product[]>(initialProducts)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterCategory, setFilterCategory] = useState('Todas')
   const [filterStock, setFilterStock] = useState('Todos')
   const [isProductModalOpen, setIsProductModalOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
-  const [productToDelete, setProductToDelete] = useState<string | null>(null)
+  const [productToDelete, setProductToDelete] = useState<number | null>(null)
 
-  const categories = Array.from(new Set(sampleProducts.map(p => p.category)))
+  const categories = Array.from(new Set(initialProducts.map(p => p.category)))
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          product.id.toLowerCase().includes(searchTerm.toLowerCase())
+                          product.barcode.toString().includes(searchTerm.toLowerCase())
     const matchesCategory = filterCategory === 'Todas' || product.category === filterCategory
     const matchesStock = filterStock === 'Todos' ||
                          (filterStock === 'Bajo' && product.stock <= 5) ||
@@ -37,21 +62,25 @@ export default function InventoryModule() {
   const handleAddEditProduct = (e: React.FormEvent) => {
     e.preventDefault()
     const formData = new FormData(e.target as HTMLFormElement)
+    
+    const barcodeValue = formData.get('barcode') as string
+    const ivaValue = formData.get('iva') as string
+    
     const newProduct: Product = {
-      // Use the 'id' from the form for barcode
-      id: formData.get('id') as string,
+      id: barcodeValue, // Use barcode as id
+      barcode: parseInt(barcodeValue), // Convert to number
       name: formData.get('name') as string,
       price: parseFloat(formData.get('price') as string),
       stock: parseInt(formData.get('stock') as string),
       category: formData.get('category') as string,
-      ivaType: formData.get('ivaType') as '5%' | '10%',
+      iva: parseInt(ivaValue),
     }
 
     if (editingProduct) {
-      setProducts(prev => prev.map(p => (p.id === newProduct.id ? newProduct : p)))
+      setProducts(prev => prev.map(p => (p.barcode === newProduct.barcode ? newProduct : p)))
     } else {
-      // Check for duplicate ID when adding new product
-      if (products.some(p => p.id === newProduct.id)) {
+      // Check for duplicate barcode when adding new product
+      if (products.some(p => p.barcode === newProduct.barcode)) {
         alert('Error: Ya existe un producto con este código de barras.')
         return
       }
@@ -63,7 +92,7 @@ export default function InventoryModule() {
 
   const handleDeleteProduct = () => {
     if (productToDelete) {
-      setProducts(prev => prev.filter(p => p.id !== productToDelete))
+      setProducts(prev => prev.filter(p => p.barcode !== productToDelete))
       setIsDeleteModalOpen(false)
       setProductToDelete(null)
     }
@@ -117,22 +146,23 @@ export default function InventoryModule() {
               </DialogHeader>
               <form onSubmit={handleAddEditProduct} className="grid gap-4 py-4">
                 <Input
-                  name="id"
-                  placeholder="Código de Barras (ID)"
-                  defaultValue={editingProduct?.id || ''}
+                  name="barcode"
+                  type="number"
+                  placeholder="Código de Barras"
+                  defaultValue={editingProduct?.barcode || ''}
                   required
                 />
                 <Input name="name" placeholder="Nombre del Producto" defaultValue={editingProduct?.name || ''} required />
                 <Input name="price" type="number" step="1" placeholder="Precio (sin IVA)" defaultValue={editingProduct?.price || ''} required />
                 <Input name="stock" type="number" placeholder="Stock" defaultValue={editingProduct?.stock || ''} required />
                 <Input name="category" placeholder="Categoría" defaultValue={editingProduct?.category || ''} required />
-                <Select name="ivaType" defaultValue={editingProduct?.ivaType || '10%'}>
+                <Select name="iva" defaultValue={editingProduct?.iva?.toString() || '10'}>
                   <SelectTrigger>
                     <SelectValue placeholder="Tipo de IVA" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="5%">5%</SelectItem>
-                    <SelectItem value="10%">10%</SelectItem>
+                    <SelectItem value="5">5%</SelectItem>
+                    <SelectItem value="10">10%</SelectItem>
                   </SelectContent>
                 </Select>
                 <DialogFooter>
@@ -150,7 +180,7 @@ export default function InventoryModule() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>ID</TableHead>
+                <TableHead>Código de barras</TableHead>
                 <TableHead>Nombre</TableHead>
                 <TableHead className="text-right">Precio (sin IVA)</TableHead>
                 <TableHead className="text-center">Stock</TableHead>
@@ -168,8 +198,8 @@ export default function InventoryModule() {
                 </TableRow>
               ) : (
                 filteredProducts.map((product) => (
-                  <TableRow key={product.id}>
-                    <TableCell className="font-medium">{product.id}</TableCell>
+                  <TableRow key={product.barcode}>
+                    <TableCell className="font-medium">{product.barcode}</TableCell>
                     <TableCell>{product.name}</TableCell>
                     <TableCell className="text-right">Gs {product.price.toFixed(0)}</TableCell>
                     <TableCell className="text-center">
@@ -178,7 +208,7 @@ export default function InventoryModule() {
                       </Badge>
                     </TableCell>
                     <TableCell>{product.category}</TableCell>
-                    <TableCell><Badge variant="outline">{product.ivaType}</Badge></TableCell>
+                    <TableCell><Badge variant="outline">{product.iva}%</Badge></TableCell>
                     <TableCell className="text-center">
                       <div className="flex justify-center gap-2">
                         <Button
@@ -191,12 +221,12 @@ export default function InventoryModule() {
                         >
                           <Edit className="h-4 w-4 text-blue-500" />
                         </Button>
-                        <Dialog open={isDeleteModalOpen && productToDelete === product.id} onOpenChange={setIsDeleteModalOpen}>
+                        <Dialog open={isDeleteModalOpen && productToDelete === product.barcode} onOpenChange={setIsDeleteModalOpen}>
                           <DialogTrigger asChild>
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => setProductToDelete(product.id)}
+                              onClick={() => setProductToDelete(product.barcode)}
                             >
                               <Trash2 className="h-4 w-4 text-red-500" />
                             </Button>
