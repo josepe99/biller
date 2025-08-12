@@ -16,7 +16,8 @@ export class ProductDatasource {
       price: product.price,
       stock: product.stock,
       category: product.category?.name || 'Sin categoría',
-      iva: (product as any).iva || 10 // Safe fallback for iva field
+      iva: (product as any).iva || 10, // Safe fallback for iva field
+      discount: (product as any).discount || 0,
     }));
   }
 
@@ -79,7 +80,8 @@ export class ProductDatasource {
       price: product.price,
       stock: product.stock,
       category: product.category?.name || 'Sin categoría',
-      iva: (product as any).iva || 10 // Safe fallback for iva field
+      iva: (product as any).iva || 10,
+      discount: (product as any).discount || 0,
     };
   }
 

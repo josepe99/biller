@@ -134,7 +134,7 @@ model Product {
   barcode     String?   @unique
   stock       Int       @default(0)
   categoryId  String?   @db.ObjectId
-  discount    Float     @default(0)
+  discount    Int       @default(0)
   isActive    Boolean   @default(true)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -165,7 +165,7 @@ model Sale {
   saleNumber      String     @unique // Invoice/Sale number in format xxx-xxx-zzzzzzz
   invoicePrefix   String     @default("001") // First 3 digits (xxx)
   invoiceMiddle   String     @default("001") // Middle 3 digits (xxx)
-  invoiceSequence Int        // Last 7 digits (zzzzzzz) - sequential number
+  invoiceSequence Int // Last 7 digits (zzzzzzz) - sequential number
   total           Float
   subtotal        Float
   tax             Float      @default(0)
