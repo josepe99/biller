@@ -1,9 +1,9 @@
-import type { Metadata } from "next";
-import { Roboto } from 'next/font/google'; // Import Roboto from next/font/google
-import "./globals.css";
-import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/components/auth/auth-provider";
 import { AuthWrapper } from "@/components/auth/auth-wrapper";
+import { ThemeProvider } from "@/components/theme-provider";
+import { Roboto } from 'next/font/google';
+import type { Metadata } from "next";
+import "./globals.css";
 
 // Configure Roboto font
 const roboto = Roboto({
@@ -15,7 +15,7 @@ const roboto = Roboto({
 export const metadata: Metadata = {
   title: "Vercel POS System",
   description: "A modern point of sale system designed with Next.js and Tailwind CSS.",
-    generator: 'v0.dev'
+  generator: 'v0.dev'
 };
 
 export default function RootLayout({

@@ -262,8 +262,6 @@ model Checkout {
   id          String    @id @default(auto()) @map("_id") @db.ObjectId
   name        String    @unique // e.g., "Caja 1", "Caja Principal", "Caja Express"
   description String?
-  location    String? // Physical location of the checkout
-  isActive    Boolean   @default(true)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   deletedAt   DateTime?

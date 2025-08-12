@@ -67,3 +67,75 @@ export interface Category {
   id: string
   name: string
 }
+
+export interface Checkout {
+  id: string
+  name: string
+  description?: string | null
+  createdAt: Date
+  updatedAt: Date
+  deletedAt?: Date | null
+}
+
+export interface CheckoutSummary extends Checkout {
+  salesCount: number
+  cashRegistersCount: number
+}
+
+export interface CheckoutWithSales extends Checkout {
+  sales: Sale[]
+  cashRegisters?: CashRegister[]
+}
+
+export interface CashRegister {
+  id: string
+  checkoutId: string
+  openedById: string
+  closedById?: string | null
+  openedAt: Date
+  closedAt?: Date | null
+  status: string
+  initialCash: number
+  finalCash?: number | null
+  totalSales?: number | null
+  totalCash?: number | null
+  totalCard?: number | null
+  totalOther?: number | null
+  expectedCash?: number | null
+  cashDifference?: number | null
+  openingNotes?: string | null
+  closingNotes?: string | null
+  createdAt: Date
+  updatedAt: Date
+  deletedAt?: Date | null
+  openedBy: {
+    name: string
+    lastname: string
+  }
+  closedBy?: {
+    name: string
+    lastname: string
+  } | null
+}
+
+export interface Sale {
+  id: string
+  saleNumber: string
+  invoicePrefix: string
+  invoiceMiddle: string
+  invoiceSequence: number
+  total: number
+  subtotal: number
+  tax: number
+  discount: number
+  status: string
+  paymentMethodId: string
+  userId: string
+  customerId?: string | null
+  checkoutId: string
+  cashRegisterId?: string | null
+  notes?: string | null
+  createdAt: Date
+  updatedAt: Date
+  deletedAt?: Date | null
+}
