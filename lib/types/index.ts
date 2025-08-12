@@ -54,6 +54,7 @@ export interface LoginResponse {
   user?: AuthUser
   session?: Session
   error?: string
+  permissions?: string[]
 }
 
 export interface AuthUser {

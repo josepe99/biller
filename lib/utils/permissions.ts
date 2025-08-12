@@ -56,12 +56,12 @@ export async function hasPermission(
 
     // Check if user has the required permission through any of their roles
     for (const userRole of userRoles) {
-      if (!userRole.role.isActive || userRole.role.deletedAt) continue
+      if (userRole.role.deletedAt) continue
 
       for (const rolePermission of userRole.role.rolePermissions) {
         const permission = rolePermission.permission
         
-        if (!permission.isActive || permission.deletedAt) continue
+        if (permission.deletedAt) continue
 
         // Check for exact match or manage permission (which grants all actions)
         if (permission.resource === resource && 
@@ -123,12 +123,12 @@ export async function getUserPermissions(userId: string): Promise<Array<{ resour
     const permissions: Array<{ resource: string; action: string }> = []
 
     for (const userRole of userRoles) {
-      if (!userRole.role.isActive || userRole.role.deletedAt) continue
+      if (userRole.role.deletedAt) continue
 
       for (const rolePermission of userRole.role.rolePermissions) {
         const permission = rolePermission.permission
         
-        if (!permission.isActive || permission.deletedAt) continue
+        if (permission.deletedAt) continue
 
         permissions.push({
           resource: permission.resource,
@@ -163,13 +163,6 @@ export async function assignRoleToUser(
     })
 
     if (existing) {
-      // Reactivate if exists but inactive
-      if (!existing.isActive) {
-        await prisma.userRoleAssignment.update({
-          where: { id: existing.id },
-          data: { isActive: true }
-        })
-      }
       return true
     }
 
@@ -178,8 +171,7 @@ export async function assignRoleToUser(
       data: {
         userId,
         roleId,
-        assignedBy,
-        isActive: true
+        assignedBy
       }
     })
 
@@ -198,11 +190,9 @@ export async function removeRoleFromUser(userId: string, roleId: string): Promis
     await prisma.userRoleAssignment.updateMany({
       where: {
         userId,
-        roleId,
-        isActive: true
+        roleId
       },
       data: {
-        isActive: false,
         deletedAt: new Date()
       }
     })
@@ -233,13 +223,6 @@ export async function assignPermissionToRole(
     })
 
     if (existing) {
-      // Reactivate if exists but inactive
-      if (!existing.isActive) {
-        await prisma.rolePermission.update({
-          where: { id: existing.id },
-          data: { isActive: true }
-        })
-      }
       return true
     }
 
@@ -248,8 +231,7 @@ export async function assignPermissionToRole(
       data: {
         roleId,
         permissionId,
-        grantedBy,
-        isActive: true
+        grantedBy
       }
     })
 
@@ -268,11 +250,9 @@ export async function removePermissionFromRole(roleId: string, permissionId: str
     await prisma.rolePermission.updateMany({
       where: {
         roleId,
-        permissionId,
-        isActive: true
+        permissionId
       },
       data: {
-        isActive: false,
         deletedAt: new Date()
       }
     })
@@ -410,11 +390,13 @@ export async function createDefaultRoles(): Promise<void> {
   }
 
   // Assign permissions to Manager
-  const managerPermissions = allPermissions.filter(p => 
-    p.resource !== PermissionResource.USERS || p.action !== PermissionAction.DELETE &&
-    p.resource !== PermissionResource.ROLES &&
-    p.resource !== PermissionResource.PERMISSIONS
-  )
+  const managerPermissions = allPermissions.filter(p => {
+    // Exclude: USERS:DELETE, all ROLES, all PERMISSIONS
+    if (p.resource === PermissionResource.USERS && p.action === PermissionAction.DELETE) return false;
+    if (p.resource === PermissionResource.ROLES) return false;
+    if (p.resource === PermissionResource.PERMISSIONS) return false;
+    return true;
+  })
   
   for (const permission of managerPermissions) {
     await assignPermissionToRole(managerRole.id, permission.id)

@@ -112,7 +112,6 @@ export class SessionDatasource {
 
     if (data.expiresAt) updateData.expiresAt = data.expiresAt
     if (data.refreshBefore) updateData.refreshBefore = data.refreshBefore
-    if (data.isActive !== undefined) updateData.isActive = data.isActive
     if (data.userAgent) updateData.userAgent = data.userAgent
     if (data.ipAddress) updateData.ipAddress = data.ipAddress
 
@@ -128,7 +127,7 @@ export class SessionDatasource {
   async deactivate(sessionId: string): Promise<Session> {
     return await prisma.session.update({
       where: { id: sessionId },
-      data: { isActive: false }
+    data: { deletedAt: new Date() },
     })
   }
 
@@ -138,7 +137,7 @@ export class SessionDatasource {
   async deactivateMany(sessionIds: string[]): Promise<number> {
     const result = await prisma.session.updateMany({
       where: { id: { in: sessionIds } },
-      data: { isActive: false }
+      data: { deletedAt: new Date() }
     })
     return result.count
   }
@@ -149,7 +148,7 @@ export class SessionDatasource {
   async deactivateAllUserSessions(userId: string): Promise<number> {
     const result = await prisma.session.updateMany({
       where: { userId },
-      data: { isActive: false }
+      data: { deletedAt: new Date() }
     })
     return result.count
   }
@@ -162,7 +161,7 @@ export class SessionDatasource {
       where: {
         OR: [
           { expiresAt: { lt: new Date() } },
-          { isActive: false }
+          { deletedAt: { not: null } }
         ]
       }
     })
@@ -173,12 +172,8 @@ export class SessionDatasource {
    * Get all sessions for a user
    */
   async getAllByUserId(userId: string, filters: SessionFilters = {}): Promise<Session[]> {
-    const { isActive, expired } = filters
+    const { expired } = filters
     const where: Prisma.SessionWhereInput = { userId }
-
-    if (isActive !== undefined) {
-      where.isActive = isActive
-    }
 
     if (expired !== undefined) {
       if (expired) {

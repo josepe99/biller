@@ -27,9 +27,14 @@ export function LoginForm() {
       if (result.success && result.session && result.user) {
         // Save session ID to localStorage
         localStorage.setItem('sessionId', result.session.id)
-        
+
         // Save user data to localStorage
         localStorage.setItem('user', JSON.stringify(result.user))
+
+        // Save permissions to localStorage if present
+        if (result.permissions) {
+          localStorage.setItem('permissions', JSON.stringify(result.permissions))
+        }
 
         // Set session cookie for middleware compatibility
         // This is crucial because server actions don't set cookies properly for immediate use
@@ -38,7 +43,7 @@ export function LoginForm() {
         // Get redirect URL from query params or default to home
         const urlParams = new URLSearchParams(window.location.search)
         const redirectTo = urlParams.get('redirect') || '/'
-        
+
         // Use window.location.href for full page refresh to ensure auth state is updated
         window.location.href = redirectTo
       } else {
