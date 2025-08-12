@@ -200,10 +200,10 @@ export class SessionDatasource {
   async exists(sessionId: string): Promise<boolean> {
     const session = await prisma.session.findUnique({
       where: { id: sessionId },
-      select: { id: true, isActive: true, expiresAt: true }
+      select: { id: true, expiresAt: true }
     })
     
-    return session !== null && session.isActive && session.expiresAt > new Date()
+    return session !== null && session.expiresAt > new Date()
   }
 
   /**

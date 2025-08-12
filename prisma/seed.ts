@@ -10,47 +10,47 @@ async function main() {
   // Step 1: Create all permissions
   console.log('📋 Creating permissions...')
   const createdPermissions = new Map()
-  
+
   for (const permission of permissions) {
     const createdPermission = await prisma.permission.upsert({
-      where: { 
+      where: {
         resource_action: {
           resource: permission.resource,
           action: permission.action
         }
       },
       update: {
-        name: permission.name,
-        description: permission.description,
-        isActive: true
+  name: permission.name,
+  description: permission.description,
+  deletedAt: null,
       },
       create: {
-        name: permission.name,
-        description: permission.description,
-        resource: permission.resource,
-        action: permission.action,
-        isActive: true
+  name: permission.name,
+  description: permission.description,
+  resource: permission.resource,
+  action: permission.action,
+  deletedAt: null,
       },
     })
     createdPermissions.set(permission.name, createdPermission.id)
   }
-  
+
   console.log(`✅ Created ${permissions.length} permissions`)
 
   // Step 2: Create roles with their permissions
   console.log('👥 Creating roles...')
-  
+
   // Admin Role - Full access to everything
   const adminRole = await prisma.role.upsert({
     where: { name: 'Admin' },
     update: {
-      description: 'Full system administrator with complete access',
-      isActive: true
+  description: 'Full system administrator with complete access',
+  deletedAt: null,
     },
     create: {
-      name: 'Admin',
-      description: 'Full system administrator with complete access',
-      isActive: true
+  name: 'Admin',
+  description: 'Full system administrator with complete access',
+  deletedAt: null,
     },
   })
 
@@ -58,13 +58,13 @@ async function main() {
   const managerRole = await prisma.role.upsert({
     where: { name: 'Manager' },
     update: {
-      description: 'Store manager with access to daily operations and reports',
-      isActive: true
+  description: 'Store manager with access to daily operations and reports',
+  deletedAt: null,
     },
     create: {
-      name: 'Manager',
-      description: 'Store manager with access to daily operations and reports',
-      isActive: true
+  name: 'Manager',
+  description: 'Store manager with access to daily operations and reports',
+  deletedAt: null,
     },
   })
 
@@ -72,13 +72,13 @@ async function main() {
   const cashierRole = await prisma.role.upsert({
     where: { name: 'Cashier' },
     update: {
-      description: 'Point of sale operator with limited access',
-      isActive: true
+  description: 'Point of sale operator with limited access',
+  deletedAt: null,
     },
     create: {
-      name: 'Cashier',
-      description: 'Point of sale operator with limited access',
-      isActive: true
+  name: 'Cashier',
+  description: 'Point of sale operator with limited access',
+  deletedAt: null,
     },
   })
 
@@ -89,15 +89,15 @@ async function main() {
 
   // Admin gets ALL permissions
   const adminPermissions = permissions.map(p => p.name)
-  
+
   // Manager gets most permissions except critical system administration
   const managerPermissions = permissions
-    .filter(p => 
-      !p.name.includes('system:') || 
+    .filter(p =>
+      !p.name.includes('system:') ||
       p.name === 'system:logs' // Managers can view logs but not manage system
     )
-    .filter(p => 
-      !p.name.includes('users:delete') && 
+    .filter(p =>
+      !p.name.includes('users:delete') &&
       !p.name.includes('users:manage') &&
       !p.name.includes('roles:delete') &&
       !p.name.includes('roles:manage') &&
@@ -107,7 +107,7 @@ async function main() {
 
   // Cashier gets basic sales and inventory read permissions
   const cashierPermissions = permissions
-    .filter(p => 
+    .filter(p =>
       // Sales operations
       p.resource === 'sales' && ['create', 'read'].includes(p.action) ||
       // Product viewing only
@@ -121,7 +121,7 @@ async function main() {
       // Payment processing
       p.resource === 'payments' && ['process', 'read'].includes(p.action) ||
       // Cash register operations
-      p.resource === 'cash' &&  ['register_open', 'register_close', 'drawer_open', 'count'].includes(p.action) ||
+      p.resource === 'cash' && ['register_open', 'register_close', 'drawer_open', 'count'].includes(p.action) ||
       // Barcode scanning
       p.resource === 'barcode' && p.action === 'scan' ||
       // Basic promotions
@@ -140,11 +140,11 @@ async function main() {
             permissionId: permissionId
           }
         },
-        update: { isActive: true },
+        update: {},
         create: {
           roleId: adminRole.id,
           permissionId: permissionId,
-          isActive: true
+          deletedAt: null,
         }
       })
     }
@@ -161,11 +161,11 @@ async function main() {
             permissionId: permissionId
           }
         },
-        update: { isActive: true },
+        update: {},
         create: {
           roleId: managerRole.id,
           permissionId: permissionId,
-          isActive: true
+          deletedAt: null,
         }
       })
     }
@@ -182,11 +182,11 @@ async function main() {
             permissionId: permissionId
           }
         },
-        update: { isActive: true },
+        update: {},
         create: {
           roleId: cashierRole.id,
           permissionId: permissionId,
-          isActive: true
+          deletedAt: null,
         }
       })
     }
@@ -198,23 +198,25 @@ async function main() {
 
   // Step 4: Create users with proper role assignments
   console.log('👤 Creating users...')
-  
+
   // Create Admin User
   const adminPassword = await hashPassword('admin123')
   const adminUser = await prisma.user.upsert({
     where: { email: 'admin@pos.com' },
     update: {
-      name: 'System',
-      lastname: 'Administrator',
-      password: adminPassword,
-      role: 'ADMIN'
+  name: 'System',
+  lastname: 'Administrator',
+  password: adminPassword,
+  role: 'ADMIN',
+  deletedAt: null
     },
     create: {
-      email: 'admin@pos.com',
-      name: 'System',
-      lastname: 'Administrator',
-      password: adminPassword,
-      role: 'ADMIN',
+  email: 'admin@pos.com',
+  name: 'System',
+  lastname: 'Administrator',
+  password: adminPassword,
+  role: 'ADMIN',
+  deletedAt: null,
     },
   })
 
@@ -226,11 +228,11 @@ async function main() {
         roleId: adminRole.id
       }
     },
-    update: { isActive: true },
+    update: {},
     create: {
       userId: adminUser.id,
       roleId: adminRole.id,
-      isActive: true
+      deletedAt: null,
     }
   })
 
@@ -239,17 +241,19 @@ async function main() {
   const managerUser = await prisma.user.upsert({
     where: { email: 'manager@pos.com' },
     update: {
-      name: 'Store',
-      lastname: 'Manager',
-      password: managerPassword,
-      role: 'MANAGER'
+  name: 'Store',
+  lastname: 'Manager',
+  password: managerPassword,
+  role: 'MANAGER',
+  deletedAt: null
     },
     create: {
-      email: 'manager@pos.com',
-      name: 'Store',
-      lastname: 'Manager',
-      password: managerPassword,
-      role: 'MANAGER',
+  email: 'manager@pos.com',
+  name: 'Store',
+  lastname: 'Manager',
+  password: managerPassword,
+  role: 'MANAGER',
+  deletedAt: null,
     },
   })
 
@@ -261,11 +265,11 @@ async function main() {
         roleId: managerRole.id
       }
     },
-    update: { isActive: true },
+    update: {},
     create: {
       userId: managerUser.id,
       roleId: managerRole.id,
-      isActive: true
+      deletedAt: null,
     }
   })
 
@@ -274,17 +278,19 @@ async function main() {
   const cashierUser = await prisma.user.upsert({
     where: { email: 'cashier@pos.com' },
     update: {
-      name: 'Store',
-      lastname: 'Cashier',
-      password: cashierPassword,
-      role: 'CASHIER'
+  name: 'Store',
+  lastname: 'Cashier',
+  password: cashierPassword,
+  role: 'CASHIER',
+  deletedAt: null
     },
     create: {
-      email: 'cashier@pos.com',
-      name: 'Store',
-      lastname: 'Cashier',
-      password: cashierPassword,
-      role: 'CASHIER',
+  email: 'cashier@pos.com',
+  name: 'Store',
+  lastname: 'Cashier',
+  password: cashierPassword,
+  role: 'CASHIER',
+  deletedAt: null,
     },
   })
 
@@ -296,11 +302,11 @@ async function main() {
         roleId: cashierRole.id
       }
     },
-    update: { isActive: true },
+    update: {},
     create: {
       userId: cashierUser.id,
       roleId: cashierRole.id,
-      isActive: true
+      deletedAt: null,
     }
   })
 
@@ -313,6 +319,7 @@ async function main() {
     create: {
       name: 'Efectivo',
       description: 'Pagos en efectivos',
+      deletedAt: null,
     },
   })
 
@@ -322,37 +329,38 @@ async function main() {
     create: {
       name: 'Tarjeta de crédito',
       description: 'Pagos con tarjeta de crédito',
+      deletedAt: null,
     },
   })
 
   // Step 6: Create checkout points (cash registers)
   console.log('💰 Creating checkout points...')
-  
+
   const checkouts = [
     {
       name: 'Caja 1',
       description: 'Caja principal - Entrada principal',
-      location: 'Planta baja - Entrada principal',
+      deletedAt: null
     },
     {
       name: 'Caja 2',
       description: 'Caja secundaria - Sector A',
-      location: 'Planta baja - Sector A',
+      deletedAt: null
     },
     {
       name: 'Caja 3',
       description: 'Caja express - Compras rápidas',
-      location: 'Planta baja - Sector express',
+      deletedAt: null
     },
     {
       name: 'Caja 4',
       description: 'Caja primer piso',
-      location: 'Primer piso - Centro',
+      deletedAt: null
     },
     {
       name: 'Caja 5',
       description: 'Caja autoservicio',
-      location: 'Planta baja - Autoservicio',
+      deletedAt: null
     },
   ]
 

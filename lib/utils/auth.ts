@@ -1,4 +1,5 @@
 import type { AuthUser, Session, LoginRequest, LoginResponse } from '../types'
+import { getUserPermissions } from '../utils/permissions'
 import { SessionController } from '../controllers/session.controller'
 import { userController } from '../controllers/user.controller'
 import { getUserBySessionIdFetch } from './session-fetch'
@@ -146,7 +147,7 @@ export async function loginUser(
   credentials: LoginRequest,
   userAgent?: string,
   ipAddress?: string
-): Promise<LoginResponse> {
+): Promise<LoginResponse & { permissions?: Array<{ resource: string; action: string }> }> {
   try {
     const { email, password } = credentials
 
@@ -209,6 +210,7 @@ export async function loginUser(
     // Create session
     const session = await createSession(user.id, userAgent, ipAddress)
 
+
     const authUser: AuthUser = {
       id: user.id,
       name: user.name,
@@ -216,10 +218,14 @@ export async function loginUser(
       role: user.role
     }
 
+    // Obtener permisos del usuario
+    const permissions = await getUserPermissions(user.id)
+
     return {
       success: true,
       user: authUser,
-      session
+      session,
+      permissions
     }
 
   } catch (error) {

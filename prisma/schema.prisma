@@ -35,7 +35,6 @@ model Role {
   id          String    @id @default(auto()) @map("_id") @db.ObjectId
   name        String    @unique
   description String?
-  isActive    Boolean   @default(true)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   deletedAt   DateTime?
@@ -52,7 +51,6 @@ model Permission {
   description String?
   resource    String // e.g., "products", "sales", "users"
   action      String // e.g., "create", "read", "update", "delete"
-  isActive    Boolean   @default(true)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   deletedAt   DateTime?
@@ -70,7 +68,6 @@ model UserRoleAssignment {
   roleId     String    @db.ObjectId
   assignedAt DateTime  @default(now())
   assignedBy String?   @db.ObjectId // Who assigned this role
-  isActive   Boolean   @default(true)
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
   deletedAt  DateTime?
@@ -91,7 +88,6 @@ model RolePermission {
   permissionId String    @db.ObjectId
   grantedAt    DateTime  @default(now())
   grantedBy    String?   @db.ObjectId // Who granted this permission
-  isActive     Boolean   @default(true)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   deletedAt    DateTime?
@@ -112,7 +108,6 @@ model Session {
   userId        String   @db.ObjectId
   loggedAt      DateTime @default(now()) // When the user logged in
   expiresAt     DateTime // Session expiration (1 hour from creation)
-  isActive      Boolean  @default(true)
   userAgent     String? // Browser/device info for security
   ipAddress     String? // IP address for security tracking
   createdAt     DateTime @default(now())
@@ -137,7 +132,6 @@ model Product {
   stock       Int       @default(0)
   categoryId  String?   @db.ObjectId
   discount    Int       @default(0)
-  isActive    Boolean   @default(true)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   deletedAt   DateTime?
@@ -247,7 +241,6 @@ model PaymentMethod {
   id          String    @id @default(auto()) @map("_id") @db.ObjectId
   name        String    @unique // e.g., "Cash", "Credit Card", "Mobile Payment"
   description String?
-  isActive    Boolean   @default(true)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   deletedAt   DateTime?
