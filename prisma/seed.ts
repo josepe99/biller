@@ -1,6 +1,6 @@
-import { PrismaClient } from '@prisma/client'
-import { hashPassword } from '../lib/utils/auth'
 import { permissions } from '../lib/constants/permissions'
+import { hashPassword } from '../lib/utils/auth'
+import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
@@ -306,119 +306,65 @@ async function main() {
 
   console.log('✅ Created users with role assignments')
 
-  // Step 5: Create categories
-  console.log('📂 Creating categories...')
+  // Create payment methods
+  await prisma.paymentMethod.upsert({
+    where: { name: 'Efectivo' },
+    update: {},
+    create: {
+      name: 'Efectivo',
+      description: 'Pagos en efectivos',
+    },
+  })
+
+  await prisma.paymentMethod.upsert({
+    where: { name: 'Tarjeta de crédito' },
+    update: {},
+    create: {
+      name: 'Tarjeta de crédito',
+      description: 'Pagos con tarjeta de crédito',
+    },
+  })
+
+  // Step 6: Create checkout points (cash registers)
+  console.log('💰 Creating checkout points...')
   
-  const electronics = await prisma.category.upsert({
-    where: { name: 'Electronics' },
-    update: {},
-    create: {
-      name: 'Electronics',
-      color: '#3B82F6',
-    },
-  })
-
-  const food = await prisma.category.upsert({
-    where: { name: 'Food & Beverages' },
-    update: {},
-    create: {
-      name: 'Food & Beverages',
-      color: '#10B981',
-    },
-  })
-
-  const clothing = await prisma.category.upsert({
-    where: { name: 'Clothing' },
-    update: {},
-    create: {
-      name: 'Clothing',
-      color: '#F59E0B',
-    },
-  })
-
-  // Create sample products
-  const products = [
+  const checkouts = [
     {
-      name: 'Wireless Headphones',
-      description: 'Premium bluetooth headphones with noise cancellation',
-      price: 99.99,
-      cost: 45.00,
-      sku: 'WH-001',
-      barcode: '1234567890123',
-      stock: 25,
-      categoryId: electronics.id,
+      name: 'Caja 1',
+      description: 'Caja principal - Entrada principal',
+      location: 'Planta baja - Entrada principal',
     },
     {
-      name: 'Coffee Beans',
-      description: 'Premium arabica coffee beans - 1kg bag',
-      price: 24.99,
-      cost: 12.00,
-      sku: 'CB-001',
-      barcode: '2345678901234',
-      stock: 50,
-      categoryId: food.id,
+      name: 'Caja 2',
+      description: 'Caja secundaria - Sector A',
+      location: 'Planta baja - Sector A',
     },
     {
-      name: 'Cotton T-Shirt',
-      description: '100% organic cotton t-shirt',
-      price: 19.99,
-      cost: 8.00,
-      sku: 'TS-001',
-      barcode: '3456789012345',
-      stock: 100,
-      categoryId: clothing.id,
+      name: 'Caja 3',
+      description: 'Caja express - Compras rápidas',
+      location: 'Planta baja - Sector express',
     },
     {
-      name: 'Smartphone Case',
-      description: 'Protective case for smartphones',
-      price: 15.99,
-      cost: 5.00,
-      sku: 'SC-001',
-      barcode: '4567890123456',
-      stock: 75,
-      categoryId: electronics.id,
+      name: 'Caja 4',
+      description: 'Caja primer piso',
+      location: 'Primer piso - Centro',
+    },
+    {
+      name: 'Caja 5',
+      description: 'Caja autoservicio',
+      location: 'Planta baja - Autoservicio',
     },
   ]
 
-  for (const product of products) {
-    await prisma.product.upsert({
-      where: { sku: product.sku },
+  for (const checkout of checkouts) {
+    await prisma.checkout.upsert({
+      where: { name: checkout.name },
       update: {},
-      create: product,
+      create: checkout,
     })
   }
 
-  // Create a sample customer
-  await prisma.customer.upsert({
-    where: { email: 'john.doe@example.com' },
-    update: {},
-    create: {
-      name: 'John Doe',
-      email: 'john.doe@example.com',
-      phone: '+1234567890',
-      address: '123 Main St, City, State 12345',
-      ruc: '12345678901', // Sample RUC number
-    },
-  })
-
-  // Create payment methods
-  await prisma.paymentMethod.upsert({
-    where: { name: 'Cash' },
-    update: {},
-    create: {
-      name: 'Cash',
-      description: 'Cash payment',
-    },
-  })
-
-  await prisma.paymentMethod.upsert({
-    where: { name: 'Credit Card' },
-    update: {},
-    create: {
-      name: 'Credit Card',
-      description: 'Credit card payment',
-    },
-  })
+  console.log('✅ Created 5 checkout points (Caja 1-5)')
 
   console.log('✅ Database seeded successfully!')
   console.log('📝 Default users created:')

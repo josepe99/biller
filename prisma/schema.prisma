@@ -23,9 +23,11 @@ model User {
   deletedAt     DateTime?
 
   // Relations
-  sales     Sale[]
-  sessions  Session[]
-  userRoles UserRoleAssignment[]
+  sales               Sale[]
+  sessions            Session[]
+  userRoles           UserRoleAssignment[]
+  openedCashRegisters CashRegister[]       @relation("CashRegisterOpenedBy")
+  closedCashRegisters CashRegister[]       @relation("CashRegisterClosedBy")
 }
 
 // Role model for defining user roles
@@ -174,6 +176,8 @@ model Sale {
   paymentMethodId String     @db.ObjectId
   userId          String     @db.ObjectId
   customerId      String?    @db.ObjectId
+  checkoutId      String     @db.ObjectId // Which checkout/cash register was used
+  cashRegisterId  String?    @db.ObjectId // Which cash register session this sale belongs to
   notes           String?
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
@@ -183,6 +187,8 @@ model Sale {
   user          User          @relation(fields: [userId], references: [id])
   customer      Customer?     @relation(fields: [customerId], references: [id])
   paymentMethod PaymentMethod @relation(fields: [paymentMethodId], references: [id])
+  checkout      Checkout      @relation(fields: [checkoutId], references: [id])
+  cashRegister  CashRegister? @relation(fields: [cashRegisterId], references: [id])
   saleItems     SaleItem[]
   salePayments  SalePayment[]
 }
@@ -251,6 +257,67 @@ model PaymentMethod {
   salePayments SalePayment[]
 }
 
+// Checkout model for managing multiple cash registers/checkouts
+model Checkout {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  name        String    @unique // e.g., "Caja 1", "Caja Principal", "Caja Express"
+  description String?
+  location    String? // Physical location of the checkout
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  // Relations
+  sales         Sale[]
+  cashRegisters CashRegister[]
+}
+
+// Cash register model for tracking opening/closing sessions and cash summary
+model CashRegister {
+  id         String             @id @default(auto()) @map("_id") @db.ObjectId
+  checkoutId String             @db.ObjectId
+  openedById String             @db.ObjectId // User who opened the register
+  closedById String?            @db.ObjectId // User who closed the register
+  openedAt   DateTime           @default(now()) // Opening date and time
+  closedAt   DateTime? // Closing date and time
+  status     CashRegisterStatus @default(OPEN)
+
+  // Opening amounts
+  initialCash Float @default(0) // Starting cash amount
+
+  // Closing amounts and summary
+  finalCash  Float? @default(0) // Final cash count
+  totalSales Float? @default(0) // Total sales during this session
+  totalCash  Float? @default(0) // Total cash sales
+  totalCard  Float? @default(0) // Total card sales
+  totalOther Float? @default(0) // Total other payment methods
+
+  // Discrepancies
+  expectedCash   Float? @default(0) // Expected cash (initial + cash sales)
+  cashDifference Float? @default(0) // Difference between expected and actual cash
+
+  // Notes and observations
+  openingNotes String? // Notes when opening
+  closingNotes String? // Notes when closing
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // Relations
+  checkout Checkout @relation(fields: [checkoutId], references: [id], onDelete: Cascade)
+  openedBy User     @relation("CashRegisterOpenedBy", fields: [openedById], references: [id])
+  closedBy User?    @relation("CashRegisterClosedBy", fields: [closedById], references: [id])
+  sales    Sale[]
+
+  @@index([checkoutId])
+  @@index([openedById])
+  @@index([closedById])
+  @@index([status])
+  @@index([openedAt])
+}
+
 // Enums
 enum UserRole {
   ADMIN
@@ -263,4 +330,10 @@ enum SaleStatus {
   COMPLETED
   CANCELLED
   REFUNDED
+}
+
+enum CashRegisterStatus {
+  OPEN
+  CLOSED
+  SUSPENDED // For temporary suspensions
 }
