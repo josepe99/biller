@@ -51,8 +51,8 @@ export function ProductTable({
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <span>{product.name}</span>
-                    {product.discount && (
-                      <Badge 
+                    { product.discount > 0 && (
+                      <Badge
                         className="bg-red-500 hover:bg-red-600 text-white font-bold px-2 py-1 text-xs animate-pulse"
                       >
                         {product.discount}%

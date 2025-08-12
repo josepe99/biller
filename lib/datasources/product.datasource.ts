@@ -81,11 +81,23 @@ export class ProductDatasource {
       stock: product.stock,
       category: product.category?.name || 'Sin categoría',
       iva: (product as any).iva || 10,
-      discount: (product as any).discount || 0,
+      discount: (product as any).discount,
     };
   }
 
   async deleteProduct(id: string) {
     return prisma.product.delete({ where: { id } });
+  }
+
+  async lowStockCount(threshold: number = 5) {
+    const count = await prisma.product.count({
+      where: {
+        stock: {
+          lte: threshold
+        }
+      }
+    });
+    
+    return count;
   }
 }

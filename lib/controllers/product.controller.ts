@@ -26,4 +26,8 @@ export class ProductController {
   async deleteProduct(id: string) {
     return await this.productDatasource.deleteProduct(id);
   }
+
+  async lowStockCount(threshold?: number) {
+    return await this.productDatasource.lowStockCount(threshold);
+  }
 }

@@ -8,7 +8,7 @@ export interface Product {
   stock: number
   category: string
   iva: number
-  discount?: number // Descuento en porcentaje (opcional)
+  discount: number // Descuento en porcentaje (por defecto 0)
 }
 
 export interface CartItem extends Product {

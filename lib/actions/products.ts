@@ -49,3 +49,13 @@ export async function removeProductAction(id: string) {
     return { success: false, error: 'Failed to delete product' };
   }
 }
+
+export async function getLowStockCountAction(threshold?: number) {
+  try {
+    const count = await productController.lowStockCount(threshold);
+    return count;
+  } catch (error) {
+    console.error('Error getting low stock count:', error);
+    return 0;
+  }
+}

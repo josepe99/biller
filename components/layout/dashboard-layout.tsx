@@ -11,6 +11,7 @@ import { usePathname } from 'next/navigation'
 import { sampleProducts } from '@/lib/data/sample-data'
 import { SessionValidator } from '@/components/auth/session-validator'
 import { LogoutButton } from '@/components/auth/logout-button'
+import { getLowStockCountAction } from '@/lib/actions/products'
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -19,7 +20,16 @@ interface DashboardLayoutProps {
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname()
 
-  const lowStockCount = sampleProducts.filter(p => p.stock <= 5).length
+  const [lowStockCount, setLowStockCount] = useState(0)
+
+  useEffect(() => {
+    const fetchLowStockCount = async () => {
+      const lowStockCount = await getLowStockCountAction()
+      setLowStockCount(lowStockCount)
+    }
+
+    fetchLowStockCount()
+  }, [])
 
   const getActiveModule = () => {
     if (pathname.includes('/admin')) return 'admin'
