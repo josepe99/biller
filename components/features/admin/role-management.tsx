@@ -9,8 +9,10 @@ import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Plus, Edit, ChevronLeft } from 'lucide-react'
+
 import { RoleType } from '@/lib/types/role'
 import { getAllRolesAction, createRoleAction, updateRoleAction } from '@/lib/actions/roles'
+import { getAllPermissions } from '@/lib/actions/permissionActions'
 
 interface RoleManagementProps {
   onBack: () => void
@@ -22,31 +24,52 @@ export default function RoleManagement({ onBack }: RoleManagementProps) {
   // Validadores de permisos
   const canCreate = permissions.includes(PERMISSION_CREATE) || permissions.includes('roles:manage');
   const canUpdate = permissions.includes(PERMISSION_UPDATE) || permissions.includes('roles:manage');
-  const [roles, setRoles] = useState<RoleType[]>([])
+
+  const [roles, setRoles] = useState<any[]>([])
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false)
-  const [editingRole, setEditingRole] = useState<RoleType | null>(null)
+  const [editingRole, setEditingRole] = useState<any | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [allPermissions, setAllPermissions] = useState<{ id: string; name: string }[]>([])
+  const [selectedPermissions, setSelectedPermissions] = useState<string[]>([])
+
 
   useEffect(() => {
     setLoading(true)
-    getAllRolesAction()
-      .then((roles) => setRoles(roles.map(r => ({
-        ...r,
-        description: r.description ?? undefined,
-      }))))
-      .catch(() => setError('Error al cargar roles'))
+    Promise.all([
+      getAllRolesAction(true),
+      getAllPermissions()
+    ])
+      .then(([roles, permissions]) => {
+        setRoles(roles.map((r: any) => ({
+          ...r,
+          description: r.description ?? undefined,
+        })));
+        setAllPermissions(permissions);
+      })
+      .catch(() => setError('Error al cargar roles o permisos'))
       .finally(() => setLoading(false))
   }, [])
 
+  // Cuando se abre el modal, setear permisos seleccionados
+  useEffect(() => {
+    if (isRoleModalOpen) {
+      if (editingRole) {
+        setSelectedPermissions(editingRole.permissions?.map((p: any) => p.id) || []);
+      } else {
+        setSelectedPermissions([]);
+      }
+    }
+  }, [isRoleModalOpen, editingRole]);
+
   const handleAddEditRole = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const formData = new FormData(e.target as HTMLFormElement)
-    const name = formData.get('name') as string
-    const description = formData.get('description') as string
+    e.preventDefault();
+    const formData = new FormData(e.target as HTMLFormElement);
+    const name = formData.get('name') as string;
+    const description = formData.get('description') as string;
     try {
       if (editingRole) {
-        const updated = await updateRoleAction(editingRole.id, { name, description });
+        const updated = await updateRoleAction(editingRole.id, { name, description, permissionIds: selectedPermissions });
         if (updated && typeof updated.id === 'string') {
           setRoles(prev => prev.map(r => (r.id === updated.id ? { ...r, ...updated, description: updated.description ?? undefined } : r)));
         } else {
@@ -54,7 +77,7 @@ export default function RoleManagement({ onBack }: RoleManagementProps) {
           return;
         }
       } else {
-        const created = await createRoleAction({ name, description });
+        const created = await createRoleAction({ name, description, permissionIds: selectedPermissions });
         if (created && typeof created.id === 'string') {
           setRoles(prev => [{ ...created, description: created.description ?? undefined }, ...prev]);
         } else {
@@ -67,7 +90,15 @@ export default function RoleManagement({ onBack }: RoleManagementProps) {
     } catch {
       setError('Error al guardar el rol');
     }
-  }
+  };
+
+  const handlePermissionChange = (permissionId: string) => {
+    setSelectedPermissions((prev) =>
+      prev.includes(permissionId)
+        ? prev.filter((id) => id !== permissionId)
+        : [...prev, permissionId]
+    );
+  };
 
   return (
     <Card className="h-full flex flex-col">
@@ -116,6 +147,21 @@ export default function RoleManagement({ onBack }: RoleManagementProps) {
           <form onSubmit={handleAddEditRole} className="space-y-4">
             <Input name="name" placeholder="Nombre del rol" defaultValue={editingRole?.name} required />
             <Input name="description" placeholder="Descripción" defaultValue={editingRole?.description} />
+            <div>
+              <div className="font-semibold mb-2">Permisos</div>
+              <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto border rounded p-2">
+                {allPermissions.map((perm) => (
+                  <label key={perm.id} className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={selectedPermissions.includes(perm.id)}
+                      onChange={() => handlePermissionChange(perm.id)}
+                    />
+                    {perm.name}
+                  </label>
+                ))}
+              </div>
+            </div>
             <DialogFooter>
               <Button type="submit">Guardar</Button>
             </DialogFooter>

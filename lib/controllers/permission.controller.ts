@@ -13,4 +13,11 @@ export class PermissionController {
   async getPermissionsByUserId(userId: string): Promise<string[]> {
     return await this.permissionDatasource.getPermissionsByUserId(userId)
   }
+
+  /**
+   * Obtiene todos los permisos disponibles (id y name)
+   */
+  async getAllPermissions(): Promise<{ id: string; name: string }[]> {
+    return await this.permissionDatasource.getAllPermissions();
+  }
 }
