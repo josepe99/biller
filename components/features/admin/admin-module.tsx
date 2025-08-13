@@ -6,16 +6,20 @@ import { Settings, Users, Tag, BarChart } from 'lucide-react'
 
 import { User, Category } from '@/lib/types'
 import { sampleUsers, sampleCategories } from '@/lib/data/sample-data'
+
 import UserManagement from './user-management'
 import CategoryManagement from './category-management'
 import OverviewModule from './overview-module'
 import SettingsModule from './settings-module'
 import ReportsModule from './reports-module'
+import RoleManagement from './role-management'
+
 
 export default function AdminModule() {
-  const [adminSubModule, setAdminSubModule] = useState<'overview' | 'users' | 'categories' | 'settings' | 'reports'>('overview')
+  const [adminSubModule, setAdminSubModule] = useState<'overview' | 'users' | 'categories' | 'settings' | 'reports' | 'roles'>('overview')
   const [users, setUsers] = useState<User[]>(sampleUsers)
   const [categories, setCategories] = useState<Category[]>(sampleCategories)
+
 
 
   const renderAdminSubModule = () => {
@@ -26,6 +30,8 @@ export default function AdminModule() {
         return <UserManagement users={users} setUsers={setUsers} onBack={() => setAdminSubModule('overview')} />
       case 'categories':
         return <CategoryManagement categories={categories} setCategories={setCategories} onBack={() => setAdminSubModule('overview')} />
+      case 'roles':
+        return <RoleManagement onBack={() => setAdminSubModule('overview')} />
       case 'settings':
         return <SettingsModule onBack={() => setAdminSubModule('overview')} />
       case 'reports':

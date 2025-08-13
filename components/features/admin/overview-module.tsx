@@ -2,7 +2,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Settings, Users, Tag, BarChart } from 'lucide-react'
 
 interface OverviewModuleProps {
-  onSelect: (module: 'settings' | 'users' | 'categories' | 'reports') => void
+  onSelect: (module: 'settings' | 'users' | 'categories' | 'reports' | 'roles') => void
 }
 
 export default function OverviewModule({ onSelect }: OverviewModuleProps) {
@@ -27,6 +27,13 @@ export default function OverviewModule({ onSelect }: OverviewModuleProps) {
           <Tag className="h-12 w-12 text-orange-500 mb-3" />
           <h3 className="text-lg font-semibold">Categorías</h3>
           <p className="text-sm text-muted-foreground">Organizar productos.</p>
+        </CardContent>
+      </Card>
+      <Card className="hover:shadow-xl transition-shadow duration-200 cursor-pointer" onClick={() => onSelect('roles')}>
+        <CardContent className="flex flex-col items-center justify-center p-6 text-center">
+          <Users className="h-12 w-12 text-orange-500 mb-3" />
+          <h3 className="text-lg font-semibold">Roles</h3>
+          <p className="text-sm text-muted-foreground">Crear y editar roles de usuario.</p>
         </CardContent>
       </Card>
       <Card className="hover:shadow-xl transition-shadow duration-200 cursor-pointer" onClick={() => onSelect('reports')}>
