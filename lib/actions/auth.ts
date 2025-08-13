@@ -115,8 +115,24 @@ export async function validateSessionAction(sessionId: string): Promise<{ succes
       return { success: false, error: 'Session not found or expired' }
     }
 
-  // Obtener usuario y lógica de extensión de sesión aquí, pero sin permisos
-  return { success: false, error: 'Not implemented' }
+    // Fetch user
+    const { UserController } = await import('@/lib/controllers/user.controller')
+    const userController = new UserController()
+    const userResult = await userController.getById(session.userId)
+    if (!userResult.success || !userResult.data) {
+      return { success: false, error: 'User not found' }
+    }
+
+    // Map user to AuthUser type
+    const user = userResult.data as any
+    const authUser = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    }
+
+    return { success: true, user: authUser }
   } catch (error) {
     console.error('Error validating session:', error)
     return { success: false, error: 'Internal server error' }

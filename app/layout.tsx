@@ -1,5 +1,4 @@
 import { AuthProvider } from "@/components/auth/auth-provider";
-import { AuthWrapper } from "@/components/auth/auth-wrapper";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Roboto } from 'next/font/google';
 import type { Metadata } from "next";
@@ -26,9 +25,7 @@ export default function RootLayout({
         disableTransitionOnChange
       >
         <AuthProvider>
-          <AuthWrapper>
-            {children}
-          </AuthWrapper>
+          {children}
         </AuthProvider>
       </ThemeProvider>
     </body></html>
