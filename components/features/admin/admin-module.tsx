@@ -1,21 +1,19 @@
 'use client'
 
-import { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Settings, Users, Tag, BarChart } from 'lucide-react'
-
-import { User, Category } from '@/lib/types'
 import { sampleUsers, sampleCategories } from '@/lib/data/sample-data'
-
-import UserManagement from './user-management'
+import { Card, CardHeader, CardTitle } from '@/components/ui/card'
+import { useAuth } from '@/components/auth/auth-provider'
 import CategoryManagement from './category-management'
+import UserManagement from './user-management'
 import OverviewModule from './overview-module'
 import SettingsModule from './settings-module'
-import ReportsModule from './reports-module'
 import RoleManagement from './role-management'
-
+import ReportsModule from './reports-module'
+import { User, Category } from '@/lib/types'
+import { useState } from 'react'
 
 export default function AdminModule() {
+  const { permissions = [] } = useAuth();
   const [adminSubModule, setAdminSubModule] = useState<'overview' | 'users' | 'categories' | 'settings' | 'reports' | 'roles'>('overview')
   const [users, setUsers] = useState<User[]>(sampleUsers)
   const [categories, setCategories] = useState<Category[]>(sampleCategories)
@@ -27,7 +25,7 @@ export default function AdminModule() {
       case 'overview':
         return <OverviewModule onSelect={setAdminSubModule} />
       case 'users':
-        return <UserManagement users={users} setUsers={setUsers} onBack={() => setAdminSubModule('overview')} />
+        return <UserManagement onBack={() => setAdminSubModule('overview')} />
       case 'categories':
         return <CategoryManagement categories={categories} setCategories={setCategories} onBack={() => setAdminSubModule('overview')} />
       case 'roles':

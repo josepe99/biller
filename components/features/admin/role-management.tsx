@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useAuth } from '@/components/auth/auth-provider'
 // Permisos requeridos para roles
 const PERMISSION_CREATE = 'roles:create';
@@ -32,6 +33,7 @@ export default function RoleManagement({ onBack }: RoleManagementProps) {
   const [error, setError] = useState<string | null>(null)
   const [allPermissions, setAllPermissions] = useState<{ id: string; name: string }[]>([])
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([])
+  const [formLoading, setFormLoading] = useState(false)
 
 
   useEffect(() => {
@@ -64,6 +66,7 @@ export default function RoleManagement({ onBack }: RoleManagementProps) {
 
   const handleAddEditRole = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormLoading(true);
     const formData = new FormData(e.target as HTMLFormElement);
     const name = formData.get('name') as string;
     const description = formData.get('description') as string;
@@ -78,6 +81,7 @@ export default function RoleManagement({ onBack }: RoleManagementProps) {
           setRoles(prev => prev.map(r => (r.id === updated.id ? { ...r, ...updated, description: updated.description ?? undefined } : r)));
         } else {
           setError('Error: El rol actualizado no es válido.');
+          setFormLoading(false);
           return;
         }
       } else {
@@ -86,6 +90,7 @@ export default function RoleManagement({ onBack }: RoleManagementProps) {
           setRoles(prev => [{ ...created, description: created.description ?? undefined }, ...prev]);
         } else {
           setError('Error: El rol creado no es válido.');
+          setFormLoading(false);
           return;
         }
       }
@@ -93,6 +98,8 @@ export default function RoleManagement({ onBack }: RoleManagementProps) {
       setEditingRole(null);
     } catch {
       setError('Error al guardar el rol');
+    } finally {
+      setFormLoading(false);
     }
   };
 
@@ -118,29 +125,41 @@ export default function RoleManagement({ onBack }: RoleManagementProps) {
       </CardHeader>
       <CardContent>
         {error && <div className="text-red-500 mb-2">{error}</div>}
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nombre</TableHead>
-              <TableHead>Descripción</TableHead>
-              <TableHead>Acciones</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {roles.map(role => (
-              <TableRow key={role.id}>
-                <TableCell>{role.name}</TableCell>
-                <TableCell>{role.description}</TableCell>
-                <TableCell>
-                  {/* Botón editar solo si tiene permiso */}
-                  {canUpdate && (
-                    <Button variant="outline" size="icon" onClick={() => { setEditingRole(role); setIsRoleModalOpen(true) }}><Edit /></Button>
-                  )}
-                </TableCell>
-              </TableRow>
+        {loading ? (
+          <div className="space-y-2">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="flex items-center gap-4">
+                <Skeleton className="h-6 w-1/4" />
+                <Skeleton className="h-6 w-1/2" />
+                <Skeleton className="h-8 w-10" />
+              </div>
             ))}
-          </TableBody>
-        </Table>
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nombre</TableHead>
+                <TableHead>Descripción</TableHead>
+                <TableHead>Acciones</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {roles.map(role => (
+                <TableRow key={role.id}>
+                  <TableCell>{role.name}</TableCell>
+                  <TableCell>{role.description}</TableCell>
+                  <TableCell>
+                    {/* Botón editar solo si tiene permiso */}
+                    {canUpdate && (
+                      <Button variant="outline" size="icon" onClick={() => { setEditingRole(role); setIsRoleModalOpen(true) }}><Edit /></Button>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
       </CardContent>
       <Dialog open={isRoleModalOpen} onOpenChange={setIsRoleModalOpen}>
         <DialogContent>
@@ -149,8 +168,8 @@ export default function RoleManagement({ onBack }: RoleManagementProps) {
             <DialogDescription>Complete los campos para {editingRole ? 'editar' : 'crear'} un rol.</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleAddEditRole} className="space-y-4">
-            <Input name="name" placeholder="Nombre del rol" defaultValue={editingRole?.name} required />
-            <Input name="description" placeholder="Descripción" defaultValue={editingRole?.description} />
+            <Input name="name" placeholder="Nombre del rol" defaultValue={editingRole?.name} required disabled={formLoading} />
+            <Input name="description" placeholder="Descripción" defaultValue={editingRole?.description} disabled={formLoading} />
             <div>
               <div className="font-semibold mb-2">Permisos</div>
               <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto border rounded p-2">
@@ -160,6 +179,7 @@ export default function RoleManagement({ onBack }: RoleManagementProps) {
                       type="checkbox"
                       checked={selectedPermissions.includes(perm.id)}
                       onChange={() => handlePermissionChange(perm.id)}
+                      disabled={formLoading}
                     />
                     {perm.name}
                   </label>
@@ -167,7 +187,9 @@ export default function RoleManagement({ onBack }: RoleManagementProps) {
               </div>
             </div>
             <DialogFooter>
-              <Button type="submit">Guardar</Button>
+              <Button type="submit" disabled={formLoading}>
+                {formLoading ? <Skeleton className="h-5 w-20" /> : 'Guardar'}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
