@@ -15,7 +15,8 @@ import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Plus, Edit, Trash2, ChevronLeft } from 'lucide-react'
 import { User } from '@/lib/types'
-import { getAllUsersAction } from '@/lib/actions/userActions'
+import { UserRole } from '@prisma/client'
+import { getAllUsersAction, updateUserAction, createUserAction } from '@/lib/actions/userActions'
 
 
 interface UserManagementProps {
@@ -49,7 +50,8 @@ export default function UserManagement({ onBack }: UserManagementProps) {
               id: u.id,
               name: u.name,
               email: u.email,
-              role: u.role,
+              // Normalizar el rol a mayúsculas para el enum UserRole
+              role: (u.role?.toUpperCase?.() as UserRole) || UserRole.CASHIER,
               loginAttempts: u.loginAttempts,
               lockedUntil: u.lockedUntil === null ? undefined : u.lockedUntil,
               lastLoginAt: u.lastLoginAt === null ? undefined : u.lastLoginAt,
@@ -69,11 +71,44 @@ export default function UserManagement({ onBack }: UserManagementProps) {
   }, [])
 
   // TODO: Integrar create/update/delete con los actions reales
-  const handleAddEditUser = (e: React.FormEvent) => {
-    e.preventDefault()
-    // ...implementación real pendiente...
-    setIsUserModalOpen(false)
-    setEditingUser(null)
+  const handleAddEditUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const form = e.target as HTMLFormElement;
+    const formData = new FormData(form);
+    const name = formData.get('name') as string;
+    const role = formData.get('role') as UserRole;
+    try {
+      if (editingUser) {
+        // Actualizar usuario existente
+        await updateUserAction(editingUser.id, { name, role });
+      } else {
+        // Crear nuevo usuario
+        const email = formData.get('email') as string;
+        const password = formData.get('password') as string;
+        await createUserAction({ name, email, password, role });
+      }
+      // Refrescar lista de usuarios y mapear como en useEffect
+      const usersArr = await getAllUsersAction();
+      const mapped = Array.isArray(usersArr)
+        ? usersArr.map((u: any) => ({
+            id: u.id,
+            name: u.name,
+            email: u.email,
+            role: (u.role?.toUpperCase?.() as UserRole) || UserRole.CASHIER,
+            loginAttempts: u.loginAttempts,
+            lockedUntil: u.lockedUntil === null ? undefined : u.lockedUntil,
+            lastLoginAt: u.lastLoginAt === null ? undefined : u.lastLoginAt,
+            createdAt: u.createdAt,
+            updatedAt: u.updatedAt,
+            deletedAt: u.deletedAt === undefined ? undefined : u.deletedAt,
+          }))
+        : [];
+      setUsers(mapped);
+      setIsUserModalOpen(false);
+      setEditingUser(null);
+    } catch (err) {
+      setError(editingUser ? 'Error al actualizar usuario' : 'Error al crear usuario');
+    }
   }
 
   const handleDeleteUser = () => {
@@ -108,13 +143,19 @@ export default function UserManagement({ onBack }: UserManagementProps) {
               </DialogHeader>
               <form onSubmit={handleAddEditUser} className="grid gap-4 py-4">
                 <Input name="name" placeholder="Nombre del Usuario" defaultValue={editingUser?.name || ''} required />
-                <Select name="role" defaultValue={editingUser?.role || 'cashier'}>
+                {!editingUser && (
+                  <Input name="email" placeholder="Email" type="email" required />
+                )}
+                {!editingUser && (
+                  <Input name="password" placeholder="Contraseña" type="password" required />
+                )}
+                <Select name="role" defaultValue={editingUser?.role || UserRole.CASHIER}>
                   <SelectTrigger>
                     <SelectValue placeholder="Seleccionar Rol" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="admin">Administrador</SelectItem>
-                    <SelectItem value="cashier">Cajero</SelectItem>
+                    <SelectItem value={UserRole.ADMIN}>Administrador</SelectItem>
+                    <SelectItem value={UserRole.CASHIER}>Cajero</SelectItem>
                   </SelectContent>
                 </Select>
                 <DialogFooter>
@@ -158,8 +199,8 @@ export default function UserManagement({ onBack }: UserManagementProps) {
                     <TableCell>{user.name}</TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>
-                      <Badge variant={user.role === 'ADMIN' ? 'default' : 'secondary'}>
-                        {user.role === 'ADMIN' ? 'Administrador' : 'Cajero'}
+                      <Badge variant={user.role === UserRole.ADMIN ? 'default' : 'secondary'}>
+                        {user.role === UserRole.ADMIN ? 'Administrador' : 'Cajero'}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-center">

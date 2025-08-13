@@ -1,10 +1,11 @@
+import { userRoleAssignmentController } from './userRoleAssignment.controller'
 import { User, UserRole } from '@prisma/client'
-import { 
-  userDatasource, 
-  CreateUserData, 
-  UpdateUserData, 
+import {
+  userDatasource,
+  CreateUserData,
+  UpdateUserData,
   UserFilters,
-  UserSelectFields 
+  UserSelectFields
 } from '@/lib/datasources/user.datasource'
 
 export interface UserResponse {
@@ -149,48 +150,47 @@ export class UserController {
   /**
    * Update user
    */
-  async update(id: string, data: UpdateUserData): Promise<UserResponse> {
+  async update(id: string, data: UpdateUserData): Promise<User | null> {
     try {
       if (!id || id.trim() === '') {
-        return {
-          success: false,
-          error: 'User ID is required',
-        }
+        return null;
       }
 
       // Check if user exists
       const existingUser = await userDatasource.getById(id.trim())
       if (!existingUser) {
-        return {
-          success: false,
-          error: 'User not found',
-        }
+        return null;
       }
 
       // If email is being updated, check if it's already taken
       if (data.email && data.email !== existingUser.email) {
         const emailExists = await userDatasource.existsByEmail(data.email.trim())
         if (emailExists) {
-          return {
-            success: false,
-            error: 'A user with this email already exists',
-          }
+          return null;
+        }
+      }
+
+      // Si se recibe un cambio de rol, actualizar también la asignación de rol
+      if (data.role) {
+        const roleUpper = typeof data.role === 'string' ? data.role.toUpperCase() : data.role;
+        if (!Object.values(UserRole).includes(roleUpper as UserRole)) {
+          return null;
+        }
+        data.role = roleUpper as UserRole;
+
+        // Buscar el Role correspondiente en la tabla Role
+        const prisma = require('@/lib/prisma').prisma;
+        const roleRecord = await prisma.role.findFirst({ where: { name: roleUpper } });
+        if (roleRecord) {
+          await userRoleAssignmentController.updateUserRole(id.trim(), roleRecord.id);
         }
       }
 
       const updatedUser = await userDatasource.update(id.trim(), data)
-
-      return {
-        success: true,
-        data: updatedUser,
-        message: 'User updated successfully',
-      }
+      return updatedUser || null;
     } catch (error) {
       console.error('Error updating user:', error)
-      return {
-        success: false,
-        error: 'Failed to update user',
-      }
+      return null;
     }
   }
 
