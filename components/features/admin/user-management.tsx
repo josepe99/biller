@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -10,43 +10,65 @@ import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Plus, Edit, Trash2, ChevronLeft } from 'lucide-react'
 import { User } from '@/lib/types'
+import { getAllUsersAction } from '@/lib/actions/userActions'
+
 
 interface UserManagementProps {
-  users: User[]
-  setUsers: React.Dispatch<React.SetStateAction<User[]>>
   onBack: () => void
 }
 
-export default function UserManagement({ users, setUsers, onBack }: UserManagementProps) {
+export default function UserManagement({ onBack }: UserManagementProps) {
+  const [users, setUsers] = useState<User[]>([])
   const [isUserModalOpen, setIsUserModalOpen] = useState(false)
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [userToDelete, setUserToDelete] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
+  useEffect(() => {
+    async function fetchUsers() {
+      setLoading(true)
+      setError(null)
+      try {
+        const usersArr = await getAllUsersAction()
+        // Mapear los campos para que coincidan con el tipo User del frontend
+        const mapped = Array.isArray(usersArr)
+          ? usersArr.map((u: any) => ({
+              id: u.id,
+              name: u.name,
+              email: u.email,
+              role: u.role,
+              loginAttempts: u.loginAttempts,
+              lockedUntil: u.lockedUntil === null ? undefined : u.lockedUntil,
+              lastLoginAt: u.lastLoginAt === null ? undefined : u.lastLoginAt,
+              createdAt: u.createdAt,
+              updatedAt: u.updatedAt,
+              deletedAt: u.deletedAt === undefined ? undefined : u.deletedAt,
+            }))
+          : []
+        setUsers(mapped)
+      } catch (err) {
+        setError('Error al obtener usuarios')
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchUsers()
+  }, [])
+
+  // TODO: Integrar create/update/delete con los actions reales
   const handleAddEditUser = (e: React.FormEvent) => {
     e.preventDefault()
-    const formData = new FormData(e.target as HTMLFormElement)
-    const newUser: User = {
-      id: editingUser?.id || `U${(users.length + 1).toString().padStart(3, '0')}`,
-      name: formData.get('name') as string,
-      role: formData.get('role') as 'admin' | 'cashier',
-    }
-
-    if (editingUser) {
-      setUsers(prev => prev.map(u => (u.id === newUser.id ? newUser : u)))
-    } else {
-      setUsers(prev => [...prev, newUser])
-    }
+    // ...implementación real pendiente...
     setIsUserModalOpen(false)
     setEditingUser(null)
   }
 
   const handleDeleteUser = () => {
-    if (userToDelete) {
-      setUsers(prev => prev.filter(u => u.id !== userToDelete))
-      setIsDeleteModalOpen(false)
-      setUserToDelete(null)
-    }
+    // ...implementación real pendiente...
+    setIsDeleteModalOpen(false)
+    setUserToDelete(null)
   }
 
   return (
@@ -93,74 +115,82 @@ export default function UserManagement({ users, setUsers, onBack }: UserManageme
         </Dialog>
       </CardHeader>
       <CardContent className="flex-grow overflow-auto border rounded-lg">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>ID</TableHead>
-              <TableHead>Nombre</TableHead>
-              <TableHead>Rol</TableHead>
-              <TableHead className="text-center">Acciones</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {users.length === 0 ? (
+        {loading ? (
+          <div className="text-center py-8 text-muted-foreground">Cargando usuarios...</div>
+        ) : error ? (
+          <div className="text-center py-8 text-red-500">{error}</div>
+        ) : (
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
-                  No hay usuarios registrados.
-                </TableCell>
+                <TableHead>ID</TableHead>
+                <TableHead>Nombre</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Rol</TableHead>
+                <TableHead className="text-center">Acciones</TableHead>
               </TableRow>
-            ) : (
-              users.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell className="font-medium">{user.id}</TableCell>
-                  <TableCell>{user.name}</TableCell>
-                  <TableCell>
-                    <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
-                      {user.role === 'admin' ? 'Administrador' : 'Cajero'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <div className="flex justify-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          setEditingUser(user)
-                          setIsUserModalOpen(true)
-                        }}
-                      >
-                        <Edit className="h-4 w-4 text-blue-500" />
-                      </Button>
-                      <Dialog open={isDeleteModalOpen && userToDelete === user.id} onOpenChange={setIsDeleteModalOpen}>
-                        <DialogTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setUserToDelete(user.id)}
-                          >
-                            <Trash2 className="h-4 w-4 text-red-500" />
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Confirmar Eliminación</DialogTitle>
-                            <DialogDescription>
-                              ¿Estás seguro de que deseas eliminar al usuario "{user.name}"? Esta acción no se puede deshacer.
-                            </DialogDescription>
-                          </DialogHeader>
-                          <DialogFooter>
-                            <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)}>Cancelar</Button>
-                            <Button onClick={handleDeleteUser} className="bg-red-500 hover:bg-red-600">Eliminar</Button>
-                          </DialogFooter>
-                        </DialogContent>
-                      </Dialog>
-                    </div>
+            </TableHeader>
+            <TableBody>
+              {users.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                    No hay usuarios registrados.
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+              ) : (
+                users.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell className="font-medium">{user.id}</TableCell>
+                    <TableCell>{user.name}</TableCell>
+                    <TableCell>{user.email}</TableCell>
+                    <TableCell>
+                      <Badge variant={user.role === 'ADMIN' ? 'default' : 'secondary'}>
+                        {user.role === 'ADMIN' ? 'Administrador' : 'Cajero'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex justify-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            setEditingUser(user)
+                            setIsUserModalOpen(true)
+                          }}
+                        >
+                          <Edit className="h-4 w-4 text-blue-500" />
+                        </Button>
+                        <Dialog open={isDeleteModalOpen && userToDelete === user.id} onOpenChange={setIsDeleteModalOpen}>
+                          <DialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setUserToDelete(user.id)}
+                            >
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Confirmar Eliminación</DialogTitle>
+                              <DialogDescription>
+                                ¿Estás seguro de que deseas eliminar al usuario "{user.name}"? Esta acción no se puede deshacer.
+                              </DialogDescription>
+                            </DialogHeader>
+                            <DialogFooter>
+                              <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)}>Cancelar</Button>
+                              <Button onClick={handleDeleteUser} className="bg-red-500 hover:bg-red-600">Eliminar</Button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        )}
       </CardContent>
     </Card>
   )

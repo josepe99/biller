@@ -76,19 +76,13 @@ export class UserController {
   /**
    * Get all users
    */
-  async getAll(filters: UserFilters = {}): Promise<UserResponse> {
+  async getAll(filters: UserFilters = {}): Promise<User[]> {
     try {
       const users = await userDatasource.getAll(filters)
-      return {
-        success: true,
-        data: users,
-      }
+      return Array.isArray(users) ? users : []
     } catch (error) {
       console.error('Error fetching users:', error)
-      return {
-        success: false,
-        error: 'Failed to fetch users',
-      }
+      return []
     }
   }
 
