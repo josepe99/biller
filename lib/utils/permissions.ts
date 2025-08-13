@@ -1,5 +1,4 @@
 import { prisma } from '../prisma'
-import type { AuthUser } from '../types'
 
 // Define permission actions
 export enum PermissionAction {

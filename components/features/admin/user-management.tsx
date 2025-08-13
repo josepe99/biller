@@ -1,6 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useAuth } from '@/components/auth/auth-provider'
+// Permisos para acciones sobre usuarios
+const PERMISSION_CREATE = 'users:create';
+const PERMISSION_UPDATE = 'users:update';
+const PERMISSION_DELETE = 'users:delete';
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -18,6 +23,12 @@ interface UserManagementProps {
 }
 
 export default function UserManagement({ onBack }: UserManagementProps) {
+  // Obtener permisos del usuario actual
+  const { permissions } = useAuth()
+  // Validadores de permisos
+  const canCreate = permissions.includes(PERMISSION_CREATE) || permissions.includes('users:manage');
+  const canUpdate = permissions.includes(PERMISSION_UPDATE) || permissions.includes('users:manage');
+  const canDelete = permissions.includes(PERMISSION_DELETE) || permissions.includes('users:manage');
   const [users, setUsers] = useState<User[]>([])
   const [isUserModalOpen, setIsUserModalOpen] = useState(false)
   const [editingUser, setEditingUser] = useState<User | null>(null)
@@ -80,39 +91,42 @@ export default function UserManagement({ onBack }: UserManagementProps) {
           </Button>
           <CardTitle className="text-orange-500">Gestión de Usuarios</CardTitle>
         </div>
-        <Dialog open={isUserModalOpen} onOpenChange={setIsUserModalOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-orange-500 hover:bg-orange-600" onClick={() => setEditingUser(null)}>
-              <Plus className="mr-2 h-4 w-4" /> Agregar Usuario
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{editingUser ? 'Editar Usuario' : 'Agregar Nuevo Usuario'}</DialogTitle>
-              <DialogDescription>
-                {editingUser ? 'Modifica los detalles del usuario.' : 'Ingresa los detalles del nuevo usuario.'}
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleAddEditUser} className="grid gap-4 py-4">
-              <Input name="name" placeholder="Nombre del Usuario" defaultValue={editingUser?.name || ''} required />
-              <Select name="role" defaultValue={editingUser?.role || 'cashier'}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar Rol" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="admin">Administrador</SelectItem>
-                  <SelectItem value="cashier">Cajero</SelectItem>
-                </SelectContent>
-              </Select>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsUserModalOpen(false)}>Cancelar</Button>
-                <Button type="submit" className="bg-orange-500 hover:bg-orange-600">
-                  {editingUser ? 'Guardar Cambios' : 'Agregar'}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+        {/* Mostrar botón de crear solo si tiene permiso */}
+        {canCreate && (
+          <Dialog open={isUserModalOpen} onOpenChange={setIsUserModalOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-orange-500 hover:bg-orange-600" onClick={() => setEditingUser(null)}>
+                <Plus className="mr-2 h-4 w-4" /> Agregar Usuario
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>{editingUser ? 'Editar Usuario' : 'Agregar Nuevo Usuario'}</DialogTitle>
+                <DialogDescription>
+                  {editingUser ? 'Modifica los detalles del usuario.' : 'Ingresa los detalles del nuevo usuario.'}
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleAddEditUser} className="grid gap-4 py-4">
+                <Input name="name" placeholder="Nombre del Usuario" defaultValue={editingUser?.name || ''} required />
+                <Select name="role" defaultValue={editingUser?.role || 'cashier'}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar Rol" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="admin">Administrador</SelectItem>
+                    <SelectItem value="cashier">Cajero</SelectItem>
+                  </SelectContent>
+                </Select>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsUserModalOpen(false)}>Cancelar</Button>
+                  <Button type="submit" className="bg-orange-500 hover:bg-orange-600">
+                    {editingUser ? 'Guardar Cambios' : 'Agregar'}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+        )}
       </CardHeader>
       <CardContent className="flex-grow overflow-auto border rounded-lg">
         {loading ? (
@@ -150,39 +164,45 @@ export default function UserManagement({ onBack }: UserManagementProps) {
                     </TableCell>
                     <TableCell className="text-center">
                       <div className="flex justify-center gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setEditingUser(user)
-                            setIsUserModalOpen(true)
-                          }}
-                        >
-                          <Edit className="h-4 w-4 text-blue-500" />
-                        </Button>
-                        <Dialog open={isDeleteModalOpen && userToDelete === user.id} onOpenChange={setIsDeleteModalOpen}>
-                          <DialogTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setUserToDelete(user.id)}
-                            >
-                              <Trash2 className="h-4 w-4 text-red-500" />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Confirmar Eliminación</DialogTitle>
-                              <DialogDescription>
-                                ¿Estás seguro de que deseas eliminar al usuario "{user.name}"? Esta acción no se puede deshacer.
-                              </DialogDescription>
-                            </DialogHeader>
-                            <DialogFooter>
-                              <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)}>Cancelar</Button>
-                              <Button onClick={handleDeleteUser} className="bg-red-500 hover:bg-red-600">Eliminar</Button>
-                            </DialogFooter>
-                          </DialogContent>
-                        </Dialog>
+                        {/* Botón editar solo si tiene permiso */}
+                        {canUpdate && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              setEditingUser(user)
+                              setIsUserModalOpen(true)
+                            }}
+                          >
+                            <Edit className="h-4 w-4 text-blue-500" />
+                          </Button>
+                        )}
+                        {/* Botón eliminar solo si tiene permiso */}
+                        {canDelete && (
+                          <Dialog open={isDeleteModalOpen && userToDelete === user.id} onOpenChange={setIsDeleteModalOpen}>
+                            <DialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setUserToDelete(user.id)}
+                              >
+                                <Trash2 className="h-4 w-4 text-red-500" />
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Confirmar Eliminación</DialogTitle>
+                                <DialogDescription>
+                                  ¿Estás seguro de que deseas eliminar al usuario "{user.name}"? Esta acción no se puede deshacer.
+                                </DialogDescription>
+                              </DialogHeader>
+                              <DialogFooter>
+                                <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)}>Cancelar</Button>
+                                <Button onClick={handleDeleteUser} className="bg-red-500 hover:bg-red-600">Eliminar</Button>
+                              </DialogFooter>
+                            </DialogContent>
+                          </Dialog>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
