@@ -44,13 +44,12 @@ export class RoleDatasource {
     const now = new Date();
     // Soft delete de los permisos a eliminar
     if (permissionsToRemove && permissionsToRemove.length > 0) {
-      await prisma.rolePermission.updateMany({
+      await prisma.rolePermission.deleteMany({
         where: {
           roleId,
           permissionId: { in: permissionsToRemove },
           deletedAt: null,
         },
-        data: { deletedAt: now, updatedAt: now },
       });
     }
     // Agregar los nuevos permisos (solo si no existen y no están activos)
@@ -67,6 +66,7 @@ export class RoleDatasource {
               grantedAt: now,
               createdAt: now,
               updatedAt: now,
+              deletedAt: null,
             },
           });
         }

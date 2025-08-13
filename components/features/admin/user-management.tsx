@@ -26,9 +26,9 @@ export default function UserManagement({ onBack }: UserManagementProps) {
   // Obtener permisos del usuario actual
   const { permissions } = useAuth()
   // Validadores de permisos
-  const canCreate = permissions.includes(PERMISSION_CREATE) || permissions.includes('users:manage');
-  const canUpdate = permissions.includes(PERMISSION_UPDATE) || permissions.includes('users:manage');
-  const canDelete = permissions.includes(PERMISSION_DELETE) || permissions.includes('users:manage');
+  const canCreate = permissions.includes(PERMISSION_CREATE) || permissions.includes('users:create');
+  const canUpdate = permissions.includes(PERMISSION_UPDATE) || permissions.includes('users:update');
+  const canDelete = permissions.includes(PERMISSION_DELETE) || permissions.includes('users:delete');
   const [users, setUsers] = useState<User[]>([])
   const [isUserModalOpen, setIsUserModalOpen] = useState(false)
   const [editingUser, setEditingUser] = useState<User | null>(null)
