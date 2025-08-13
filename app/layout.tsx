@@ -12,12 +12,6 @@ const roboto = Roboto({
   display: 'swap', // Use 'swap' for font display strategy [^1]
 });
 
-export const metadata: Metadata = {
-  title: "Vercel POS System",
-  description: "A modern point of sale system designed with Next.js and Tailwind CSS.",
-  generator: 'v0.dev'
-};
-
 export default function RootLayout({
   children,
 }: Readonly<{

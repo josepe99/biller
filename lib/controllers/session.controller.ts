@@ -76,11 +76,7 @@ export class SessionController {
       const session = await this.sessionDatasource.getById(sessionId.trim())
 
       // Check if session is valid (active and not expired)
-      if (session && (!session.isActive || session.expiresAt < new Date())) {
-        // Deactivate expired session
-        if (session.isActive) {
-          await this.deactivateSession(session.id)
-        }
+      if (session && (session.expiresAt < new Date())) {
         return null
       }
 
@@ -103,7 +99,7 @@ export class SessionController {
       }
 
       // Double check if session is still valid
-      if (!session.isActive || session.expiresAt < new Date()) {
+      if (session.expiresAt < new Date()) {
         await this.deactivateSession(session.id)
         return null
       }

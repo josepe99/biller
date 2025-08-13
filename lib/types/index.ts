@@ -38,7 +38,7 @@ export interface Session {
   userId: string
   loggedAt: Date
   expiresAt: Date
-  isActive: boolean
+  deletedAt?: Date | null
   userAgent?: string | null
   ipAddress?: string | null
   user?: User

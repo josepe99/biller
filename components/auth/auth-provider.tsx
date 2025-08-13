@@ -1,8 +1,9 @@
 'use client'
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import type { AuthUser, Session } from '@/lib/types'
+import { getPermissionsBySessionIdAction } from '@/lib/actions/auth'
 import { validateSessionAction } from '@/lib/actions/session'
+import type { AuthUser, Session } from '@/lib/types'
 
 interface AuthContextType {
   user: AuthUser | null
@@ -10,6 +11,7 @@ interface AuthContextType {
   sessionId: string | null
   isLoading: boolean
   isAuthenticated: boolean
+  permissions: string[]
   setAuthData: (user: AuthUser, sessionId: string) => void
   clearAuth: () => void
   refreshAuth: () => Promise<void>
@@ -21,66 +23,86 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [sessionId, setSessionId] = useState<string | null>(null)
+  const [permissions, setPermissions] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Load auth data from localStorage on mount and validate session
+    // Al montar, valida la sesión y carga el usuario desde el backend
     const initializeAuth = async () => {
       try {
         const storedSessionId = localStorage.getItem('sessionId')
-        const storedUser = localStorage.getItem('user')
-
-        if (storedSessionId && storedUser) {
-          // Validate stored session
+        if (storedSessionId) {
+          setSessionId(storedSessionId)
+          // Valida la sesión y obtiene el usuario real
           const validationResult = await validateSessionAction(storedSessionId)
-          
           if (validationResult.success && validationResult.user) {
-            setSessionId(storedSessionId)
             setUser(validationResult.user)
-            // Update stored user data in case it changed
             localStorage.setItem('user', JSON.stringify(validationResult.user))
+            // Cargar permisos
+            const perms = await getPermissionsBySessionIdAction(storedSessionId)
+            setPermissions(perms || [])
+            localStorage.setItem('permissions', JSON.stringify(perms || []))
           } else {
-            // Clear invalid session data
+            // Sesión inválida
+            setUser(null)
+            setSessionId(null)
+            setPermissions([])
             localStorage.removeItem('sessionId')
             localStorage.removeItem('user')
+            localStorage.removeItem('permissions')
           }
+        } else {
+          setUser(null)
+          setSessionId(null)
+          setPermissions([])
         }
       } catch (error) {
         console.error('Error validating session on mount:', error)
-        // Clear invalid data on error
+        setUser(null)
+        setSessionId(null)
+        setPermissions([])
         localStorage.removeItem('sessionId')
         localStorage.removeItem('user')
+        localStorage.removeItem('permissions')
       } finally {
         setIsLoading(false)
       }
     }
-
     initializeAuth()
   }, [])
 
-  const setAuthData = (userData: AuthUser, sessionIdData: string) => {
-    setUser(userData)
-    setSessionId(sessionIdData)
-    localStorage.setItem('user', JSON.stringify(userData))
-    localStorage.setItem('sessionId', sessionIdData)
+  const setAuthData = async (userData: AuthUser, sessionIdData: string) => {
+  setUser(userData)
+  setSessionId(sessionIdData)
+  localStorage.setItem('user', JSON.stringify(userData))
+  localStorage.setItem('sessionId', sessionIdData)
+  // Cargar permisos usando getPermissionsBySessionIdAction
+  const perms = await getPermissionsBySessionIdAction(sessionIdData)
+  setPermissions(perms || [])
+  localStorage.setItem('permissions', JSON.stringify(perms || []))
   }
 
   const clearAuth = () => {
     setUser(null)
     setSession(null)
     setSessionId(null)
+    setPermissions([])
     localStorage.removeItem('sessionId')
     localStorage.removeItem('user')
+    localStorage.removeItem('permissions')
   }
 
   const refreshAuth = async () => {
     if (sessionId) {
       try {
         const validationResult = await validateSessionAction(sessionId)
-        
         if (validationResult.success && validationResult.user) {
           setUser(validationResult.user)
           localStorage.setItem('user', JSON.stringify(validationResult.user))
+          // Refrescar permisos usando getPermissionsBySessionIdAction
+          const perms = await getPermissionsBySessionIdAction(sessionId)
+          setPermissions(perms || [])
+          localStorage.setItem('permissions', JSON.stringify(perms || []))
         } else {
           clearAuth()
         }
@@ -99,6 +121,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     sessionId,
     isLoading,
     isAuthenticated,
+    permissions,
     setAuthData,
     clearAuth,
     refreshAuth

@@ -30,32 +30,36 @@ interface AuthWrapperProps {
  */
 export function AuthWrapper({ children }: AuthWrapperProps) {
   const pathname = usePathname()
-  
-  // Removed session validation from here to prevent global excessive calls
-  // Session validation is now handled by individual protected components
+  // Log para depuración
+  if (typeof window !== 'undefined') {
+    // eslint-disable-next-line no-console
+    console.log('[AuthWrapper] pathname:', pathname)
+  }
+
+  // Forzar que '/' siempre sea protegida
+  if (pathname === '/') {
+    return (
+      <ProtectedRoute requiredRoles={[]}>{children}</ProtectedRoute>
+    )
+  }
 
   // Check if current route is public
   const isPublicRoute = PUBLIC_ROUTES.some(route => 
     pathname === route || pathname.startsWith(route + '/')
   )
 
-  // If it's a public route, render children without protection
   if (isPublicRoute) {
     return <>{children}</>
   }
 
-  // For the root path and all other protected routes, apply protection
   // Determine required roles based on the route
   let requiredRoles: string[] = []
-  
   if (ADMIN_ROUTES.some(route => pathname === route || pathname.startsWith(route + '/'))) {
     requiredRoles = ['ADMIN']
   } else if (MANAGER_ROUTES.some(route => pathname === route || pathname.startsWith(route + '/'))) {
     requiredRoles = ['MANAGER', 'ADMIN']
   }
-  // For the home page and other routes, require any authenticated user
 
-  // For all protected routes, require authentication
   return (
     <ProtectedRoute requiredRoles={requiredRoles}>
       {children}

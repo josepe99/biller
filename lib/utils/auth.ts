@@ -54,6 +54,7 @@ export async function createSession(
       refreshBefore,
       userAgent,
       ipAddress,
+      deletedAt: null, // Asegura que la sesión se cree con deletedAt en null
     },
     include: {
       user: {
@@ -94,12 +95,12 @@ export async function getSessionById(sessionId: string): Promise<Session | null>
     }
   })
 
-  if (!session || !session.isActive || session.expiresAt < new Date()) {
-    if (session) {
-      // Deactivate expired session
+  if (!session || session.deletedAt !== null || session.expiresAt < new Date()) {
+    if (session && session.deletedAt === null && session.expiresAt < new Date()) {
+      // Marcar como eliminada (soft delete) la sesión expirada
       await prisma.session.update({
         where: { id: session.id },
-        data: { isActive: false }
+        data: { deletedAt: new Date() }
       })
     }
     return null
@@ -114,7 +115,7 @@ export async function getSessionById(sessionId: string): Promise<Session | null>
 export async function invalidateSession(sessionId: string): Promise<void> {
   await prisma.session.updateMany({
     where: { id: sessionId },
-    data: { isActive: false }
+    data: { deletedAt: new Date() }
   })
 }
 
@@ -147,7 +148,7 @@ export async function loginUser(
   credentials: LoginRequest,
   userAgent?: string,
   ipAddress?: string
-): Promise<LoginResponse & { permissions?: Array<{ resource: string; action: string }> }> {
+): Promise<LoginResponse> {
   try {
     const { email, password } = credentials
 
@@ -219,7 +220,11 @@ export async function loginUser(
     }
 
     // Obtener permisos del usuario
-    const permissions = await getUserPermissions(user.id)
+    const permissionsObj = await getUserPermissions(user.id)
+    // Si permissionsObj es un array de objetos { resource, action }, convertir a string[] tipo 'resource:action'
+    const permissions = Array.isArray(permissionsObj)
+      ? permissionsObj.map((p: any) => typeof p === 'string' ? p : `${p.resource}:${p.action}`)
+      : [];
 
     return {
       success: true,
