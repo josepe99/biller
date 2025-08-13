@@ -31,11 +31,6 @@ export function LoginForm() {
         // Save user data to localStorage
         localStorage.setItem('user', JSON.stringify(result.user))
 
-        // Save permissions to localStorage if present
-        if (result.permissions) {
-          localStorage.setItem('permissions', JSON.stringify(result.permissions))
-        }
-
         // Set session cookie for middleware compatibility
         // This is crucial because server actions don't set cookies properly for immediate use
         setSessionCookie(result.session.id)

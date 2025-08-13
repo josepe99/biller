@@ -1,10 +1,14 @@
 'use server'
 
+import { getUserPermissions } from '@/lib/utils/permissions'
+import { prisma } from '@/lib/prisma'
+import type { Session } from '@/lib/types'
 import { SessionController } from '@/lib/controllers/session.controller'
 import { loginUser, invalidateSession } from '@/lib/utils/auth'
 import type { LoginRequest, LoginResponse } from '@/lib/types'
 import type { AuthUser } from '@/lib/types'
 import { cookies } from 'next/headers'
+import { AuthController } from '../controllers/auth.controller'
 
 const SESSION_COOKIE_NAME = 'sessionId'
 const COOKIE_MAX_AGE = 60 * 60 // 1 hour
@@ -39,28 +43,11 @@ export async function loginAction(email: string, password: string): Promise<Logi
       path: '/'
     })
 
-    console.log('permissions: ', loginResult.permissions)
-    // Extraer permisos del loginResult (array de {resource, action})
-    const permissionsArr = Array.isArray(loginResult.permissions) ? loginResult.permissions : [];
-    // Generar lista de nombres de permisos tipo "resource:action"
-    const permissionNames = permissionsArr.map(p => `${p.resource}:${p.action}`);
-
-    // Guardar los nombres de los permisos en cookie (JSON string)
-    cookieStore.set('permissions', JSON.stringify(permissionNames), {
-      httpOnly: false, // Accessible from client
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: COOKIE_MAX_AGE,
-      path: '/'
-    });
-
-    // Retornar también los permisos para localStorage
     return {
       success: true,
       session: loginResult.session,
       user: loginResult.user,
-      permissions: permissionNames
-    } as LoginResponse & { permissions: string[] };
+    };
   } catch (error) {
     console.error('Login action error:', error)
     return { success: false, error: 'Internal server error' }
@@ -90,13 +77,7 @@ export async function logoutAction(): Promise<{ success: boolean }> {
   }
 }
 
-/**
- * Server action for getting session by ID
- */
-import { getUserPermissions } from '@/lib/utils/permissions'
-import { userController } from '@/lib/controllers/user.controller'
-
-export async function getSessionByIdAction(sessionId: string): Promise<{ success: boolean; user?: AuthUser; permissions?: string[]; error?: string }> {
+export async function getSessionByIdAction(sessionId: string): Promise<{ success: boolean; user?: AuthUser; error?: string }> {
   try {
     if (!sessionId) {
       return { success: false, error: 'Session ID is required' }
@@ -109,27 +90,9 @@ export async function getSessionByIdAction(sessionId: string): Promise<{ success
       return { success: false, error: 'Session not found or expired' }
     }
 
-    // Obtener usuario
-    const userResp = await userController.getById(session.userId);
-    if (!userResp.success || !userResp.data) {
-      return { success: false, error: 'User not found' }
-    }
-    const user = Array.isArray(userResp.data) ? userResp.data[0] : userResp.data;
-
-    // Obtener permisos del usuario
-    const permissionsArr = await getUserPermissions(user.id);
-    const permissionNames = permissionsArr.map(p => `${p.resource}:${p.action}`);
-
-    return {
-      success: true,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role
-      },
-      permissions: permissionNames
-    }
+  // Obtener usuario
+  // Si necesitas retornar el usuario, implementa aquí la lógica, pero sin permisos
+  return { success: false, error: 'Not implemented' }
   } catch (error) {
     console.error('Error getting session:', error)
     return { success: false, error: 'Internal server error' }
@@ -139,7 +102,7 @@ export async function getSessionByIdAction(sessionId: string): Promise<{ success
 /**
  * Server action for validating session
  */
-export async function validateSessionAction(sessionId: string): Promise<{ success: boolean; user?: AuthUser; permissions?: string[]; sessionExtended?: boolean; error?: string }> {
+export async function validateSessionAction(sessionId: string): Promise<{ success: boolean; user?: AuthUser; sessionExtended?: boolean; error?: string }> {
   try {
     if (!sessionId) {
       return { success: false, error: 'Session ID is required' }
@@ -152,43 +115,8 @@ export async function validateSessionAction(sessionId: string): Promise<{ succes
       return { success: false, error: 'Session not found or expired' }
     }
 
-    // Obtener usuario
-    const userResp = await userController.getById(session.userId);
-    if (!userResp.success || !userResp.data) {
-      return { success: false, error: 'User not found' }
-    }
-    const user = Array.isArray(userResp.data) ? userResp.data[0] : userResp.data;
-
-    // Check if session needs to be extended (if it expires within the next 15 minutes)
-    const now = new Date()
-    const expiresAt = new Date(session.expiresAt)
-    const timeUntilExpiry = expiresAt.getTime() - now.getTime()
-    const fifteenMinutes = 15 * 60 * 1000
-    const SESSION_DURATION = 60 * 60 * 1000 // 1 hour in milliseconds
-    let sessionExtended = false
-    if (timeUntilExpiry < fifteenMinutes) {
-      // Extend the session
-      const newExpiresAt = new Date(Date.now() + SESSION_DURATION)
-      const refreshBefore = new Date(Date.now() + (SESSION_DURATION * 0.8))
-      await sessionController.extendSession(sessionId, newExpiresAt, refreshBefore)
-      sessionExtended = true
-    }
-
-    // Obtener permisos del usuario
-    const permissionsArr = await getUserPermissions(user.id);
-    const permissionNames = permissionsArr.map(p => `${p.resource}:${p.action}`);
-
-    return {
-      success: true,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role
-      },
-      sessionExtended,
-      permissions: permissionNames
-    }
+  // Obtener usuario y lógica de extensión de sesión aquí, pero sin permisos
+  return { success: false, error: 'Not implemented' }
   } catch (error) {
     console.error('Error validating session:', error)
     return { success: false, error: 'Internal server error' }
@@ -216,4 +144,9 @@ export async function extendSessionAction(sessionId: string): Promise<{ success:
     console.error('Error extending session:', error)
     return { success: false, error: 'Internal server error' }
   }
+}
+
+export async function getPermissionsBySessionIdAction(sessionId: string): Promise<string[]> {
+  const authController = new AuthController()
+  return authController.getPermissionsBySessionId(sessionId)
 }

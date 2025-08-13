@@ -118,7 +118,6 @@ export async function getUserPermissions(userId: string): Promise<Array<{ resour
         }
       }
     })
-    console.log('userRoles: ', userRoles)
 
     const permissions: Array<{ resource: string; action: string }> = []
 
