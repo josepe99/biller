@@ -111,11 +111,18 @@ export default function RoleManagement({ onBack }: RoleManagementProps) {
     );
   };
 
+  const handleBack = () => {
+    if (typeof window !== 'undefined') {
+      window.location.reload();
+    }
+    onBack();
+  };
+
   return (
     <Card className="h-full flex flex-col">
       <CardHeader className="flex flex-row items-center justify-between">
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={onBack}><ChevronLeft /></Button>
+          <Button variant="ghost" size="icon" onClick={handleBack}><ChevronLeft /></Button>
           <CardTitle>Gestión de Roles</CardTitle>
         </div>
         {/* Mostrar botón de crear solo si tiene permiso */}
