@@ -39,28 +39,39 @@ export class RoleDatasource {
     });
   }
 
-  // Reemplazar todos los permisos de un rol
-  async setPermissions(roleId: string, permissionIds: string[]) {
-    // Eliminar los permisos actuales (soft delete)
-    await prisma.rolePermission.updateMany({
-      where: { roleId, deletedAt: null },
-      data: { deletedAt: new Date() },
-    });
-    // Agregar los nuevos permisos
+  // Reemplazar permisos de un rol: agregar y eliminar específicos
+  async setPermissions(roleId: string, permissionsToAdd: string[], permissionsToRemove: string[]) {
     const now = new Date();
-    await Promise.all(
-      permissionIds.map((permissionId) =>
-        prisma.rolePermission.create({
-          data: {
-            roleId,
-            permissionId,
-            grantedAt: now,
-            createdAt: now,
-            updatedAt: now,
-          },
-        })
-      )
-    );
+    // Soft delete de los permisos a eliminar
+    if (permissionsToRemove && permissionsToRemove.length > 0) {
+      await prisma.rolePermission.updateMany({
+        where: {
+          roleId,
+          permissionId: { in: permissionsToRemove },
+          deletedAt: null,
+        },
+        data: { deletedAt: now, updatedAt: now },
+      });
+    }
+    // Agregar los nuevos permisos (solo si no existen y no están activos)
+    if (permissionsToAdd && permissionsToAdd.length > 0) {
+      for (const permissionId of permissionsToAdd) {
+        const existing = await prisma.rolePermission.findFirst({
+          where: { roleId, permissionId, deletedAt: null },
+        });
+        if (!existing) {
+          await prisma.rolePermission.create({
+            data: {
+              roleId,
+              permissionId,
+              grantedAt: now,
+              createdAt: now,
+              updatedAt: now,
+            },
+          });
+        }
+      }
+    }
     // Retornar los permisos actuales
     return this.getPermissions(roleId);
   }

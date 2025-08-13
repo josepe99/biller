@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Plus, Edit, ChevronLeft } from 'lucide-react'
 
 import { RoleType } from '@/lib/types/role'
-import { getAllRolesAction, createRoleAction, updateRoleAction } from '@/lib/actions/roles'
+import { getAllRolesAction, createRoleAction, updateRoleAction } from '@/lib/actions/roleActions'
 import { getAllPermissions } from '@/lib/actions/permissionActions'
 
 interface RoleManagementProps {
@@ -69,7 +69,11 @@ export default function RoleManagement({ onBack }: RoleManagementProps) {
     const description = formData.get('description') as string;
     try {
       if (editingRole) {
-        const updated = await updateRoleAction(editingRole.id, { name, description, permissionIds: selectedPermissions });
+        // Calcular permisos a agregar y quitar
+        const prevPermissions: string[] = editingRole.permissions?.map((p: any) => p.id) || [];
+        const permissionsToAdd = selectedPermissions.filter((id) => !prevPermissions.includes(id));
+        const permissionsToRemove = prevPermissions.filter((id) => !selectedPermissions.includes(id));
+        const updated = await updateRoleAction(editingRole.id, { name, description, permissionsToAdd, permissionsToRemove });
         if (updated && typeof updated.id === 'string') {
           setRoles(prev => prev.map(r => (r.id === updated.id ? { ...r, ...updated, description: updated.description ?? undefined } : r)));
         } else {
@@ -77,7 +81,7 @@ export default function RoleManagement({ onBack }: RoleManagementProps) {
           return;
         }
       } else {
-        const created = await createRoleAction({ name, description, permissionIds: selectedPermissions });
+        const created = await createRoleAction({ name, description, permissionsToAdd: selectedPermissions });
         if (created && typeof created.id === 'string') {
           setRoles(prev => [{ ...created, description: created.description ?? undefined }, ...prev]);
         } else {

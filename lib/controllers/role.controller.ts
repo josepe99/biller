@@ -34,19 +34,21 @@ export class RoleController {
   }
 
   // Create a new role, with optional permissions
-  async create(data: { name: string; description?: string; permissionIds?: string[] }) {
+  async create(data: { name: string; description?: string; permissionsToAdd?: string[] }) {
     const role = await this.roleDatasource.create({ name: data.name, description: data.description });
-    if (data.permissionIds && data.permissionIds.length > 0) {
-      await this.roleDatasource.setPermissions(role.id, data.permissionIds);
+    if (data.permissionsToAdd && data.permissionsToAdd.length > 0) {
+      await this.roleDatasource.setPermissions(role.id, data.permissionsToAdd, []);
     }
     return this.getById(role.id);
   }
 
   // Update a role, including permissions
-  async update(id: string, data: { name?: string; description?: string; permissionIds?: string[] }) {
-    await this.roleDatasource.update(id, data);
-    if (data.permissionIds) {
-      await this.roleDatasource.setPermissions(id, data.permissionIds);
+  async update(id: string, data: { name?: string; description?: string; permissionsToAdd?: string[]; permissionsToRemove?: string[] }) {
+    // Remove permissionsToAdd/permissionsToRemove before updating the role
+    const { permissionsToAdd, permissionsToRemove, ...roleData } = data;
+    await this.roleDatasource.update(id, roleData);
+    if ((permissionsToAdd && permissionsToAdd.length > 0) || (permissionsToRemove && permissionsToRemove.length > 0)) {
+      await this.roleDatasource.setPermissions(id, permissionsToAdd || [], permissionsToRemove || []);
     }
     return this.getById(id);
   }
