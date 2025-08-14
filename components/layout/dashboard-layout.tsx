@@ -93,7 +93,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         <header className="h-16 bg-white border-b shadow-sm flex items-center justify-between px-6">
           <div className="flex items-center space-x-3">
             <Image src="/placeholder.svg?height=30&width=30" alt="POS Icon" width={30} height={30} />
-            <h1 className="text-xl font-semibold text-orange-500">r1760 POS</h1>
+            <h1 className="text-xl font-semibold text-orange-500">Biller</h1>
           </div>
           <div className="flex items-center space-x-4 text-gray-600">
             <Clock showDate={true} />

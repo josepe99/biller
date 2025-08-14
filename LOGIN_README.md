@@ -1,4 +1,4 @@
-# POS System Authentication with Server Actions
+# Biller Authentication with Server Actions
 
 This document provides information about the server action-based authentication system for the POS application.
 

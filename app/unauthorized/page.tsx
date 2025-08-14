@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Unauthorized - POS System',
+  title: 'Unauthorized - Biller',
   description: 'You do not have permission to access this page',
 }
 

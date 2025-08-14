@@ -59,7 +59,7 @@ export function LoginForm() {
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
             <div className="h-8 w-8 rounded bg-blue-600"></div>
           </div>
-          <CardTitle className="text-2xl">POS System</CardTitle>
+          <CardTitle className="text-2xl">Biller</CardTitle>
           <CardDescription>
             Ingresa tus credenciales para acceder al sistema
           </CardDescription>

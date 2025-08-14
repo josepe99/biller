@@ -12,7 +12,7 @@ export default function WelcomePage() {
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center space-x-3">
               <div className="h-8 w-8 rounded bg-blue-600"></div>
-              <h1 className="text-2xl font-bold text-gray-900">POS System</h1>
+              <h1 className="text-2xl font-bold text-gray-900">Biller</h1>
             </div>
             <Link href="/login">
               <Button>Iniciar Sesión</Button>
@@ -108,7 +108,7 @@ export default function WelcomePage() {
       <footer className="bg-white border-t mt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center text-gray-600">
-            <p>&copy; 2025 POS System. Todos los derechos reservados.</p>
+            <p>&copy; 2025 Biller. Todos los derechos reservados.</p>
           </div>
         </div>
       </footer>
