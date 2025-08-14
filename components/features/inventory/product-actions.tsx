@@ -6,8 +6,10 @@ import type { Product } from '@/lib/types'
 
 interface ProductActionsProps {
   product: Product
-  onEdit: (product: Product) => void
-  onDelete: (productId: string) => void
+  onEdit?: (product: Product) => void
+  onDelete?: (productId: string) => void
+  canUpdate?: boolean
+  canDelete?: boolean
 }
 
 export function ProductActions({ product, onEdit, onDelete }: ProductActionsProps) {
@@ -17,14 +19,16 @@ export function ProductActions({ product, onEdit, onDelete }: ProductActionsProp
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => onEdit(product)}
+          onClick={onEdit ? () => onEdit(product) : undefined}
+          disabled={!onEdit}
         >
           <Edit className="h-4 w-4 text-blue-500" />
         </Button>
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => onDelete(product.id)}
+          onClick={onDelete ? () => onDelete(product.id) : undefined}
+          disabled={!onDelete}
         >
           <Trash2 className="h-4 w-4 text-red-500" />
         </Button>

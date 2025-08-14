@@ -12,7 +12,8 @@ interface ProductFiltersProps {
   filterStock: string
   setFilterStock: (stock: string) => void
   categories: string[]
-  onAddProduct: () => void
+  onAddProduct?: () => void
+  canCreate?: boolean
 }
 
 export function ProductFilters({
@@ -23,7 +24,8 @@ export function ProductFilters({
   filterStock,
   setFilterStock,
   categories,
-  onAddProduct
+  onAddProduct,
+  canCreate
 }: ProductFiltersProps) {
   return (
     <div className="flex flex-wrap items-center gap-4 mb-4">
@@ -57,6 +59,7 @@ export function ProductFilters({
       <Button
         className="bg-orange-500 hover:bg-orange-600 ml-auto"
         onClick={onAddProduct}
+        disabled={!canCreate}
       >
         <Plus className="mr-2 h-4 w-4" /> Agregar Producto
       </Button>

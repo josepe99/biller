@@ -14,14 +14,18 @@ import { ProductActions } from './product-actions'
 
 interface ProductTableProps {
   products: Product[]
-  onEditProduct: (product: Product) => void
-  onDeleteProduct: (productId: string) => void
+  onEditProduct?: (product: Product) => void
+  onDeleteProduct?: (productId: string) => void
+  canUpdate?: boolean
+  canDelete?: boolean
 }
 
 export function ProductTable({ 
   products, 
   onEditProduct, 
-  onDeleteProduct 
+  onDeleteProduct, 
+  canUpdate, 
+  canDelete 
 }: ProductTableProps) {
   return (
     <div className="flex-grow overflow-auto border rounded-lg">
@@ -74,8 +78,10 @@ export function ProductTable({
                 <TableCell className="text-center">
                   <ProductActions
                     product={product}
-                    onEdit={onEditProduct}
-                    onDelete={onDeleteProduct}
+                    onEdit={canUpdate ? onEditProduct : undefined}
+                    onDelete={canDelete ? onDeleteProduct : undefined}
+                    canUpdate={canUpdate}
+                    canDelete={canDelete}
                   />
                 </TableCell>
               </TableRow>

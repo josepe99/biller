@@ -1,7 +1,10 @@
 'use client'
 
+import { getCategoriesAction } from '@/lib/actions/categories'
+import { useAuth } from '@/components/auth/auth-provider'
 import { Button } from '@/components/ui/button'
-import { Product, Category } from '@/lib/types'
+import { Product } from '@/lib/types'
+import { Category } from '@prisma/client'
 import { Save } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import {
@@ -9,7 +12,6 @@ import {
   editProductAction,
   removeProductAction
 } from '@/lib/actions/productActions'
-import { getCategoriesAction } from '@/lib/actions/categories'
 import {
   Card,
   CardContent,
@@ -24,6 +26,11 @@ import {
 } from './index'
 
 export default function InventoryModule({ initialProducts }: { initialProducts: Product[] }) {
+  const { permissions = [] } = useAuth();
+  const canRead = permissions.includes('products:read');
+  const canCreate = permissions.includes('products:create');
+  const canUpdate = permissions.includes('products:update');
+  const canDelete = permissions.includes('products:delete');
   const [products, setProducts] = useState<Product[]>(initialProducts)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterCategory, setFilterCategory] = useState('Todas')
@@ -51,36 +58,36 @@ export default function InventoryModule({ initialProducts }: { initialProducts: 
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          product.barcode.toString().includes(searchTerm.toLowerCase())
+      product.barcode.toString().includes(searchTerm.toLowerCase())
     const matchesCategory = filterCategory === 'Todas' || product.category === filterCategory
     const matchesStock = filterStock === 'Todos' ||
-                         (filterStock === 'Bajo' && product.stock <= 5) ||
-                         (filterStock === 'Suficiente' && product.stock > 5)
+      (filterStock === 'Bajo' && product.stock <= 5) ||
+      (filterStock === 'Suficiente' && product.stock > 5)
     return matchesSearch && matchesCategory && matchesStock
   })
 
   const handleAddEditProduct = async (e: React.FormEvent) => {
     e.preventDefault()
     const formData = new FormData(e.target as HTMLFormElement)
-    
+
     const barcodeValue = formData.get('barcode') as string
     const ivaValue = formData.get('iva') as string
     const discountValue = formData.get('discount') as string
     const categoryName = formData.get('category') as string
-    
+
     // Find the categoryId based on the category name
     const selectedCategory = categoriesData.find(cat => cat.name === categoryName)
     const categoryId = selectedCategory?.id || null
-    
+
     const productData = {
-  barcode: barcodeValue,
-  name: formData.get('name') as string,
-  price: parseFloat(formData.get('price') as string),
-  stock: parseInt(formData.get('stock') as string),
-  categoryId: categoryId, // Use categoryId instead of category
-  iva: parseInt(ivaValue),
-  discount: discountValue ? parseFloat(discountValue) : undefined,
-  unity: formData.get('unity') as string,
+      barcode: barcodeValue,
+      name: formData.get('name') as string,
+      price: parseFloat(formData.get('price') as string),
+      stock: parseInt(formData.get('stock') as string),
+      categoryId: categoryId, // Use categoryId instead of category
+      iva: parseInt(ivaValue),
+      discount: discountValue ? parseFloat(discountValue) : undefined,
+      unity: formData.get('unity') as string,
     }
 
     try {
@@ -173,14 +180,21 @@ export default function InventoryModule({ initialProducts }: { initialProducts: 
           filterStock={filterStock}
           setFilterStock={setFilterStock}
           categories={categories}
-          onAddProduct={handleAddProduct}
+          onAddProduct={canCreate ? handleAddProduct : undefined}
+          canCreate={canCreate}
         />
 
-        <ProductTable
-          products={filteredProducts}
-          onEditProduct={handleEditProduct}
-          onDeleteProduct={handleDeleteClick}
-        />
+        {canRead ? (
+          <ProductTable
+            products={filteredProducts}
+            onEditProduct={canUpdate ? handleEditProduct : undefined}
+            onDeleteProduct={canDelete ? handleDeleteClick : undefined}
+            canUpdate={canUpdate}
+            canDelete={canDelete}
+          />
+        ) : (
+          <div className="text-center text-muted-foreground py-8">No tienes permiso para ver productos.</div>
+        )}
 
         <div className="mt-4 flex justify-end">
           <Button variant="outline" disabled>
