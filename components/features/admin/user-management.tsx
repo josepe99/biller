@@ -37,51 +37,43 @@ export default function UserManagement({ onBack }: UserManagementProps) {
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [userToDelete, setUserToDelete] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
   const [roles, setRoles] = useState<any[]>([])
   const [formLoading, setFormLoading] = useState(false)
 
   useEffect(() => {
     async function fetchData() {
-      setLoading(true)
-      setError(null)
-      try {
-        const [usersArr, rolesArr] = await Promise.all([
-          getAllUsersAction(),
-          getAllRolesAction(false)
-        ])
-        // Mapear los campos para que coincidan con el tipo User del frontend
-        const mapped = Array.isArray(usersArr)
-          ? usersArr.map((u: any) => ({
-              id: u.id,
-              name: u.name,
-              email: u.email,
-              role: u.role || '', // Adapted to use dynamic roles
-              loginAttempts: u.loginAttempts,
-              lockedUntil: u.lockedUntil === null ? undefined : u.lockedUntil,
-              lastLoginAt: u.lastLoginAt === null ? undefined : u.lastLoginAt,
-              createdAt: u.createdAt,
-              updatedAt: u.updatedAt,
-              deletedAt: u.deletedAt === undefined ? undefined : u.deletedAt,
-            }))
-          : []
-        setUsers(mapped)
-        setRoles(Array.isArray(rolesArr) ? rolesArr : [])
-      } catch (err) {
-        setError('Error al obtener usuarios o roles')
-      } finally {
-        setLoading(false)
-      }
+      setLoading(true);
+      const [usersArr, rolesArr] = await Promise.all([
+        getAllUsersAction(),
+        getAllRolesAction(false)
+      ]);
+      const mapped = Array.isArray(usersArr)
+        ? usersArr.map((u: any) => ({
+            id: u.id,
+            name: u.name,
+            email: u.email,
+            role: u.role || '',
+            loginAttempts: u.loginAttempts,
+            lockedUntil: u.lockedUntil === null ? undefined : u.lockedUntil,
+            lastLoginAt: u.lastLoginAt === null ? undefined : u.lastLoginAt,
+            createdAt: u.createdAt,
+            updatedAt: u.updatedAt,
+            deletedAt: u.deletedAt === undefined ? undefined : u.deletedAt,
+          }))
+        : [];
+      setUsers(mapped);
+      setRoles(Array.isArray(rolesArr) ? rolesArr : []);
+      setLoading(false);
     }
-    fetchData()
-  }, [])
+    fetchData();
+  }, []);
 
   // TODO: Integrar create/update/delete con los actions reales
   const handleAddEditUser = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormLoading(true);
-    setError(null);
+  // ...existing code...
     const form = e.target as HTMLFormElement;
     const formData = new FormData(form);
     const name = formData.get('name') as string;
@@ -116,7 +108,7 @@ export default function UserManagement({ onBack }: UserManagementProps) {
       setIsUserModalOpen(false);
       setEditingUser(null);
     } catch (err) {
-      setError(editingUser ? 'Error al actualizar usuario' : 'Error al crear usuario');
+      // Puedes agregar un toast aquí si quieres mostrar error
     } finally {
       setFormLoading(false);
       setLoading(false);
@@ -153,138 +145,129 @@ export default function UserManagement({ onBack }: UserManagementProps) {
                   {editingUser ? 'Modifica los detalles del usuario.' : 'Ingresa los detalles del nuevo usuario.'}
                 </DialogDescription>
               </DialogHeader>
-              {formLoading ? (
-                <div className="flex flex-col gap-4 py-4">
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
-                </div>
-              ) : (
-                <form onSubmit={handleAddEditUser} className="grid gap-4 py-4">
-                  <Input name="name" placeholder="Nombre del Usuario" defaultValue={editingUser?.name || ''} required disabled={formLoading} />
-                  {!editingUser && (
-                    <Input name="email" placeholder="Email" type="email" required disabled={formLoading} />
-                  )}
-                  {!editingUser && (
-                    <Input name="password" placeholder="Contraseña" type="password" required disabled={formLoading} />
-                  )}
-                  <Select
-                    name="role"
-                    defaultValue={
-                      editingUser
-                        ? roles.find(r => r.name.toLowerCase() === String(editingUser.role).toLowerCase())?.name || ''
-                        : (roles[0]?.name || '')
-                    }
-                    required
-                    disabled={formLoading}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar Rol" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {roles.map((role) => (
-                        <SelectItem key={role.id} value={role.name}>
-                          {role.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <DialogFooter>
-                    <Button variant="outline" onClick={() => setIsUserModalOpen(false)} disabled={formLoading}>Cancelar</Button>
-                    <Button type="submit" className="bg-orange-500 hover:bg-orange-600" disabled={formLoading}>
-                      {editingUser ? 'Guardar Cambios' : 'Agregar'}
-                    </Button>
-                  </DialogFooter>
-                </form>
-              )}
+              <form onSubmit={handleAddEditUser} className="grid gap-4 py-4">
+                <Input name="name" placeholder="Nombre del Usuario" defaultValue={editingUser?.name || ''} required disabled={formLoading} />
+                {!editingUser && (
+                  <Input name="email" placeholder="Email" type="email" required disabled={formLoading} />
+                )}
+                {!editingUser && (
+                  <Input name="password" placeholder="Contraseña" type="password" required disabled={formLoading} />
+                )}
+                <Select
+                  name="role"
+                  defaultValue={
+                    editingUser
+                      ? roles.find(r => r.name.toLowerCase() === String(editingUser.role).toLowerCase())?.name || ''
+                      : (roles[0]?.name || '')
+                  }
+                  required
+                  disabled={formLoading}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar Rol" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {roles.map((role) => (
+                      <SelectItem key={role.id} value={role.name}>
+                        {role.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsUserModalOpen(false)} disabled={formLoading}>Cancelar</Button>
+                  <Button type="submit" className="bg-orange-500 hover:bg-orange-600" disabled={formLoading}>
+                    {formLoading ? 'Cargando...' : (editingUser ? 'Guardar Cambios' : 'Agregar')}
+                  </Button>
+                </DialogFooter>
+              </form>
             </DialogContent>
           </Dialog>
         )}
       </CardHeader>
       <CardContent className="flex-grow overflow-auto border rounded-lg">
-        {loading ? (
-          <div className="text-center py-8 text-muted-foreground">Cargando usuarios...</div>
-        ) : error ? (
-          <div className="text-center py-8 text-red-500">{error}</div>
-        ) : (
-          <Table>
-            <TableHeader>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>ID</TableHead>
+              <TableHead>Nombre</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Rol</TableHead>
+              <TableHead className="text-center">Acciones</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {loading ? (
               <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>Nombre</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Rol</TableHead>
-                <TableHead className="text-center">Acciones</TableHead>
+                <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                  Cargando usuarios...
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {users.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
-                    No hay usuarios registrados.
+            ) : users.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                  No hay usuarios registrados.
+                </TableCell>
+              </TableRow>
+            ) : (
+              users.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell className="font-medium">{user.id}</TableCell>
+                  <TableCell>{user.name}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>
+                    <Badge variant="secondary">
+                      {user.role}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <div className="flex justify-center gap-2">
+                      {/* Botón editar solo si tiene permiso */}
+                      {canUpdate && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            setEditingUser(user)
+                            setIsUserModalOpen(true)
+                          }}
+                        >
+                          <Edit className="h-4 w-4 text-blue-500" />
+                        </Button>
+                      )}
+                      {/* Botón eliminar solo si tiene permiso */}
+                      {canDelete && (
+                        <Dialog open={isDeleteModalOpen && userToDelete === user.id} onOpenChange={setIsDeleteModalOpen}>
+                          <DialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setUserToDelete(user.id)}
+                            >
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Confirmar Eliminación</DialogTitle>
+                              <DialogDescription>
+                                ¿Estás seguro de que deseas eliminar al usuario "{user.name}"? Esta acción no se puede deshacer.
+                              </DialogDescription>
+                            </DialogHeader>
+                            <DialogFooter>
+                              <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)}>Cancelar</Button>
+                              <Button onClick={handleDeleteUser} className="bg-red-500 hover:bg-red-600">Eliminar</Button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
-              ) : (
-                users.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell className="font-medium">{user.id}</TableCell>
-                    <TableCell>{user.name}</TableCell>
-                    <TableCell>{user.email}</TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">
-                        {user.role}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="flex justify-center gap-2">
-                        {/* Botón editar solo si tiene permiso */}
-                        {canUpdate && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => {
-                              setEditingUser(user)
-                              setIsUserModalOpen(true)
-                            }}
-                          >
-                            <Edit className="h-4 w-4 text-blue-500" />
-                          </Button>
-                        )}
-                        {/* Botón eliminar solo si tiene permiso */}
-                        {canDelete && (
-                          <Dialog open={isDeleteModalOpen && userToDelete === user.id} onOpenChange={setIsDeleteModalOpen}>
-                            <DialogTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => setUserToDelete(user.id)}
-                              >
-                                <Trash2 className="h-4 w-4 text-red-500" />
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Confirmar Eliminación</DialogTitle>
-                                <DialogDescription>
-                                  ¿Estás seguro de que deseas eliminar al usuario "{user.name}"? Esta acción no se puede deshacer.
-                                </DialogDescription>
-                              </DialogHeader>
-                              <DialogFooter>
-                                <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)}>Cancelar</Button>
-                                <Button onClick={handleDeleteUser} className="bg-red-500 hover:bg-red-600">Eliminar</Button>
-                              </DialogFooter>
-                            </DialogContent>
-                          </Dialog>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        )}
+              ))
+            )}
+          </TableBody>
+        </Table>
       </CardContent>
     </Card>
   )

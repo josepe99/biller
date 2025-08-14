@@ -195,7 +195,7 @@ export default function RoleManagement({ onBack }: RoleManagementProps) {
             </div>
             <DialogFooter>
               <Button type="submit" disabled={formLoading}>
-                {formLoading ? <Skeleton className="h-5 w-20" /> : 'Guardar'}
+                {formLoading ? 'Cargando...' : 'Guardar'}
               </Button>
             </DialogFooter>
           </form>

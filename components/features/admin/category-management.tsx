@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -8,43 +8,66 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Plus, Edit, Trash2, ChevronLeft } from 'lucide-react'
 import { Category } from '@/lib/types'
+import {
+  getCategoriesAction,
+  createCategoryAction,
+  updateCategoryAction,
+  deleteCategoryAction
+} from '@/lib/actions/categoryActions'
+
 
 interface CategoryManagementProps {
-  categories: Category[]
-  setCategories: React.Dispatch<React.SetStateAction<Category[]>>
   onBack: () => void
 }
 
-export default function CategoryManagement({ categories, setCategories, onBack }: CategoryManagementProps) {
-  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false)
-  const [editingCategory, setEditingCategory] = useState<Category | null>(null)
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
-  const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null)
+export default function CategoryManagement({ onBack }: CategoryManagementProps) {
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [formLoading, setFormLoading] = useState(false);
 
-  const handleAddEditCategory = (e: React.FormEvent) => {
-    e.preventDefault()
-    const formData = new FormData(e.target as HTMLFormElement)
-    const newCategory: Category = {
-      id: editingCategory?.id || `CAT${(categories.length + 1).toString().padStart(3, '0')}`,
-      name: formData.get('name') as string,
+  useEffect(() => {
+    async function fetchCategories() {
+      setLoading(true);
+      const result = await getCategoriesAction();
+      setCategories(result || []);
+      setLoading(false);
     }
+    fetchCategories();
+  }, []);
 
+  const handleAddEditCategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormLoading(true);
+    const formData = new FormData(e.target as HTMLFormElement);
+    const name = formData.get('name') as string;
     if (editingCategory) {
-      setCategories(prev => prev.map(c => (c.id === newCategory.id ? newCategory : c)))
+      const updated = await updateCategoryAction(editingCategory.id, { name });
+      if (updated) {
+        setCategories(prev => prev.map(c => (c.id === editingCategory.id ? { ...c, name } : c)));
+      }
     } else {
-      setCategories(prev => [...prev, newCategory])
+      const created = await createCategoryAction({ name });
+      if (created && created.data) {
+        setCategories(prev => [...prev, created.data as Category]);
+      }
     }
-    setIsCategoryModalOpen(false)
-    setEditingCategory(null)
-  }
+    setIsCategoryModalOpen(false);
+    setEditingCategory(null);
+    setFormLoading(false);
+  };
 
-  const handleDeleteCategory = () => {
+  const handleDeleteCategory = async () => {
     if (categoryToDelete) {
-      setCategories(prev => prev.filter(c => c.id !== categoryToDelete))
-      setIsDeleteModalOpen(false)
-      setCategoryToDelete(null)
+      await deleteCategoryAction(categoryToDelete);
+      setCategories(prev => prev.filter(c => c.id !== categoryToDelete));
+      setIsDeleteModalOpen(false);
+      setCategoryToDelete(null);
     }
-  }
+  };
 
   return (
     <Card className="h-full flex flex-col">
@@ -71,9 +94,9 @@ export default function CategoryManagement({ categories, setCategories, onBack }
             <form onSubmit={handleAddEditCategory} className="grid gap-4 py-4">
               <Input name="name" placeholder="Nombre de la Categoría" defaultValue={editingCategory?.name || ''} required />
               <DialogFooter>
-                <Button variant="outline" onClick={() => setIsCategoryModalOpen(false)}>Cancelar</Button>
-                <Button type="submit" className="bg-orange-500 hover:bg-orange-600">
-                  {editingCategory ? 'Guardar Cambios' : 'Agregar'}
+                <Button variant="outline" onClick={() => setIsCategoryModalOpen(false)} disabled={formLoading}>Cancelar</Button>
+                <Button type="submit" className="bg-orange-500 hover:bg-orange-600" disabled={formLoading}>
+                  {formLoading ? 'Cargando...' : (editingCategory ? 'Guardar Cambios' : 'Agregar')}
                 </Button>
               </DialogFooter>
             </form>
@@ -90,7 +113,13 @@ export default function CategoryManagement({ categories, setCategories, onBack }
             </TableRow>
           </TableHeader>
           <TableBody>
-            {categories.length === 0 ? (
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={3} className="text-center text-muted-foreground py-8">
+                  Cargando categorías...
+                </TableCell>
+              </TableRow>
+            ) : categories.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={3} className="text-center text-muted-foreground py-8">
                   No hay categorías registradas.
@@ -145,5 +174,5 @@ export default function CategoryManagement({ categories, setCategories, onBack }
         </Table>
       </CardContent>
     </Card>
-  )
+  );
 }
