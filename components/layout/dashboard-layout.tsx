@@ -12,6 +12,7 @@ import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useAuth } from '@/components/auth/auth-provider'
+import { LOGO } from '@/settings'
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -47,7 +48,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       {/* Sidebar */}
       <aside className="w-20 bg-white border-r shadow-md flex flex-col items-center py-6 space-y-6">
         <div className="mb-6">
-          <Image src="/biller-logo.png" alt="POS Logo" width={40} height={40} />
+          <Image src={LOGO} alt="Biller Logo" width={40} height={40} />
         </div>
         <nav className="flex flex-col items-center space-y-4">
           <Link href="/">
@@ -95,7 +96,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         {/* Top Bar */}
         <header className="h-16 bg-white border-b shadow-sm flex items-center justify-between px-6">
           <div className="flex items-center space-x-3">
-            <Image src="/placeholder.svg?height=30&width=30" alt="POS Icon" width={30} height={30} />
+            <Image src={LOGO} alt="POS Icon" width={25} height={25} />
             <h1 className="text-xl font-semibold text-orange-500">Biller</h1>
           </div>
           <div className="flex items-center space-x-4 text-gray-600">
