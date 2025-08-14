@@ -46,7 +46,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       {/* Sidebar */}
       <aside className="w-20 bg-white border-r shadow-md flex flex-col items-center py-6 space-y-6">
         <div className="mb-6">
-          <Image src="/placeholder.svg?height=40&width=40" alt="POS Logo" width={40} height={40} />
+          <Image src="/biller-logo.png" alt="POS Logo" width={40} height={40} />
         </div>
         <nav className="flex flex-col items-center space-y-4">
           <Link href="/">

@@ -20,16 +20,16 @@ async function main() {
         }
       },
       update: {
-  name: permission.name,
-  description: permission.description,
-  deletedAt: null,
+        name: permission.name,
+        description: permission.description,
+        deletedAt: null,
       },
       create: {
-  name: permission.name,
-  description: permission.description,
-  resource: permission.resource,
-  action: permission.action,
-  deletedAt: null,
+        name: permission.name,
+        description: permission.description,
+        resource: permission.resource,
+        action: permission.action,
+        deletedAt: null,
       },
     })
     createdPermissions.set(permission.name, createdPermission.id)
@@ -44,13 +44,13 @@ async function main() {
   const adminRole = await prisma.role.upsert({
     where: { name: 'Admin' },
     update: {
-  description: 'Full system administrator with complete access',
-  deletedAt: null,
+      description: 'Full system administrator with complete access',
+      deletedAt: null,
     },
     create: {
-  name: 'Admin',
-  description: 'Full system administrator with complete access',
-  deletedAt: null,
+      name: 'Admin',
+      description: 'Full system administrator with complete access',
+      deletedAt: null,
     },
   })
 
@@ -58,13 +58,13 @@ async function main() {
   const managerRole = await prisma.role.upsert({
     where: { name: 'Manager' },
     update: {
-  description: 'Store manager with access to daily operations and reports',
-  deletedAt: null,
+      description: 'Store manager with access to daily operations and reports',
+      deletedAt: null,
     },
     create: {
-  name: 'Manager',
-  description: 'Store manager with access to daily operations and reports',
-  deletedAt: null,
+      name: 'Manager',
+      description: 'Store manager with access to daily operations and reports',
+      deletedAt: null,
     },
   })
 
@@ -72,13 +72,13 @@ async function main() {
   const cashierRole = await prisma.role.upsert({
     where: { name: 'Cashier' },
     update: {
-  description: 'Point of sale operator with limited access',
-  deletedAt: null,
+      description: 'Point of sale operator with limited access',
+      deletedAt: null,
     },
     create: {
-  name: 'Cashier',
-  description: 'Point of sale operator with limited access',
-  deletedAt: null,
+      name: 'Cashier',
+      description: 'Point of sale operator with limited access',
+      deletedAt: null,
     },
   })
 
@@ -204,19 +204,19 @@ async function main() {
   const adminUser = await prisma.user.upsert({
     where: { email: 'admin@pos.com' },
     update: {
-  name: 'System',
-  lastname: 'Administrator',
-  password: adminPassword,
-  role: 'ADMIN',
-  deletedAt: null
+      name: 'System',
+      lastname: 'Administrator',
+      password: adminPassword,
+      role: 'ADMIN',
+      deletedAt: null
     },
     create: {
-  email: 'admin@pos.com',
-  name: 'System',
-  lastname: 'Administrator',
-  password: adminPassword,
-  role: 'ADMIN',
-  deletedAt: null,
+      email: 'admin@pos.com',
+      name: 'System',
+      lastname: 'Administrator',
+      password: adminPassword,
+      role: 'ADMIN',
+      deletedAt: null,
     },
   })
 
@@ -241,19 +241,19 @@ async function main() {
   const managerUser = await prisma.user.upsert({
     where: { email: 'manager@pos.com' },
     update: {
-  name: 'Store',
-  lastname: 'Manager',
-  password: managerPassword,
-  role: 'MANAGER',
-  deletedAt: null
+      name: 'Store',
+      lastname: 'Manager',
+      password: managerPassword,
+      role: 'MANAGER',
+      deletedAt: null
     },
     create: {
-  email: 'manager@pos.com',
-  name: 'Store',
-  lastname: 'Manager',
-  password: managerPassword,
-  role: 'MANAGER',
-  deletedAt: null,
+      email: 'manager@pos.com',
+      name: 'Store',
+      lastname: 'Manager',
+      password: managerPassword,
+      role: 'MANAGER',
+      deletedAt: null,
     },
   })
 
@@ -278,19 +278,19 @@ async function main() {
   const cashierUser = await prisma.user.upsert({
     where: { email: 'cashier@pos.com' },
     update: {
-  name: 'Store',
-  lastname: 'Cashier',
-  password: cashierPassword,
-  role: 'CASHIER',
-  deletedAt: null
+      name: 'Store',
+      lastname: 'Cashier',
+      password: cashierPassword,
+      role: 'CASHIER',
+      deletedAt: null
     },
     create: {
-  email: 'cashier@pos.com',
-  name: 'Store',
-  lastname: 'Cashier',
-  password: cashierPassword,
-  role: 'CASHIER',
-  deletedAt: null,
+      email: 'cashier@pos.com',
+      name: 'Store',
+      lastname: 'Cashier',
+      password: cashierPassword,
+      role: 'CASHIER',
+      deletedAt: null,
     },
   })
 

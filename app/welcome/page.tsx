@@ -1,7 +1,9 @@
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { LayoutDashboard, ShoppingCart, Package, Users } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { LOGO } from '@/settings'
+import Image from 'next/image'
+import Link from 'next/link'
 
 export default function WelcomePage() {
   return (
@@ -11,7 +13,15 @@ export default function WelcomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center space-x-3">
-              <div className="h-8 w-8 rounded bg-blue-600"></div>
+              {/* Logo */}
+              <Image
+                src={LOGO}
+                alt="Logo Biller"
+                width={25}
+                height={25}
+                className="h-7 w-7 rounded object-contain bg-white"
+                priority
+              />
               <h1 className="text-2xl font-bold text-gray-900">Biller</h1>
             </div>
             <Link href="/login">

@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
+import { LOGO } from '@/settings'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -57,7 +59,14 @@ export function LoginForm() {
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
-            <div className="h-8 w-8 rounded bg-blue-600"></div>
+            <Image
+              src={LOGO}
+              alt="Logo Biller"
+              width={32}
+              height={32}
+              className="h-8 w-8 rounded object-contain"
+              priority
+            />
           </div>
           <CardTitle className="text-2xl">Biller</CardTitle>
           <CardDescription>

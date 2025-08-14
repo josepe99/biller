@@ -1,0 +1,1 @@
+export const LOGO = "/biller-logo.png"
