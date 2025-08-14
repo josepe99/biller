@@ -11,13 +11,14 @@ export class ProductDatasource {
     // Transform the data to match the frontend Product type
     return products.map(product => ({
       id: product.id,
-      barcode: product.barcode || '', // Keep as string
+      barcode: product.barcode || '',
       name: product.name,
       price: product.price,
       stock: product.stock,
       category: product.category?.name || 'Sin categoría',
-      iva: (product as any).iva || 10, // Safe fallback for iva field
+      iva: (product as any).iva || 10,
       discount: (product as any).discount || 0,
+  unity: (product as any).unity || 'UN',
     }));
   }
 
@@ -34,12 +35,13 @@ export class ProductDatasource {
     // Transform the data to match the frontend Product type
     return {
       id: product.id,
-      barcode: product.barcode || '', // Keep as string
+      barcode: product.barcode || '',
       name: product.name,
       price: product.price,
       stock: product.stock,
       category: product.category?.name || 'Sin categoría',
-      iva: (product as any).iva || 10 // Safe fallback for iva field
+      iva: (product as any).iva || 10,
+  unity: (product as any).unity || 'UN',
     };
   }
 
@@ -54,12 +56,13 @@ export class ProductDatasource {
     // Transform the data to match the frontend Product type
     return {
       id: product.id,
-      barcode: product.barcode || '', // Keep as string
+      barcode: product.barcode || '',
       name: product.name,
       price: product.price,
       stock: product.stock,
       category: product.category?.name || 'Sin categoría',
-      iva: (product as any).iva || 10 // Safe fallback for iva field
+      iva: (product as any).iva || 10,
+  unity: (product as any).unity || 'UN',
     };
   }
 
@@ -75,13 +78,14 @@ export class ProductDatasource {
     // Transform the data to match the frontend Product type
     return {
       id: product.id,
-      barcode: product.barcode || '', // Keep as string
+      barcode: product.barcode || '',
       name: product.name,
       price: product.price,
       stock: product.stock,
       category: product.category?.name || 'Sin categoría',
       iva: (product as any).iva || 10,
       discount: (product as any).discount,
+  unity: (product as any).unity || 'UN',
     };
   }
 

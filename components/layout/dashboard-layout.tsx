@@ -1,17 +1,16 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Clock } from '@/components/ui/clock'
+import { SessionValidator } from '@/components/auth/session-validator'
+import { getLowStockCountAction } from '@/lib/actions/productActions'
 import { LayoutDashboard, ShoppingCart, Package } from 'lucide-react'
+import { LogoutButton } from '@/components/auth/logout-button'
+import { Button } from '@/components/ui/button'
+import { Clock } from '@/components/ui/clock'
+import { usePathname } from 'next/navigation'
+import { Badge } from '@/components/ui/badge'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { sampleProducts } from '@/lib/data/sample-data'
-import { SessionValidator } from '@/components/auth/session-validator'
-import { LogoutButton } from '@/components/auth/logout-button'
-import { getLowStockCountAction } from '@/lib/actions/products'
 
 interface DashboardLayoutProps {
   children: React.ReactNode

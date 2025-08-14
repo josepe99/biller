@@ -8,7 +8,7 @@ import {
   addProductAction,
   editProductAction,
   removeProductAction
-} from '@/lib/actions/products'
+} from '@/lib/actions/productActions'
 import { getCategoriesAction } from '@/lib/actions/categories'
 import {
   Card,
@@ -73,13 +73,14 @@ export default function InventoryModule({ initialProducts }: { initialProducts: 
     const categoryId = selectedCategory?.id || null
     
     const productData = {
-      barcode: barcodeValue,
-      name: formData.get('name') as string,
-      price: parseFloat(formData.get('price') as string),
-      stock: parseInt(formData.get('stock') as string),
-      categoryId: categoryId, // Use categoryId instead of category
-      iva: parseInt(ivaValue),
-      discount: discountValue ? parseFloat(discountValue) : undefined,
+  barcode: barcodeValue,
+  name: formData.get('name') as string,
+  price: parseFloat(formData.get('price') as string),
+  stock: parseInt(formData.get('stock') as string),
+  categoryId: categoryId, // Use categoryId instead of category
+  iva: parseInt(ivaValue),
+  discount: discountValue ? parseFloat(discountValue) : undefined,
+  unity: formData.get('unity') as string,
     }
 
     try {
@@ -101,7 +102,14 @@ export default function InventoryModule({ initialProducts }: { initialProducts: 
         // Create new product using addProductAction
         const newProduct = await addProductAction(productData)
         if (newProduct) {
-          setProducts(prev => [...prev, newProduct])
+          // Asegurarse de que el producto tenga el campo discount
+          setProducts(prev => [
+            ...prev,
+            {
+              ...newProduct,
+              discount: (newProduct as any).discount !== undefined ? (newProduct as any).discount : 0
+            }
+          ])
         } else {
           alert('Error al crear producto')
           return

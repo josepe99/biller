@@ -31,7 +31,7 @@ export function ProductTable({
             <TableHead>Código de barras</TableHead>
             <TableHead>Nombre</TableHead>
             <TableHead className="text-right">Precio (con IVA)</TableHead>
-            <TableHead className="text-center">Stock</TableHead>
+            <TableHead className="text-center">Stock / Unidad</TableHead>
             <TableHead>Categoría</TableHead>
             <TableHead>IVA</TableHead>
             <TableHead className="text-center">Acciones</TableHead>
@@ -51,7 +51,7 @@ export function ProductTable({
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <span>{product.name}</span>
-                    { product.discount > 0 && (
+                    { (typeof product.discount === 'number' && product.discount > 0) && (
                       <Badge
                         className="bg-red-500 hover:bg-red-600 text-white font-bold px-2 py-1 text-xs animate-pulse"
                       >
@@ -65,6 +65,7 @@ export function ProductTable({
                   <Badge variant={product.stock <= 5 ? 'destructive' : 'secondary'}>
                     {product.stock}
                   </Badge>
+                  <span className="ml-1 text-xs text-muted-foreground">{product.unity}</span>
                 </TableCell>
                 <TableCell>{product.category}</TableCell>
                 <TableCell>

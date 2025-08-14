@@ -39,6 +39,7 @@ export function ProductForm({
 }: ProductFormProps) {
   const [categories, setCategories] = useState<Category[]>([])
   const [isLoadingCategories, setIsLoadingCategories] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -58,6 +59,31 @@ export function ProductForm({
       fetchCategories()
     }
   }, [isOpen])
+  // Opciones de unidad
+  const unityOptions = [
+    { value: 'UN', label: 'Unidad' },
+    { value: 'KG', label: 'Kilogramo' },
+    { value: 'G', label: 'Gramo' },
+    { value: 'L', label: 'Litro' },
+    { value: 'ML', label: 'Mililitro' },
+    { value: 'PACK', label: 'Pack' },
+    { value: 'CAJA', label: 'Caja' },
+    { value: 'DOC', label: 'Docena' },
+    { value: 'PAR', label: 'Par' },
+    { value: 'M', label: 'Metro' },
+    { value: 'CM', label: 'Centímetro' },
+    { value: 'MM', label: 'Milímetro' },
+    { value: 'OTRO', label: 'Otro' },
+  ];
+  // Handler para submit que activa el loading
+  const handleSubmit = async (e: React.FormEvent) => {
+    setIsSubmitting(true);
+    try {
+      await onSubmit(e);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -72,7 +98,8 @@ export function ProductForm({
             }
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={onSubmit} className="grid gap-4 py-4">
+        <form onSubmit={handleSubmit} className="grid gap-4 py-4">
+          {/* ...otros campos... */}
           <div className="grid gap-2">
             <Label htmlFor="barcode">Código de Barras</Label>
             <Input
@@ -147,6 +174,20 @@ export function ProductForm({
               </SelectContent>
             </Select>
           </div>
+          {/* Campo de unidad */}
+          <div className="grid gap-2">
+            <Label htmlFor="unity">Unidad</Label>
+            <Select name="unity" defaultValue={editingProduct?.unity || 'UN'} required>
+              <SelectTrigger id="unity">
+                <SelectValue placeholder="Unidad" />
+              </SelectTrigger>
+              <SelectContent>
+                {unityOptions.map(opt => (
+                  <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <div className="grid gap-2">
             <Label htmlFor="iva">Tipo de IVA</Label>
             <Select name="iva" defaultValue={editingProduct?.iva?.toString() || '10'}>
@@ -167,8 +208,10 @@ export function ProductForm({
             >
               Cancelar
             </Button>
-            <Button type="submit" className="bg-orange-500 hover:bg-orange-600">
-              {editingProduct ? 'Guardar Cambios' : 'Agregar'}
+            <Button type="submit" className="bg-orange-500 hover:bg-orange-600" disabled={isSubmitting}>
+              {isSubmitting
+                ? 'Cargando...'
+                : (editingProduct ? 'Guardar Cambios' : 'Agregar')}
             </Button>
           </DialogFooter>
         </form>
