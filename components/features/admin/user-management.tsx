@@ -15,8 +15,10 @@ import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Plus, Edit, Trash2, ChevronLeft } from 'lucide-react'
 import { User } from '@/lib/types'
-import { UserRole } from '@prisma/client'
 import { getAllUsersAction, updateUserAction, createUserAction } from '@/lib/actions/userActions'
+import { getAllRolesAction } from '@/lib/actions/roleActions'
+import { UserRole } from '@prisma/client'
+import { Skeleton } from '@/components/ui/skeleton'
 
 
 interface UserManagementProps {
@@ -37,21 +39,25 @@ export default function UserManagement({ onBack }: UserManagementProps) {
   const [userToDelete, setUserToDelete] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [roles, setRoles] = useState<any[]>([])
+  const [formLoading, setFormLoading] = useState(false)
 
   useEffect(() => {
-    async function fetchUsers() {
+    async function fetchData() {
       setLoading(true)
       setError(null)
       try {
-        const usersArr = await getAllUsersAction()
+        const [usersArr, rolesArr] = await Promise.all([
+          getAllUsersAction(),
+          getAllRolesAction(false)
+        ])
         // Mapear los campos para que coincidan con el tipo User del frontend
         const mapped = Array.isArray(usersArr)
           ? usersArr.map((u: any) => ({
               id: u.id,
               name: u.name,
               email: u.email,
-              // Normalizar el rol a mayúsculas para el enum UserRole
-              role: (u.role?.toUpperCase?.() as UserRole) || UserRole.CASHIER,
+              role: u.role || '', // Adapted to use dynamic roles
               loginAttempts: u.loginAttempts,
               lockedUntil: u.lockedUntil === null ? undefined : u.lockedUntil,
               lastLoginAt: u.lastLoginAt === null ? undefined : u.lastLoginAt,
@@ -61,40 +67,43 @@ export default function UserManagement({ onBack }: UserManagementProps) {
             }))
           : []
         setUsers(mapped)
+        setRoles(Array.isArray(rolesArr) ? rolesArr : [])
       } catch (err) {
-        setError('Error al obtener usuarios')
+        setError('Error al obtener usuarios o roles')
       } finally {
         setLoading(false)
       }
     }
-    fetchUsers()
+    fetchData()
   }, [])
 
   // TODO: Integrar create/update/delete con los actions reales
   const handleAddEditUser = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormLoading(true);
+    setError(null);
     const form = e.target as HTMLFormElement;
     const formData = new FormData(form);
     const name = formData.get('name') as string;
-    const role = formData.get('role') as UserRole;
+    const role = formData.get('role') as string;
+    const userRole = (role as UserRole);
     try {
       if (editingUser) {
-        // Actualizar usuario existente
-        await updateUserAction(editingUser.id, { name, role });
+        await updateUserAction(editingUser.id, { name, role: userRole });
       } else {
-        // Crear nuevo usuario
         const email = formData.get('email') as string;
         const password = formData.get('password') as string;
-        await createUserAction({ name, email, password, role });
+        await createUserAction({ name, email, password, role: userRole });
       }
       // Refrescar lista de usuarios y mapear como en useEffect
+      setLoading(true);
       const usersArr = await getAllUsersAction();
       const mapped = Array.isArray(usersArr)
         ? usersArr.map((u: any) => ({
             id: u.id,
             name: u.name,
             email: u.email,
-            role: (u.role?.toUpperCase?.() as UserRole) || UserRole.CASHIER,
+            role: u.role || '',
             loginAttempts: u.loginAttempts,
             lockedUntil: u.lockedUntil === null ? undefined : u.lockedUntil,
             lastLoginAt: u.lastLoginAt === null ? undefined : u.lastLoginAt,
@@ -108,6 +117,9 @@ export default function UserManagement({ onBack }: UserManagementProps) {
       setEditingUser(null);
     } catch (err) {
       setError(editingUser ? 'Error al actualizar usuario' : 'Error al crear usuario');
+    } finally {
+      setFormLoading(false);
+      setLoading(false);
     }
   }
 
@@ -141,30 +153,51 @@ export default function UserManagement({ onBack }: UserManagementProps) {
                   {editingUser ? 'Modifica los detalles del usuario.' : 'Ingresa los detalles del nuevo usuario.'}
                 </DialogDescription>
               </DialogHeader>
-              <form onSubmit={handleAddEditUser} className="grid gap-4 py-4">
-                <Input name="name" placeholder="Nombre del Usuario" defaultValue={editingUser?.name || ''} required />
-                {!editingUser && (
-                  <Input name="email" placeholder="Email" type="email" required />
-                )}
-                {!editingUser && (
-                  <Input name="password" placeholder="Contraseña" type="password" required />
-                )}
-                <Select name="role" defaultValue={editingUser?.role || UserRole.CASHIER}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar Rol" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={UserRole.ADMIN}>Administrador</SelectItem>
-                    <SelectItem value={UserRole.CASHIER}>Cajero</SelectItem>
-                  </SelectContent>
-                </Select>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsUserModalOpen(false)}>Cancelar</Button>
-                  <Button type="submit" className="bg-orange-500 hover:bg-orange-600">
-                    {editingUser ? 'Guardar Cambios' : 'Agregar'}
-                  </Button>
-                </DialogFooter>
-              </form>
+              {formLoading ? (
+                <div className="flex flex-col gap-4 py-4">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              ) : (
+                <form onSubmit={handleAddEditUser} className="grid gap-4 py-4">
+                  <Input name="name" placeholder="Nombre del Usuario" defaultValue={editingUser?.name || ''} required disabled={formLoading} />
+                  {!editingUser && (
+                    <Input name="email" placeholder="Email" type="email" required disabled={formLoading} />
+                  )}
+                  {!editingUser && (
+                    <Input name="password" placeholder="Contraseña" type="password" required disabled={formLoading} />
+                  )}
+                  <Select
+                    name="role"
+                    defaultValue={
+                      editingUser
+                        ? roles.find(r => r.name.toLowerCase() === String(editingUser.role).toLowerCase())?.name || ''
+                        : (roles[0]?.name || '')
+                    }
+                    required
+                    disabled={formLoading}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar Rol" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {roles.map((role) => (
+                        <SelectItem key={role.id} value={role.name}>
+                          {role.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsUserModalOpen(false)} disabled={formLoading}>Cancelar</Button>
+                    <Button type="submit" className="bg-orange-500 hover:bg-orange-600" disabled={formLoading}>
+                      {editingUser ? 'Guardar Cambios' : 'Agregar'}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              )}
             </DialogContent>
           </Dialog>
         )}
@@ -199,8 +232,8 @@ export default function UserManagement({ onBack }: UserManagementProps) {
                     <TableCell>{user.name}</TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>
-                      <Badge variant={user.role === UserRole.ADMIN ? 'default' : 'secondary'}>
-                        {user.role === UserRole.ADMIN ? 'Administrador' : 'Cajero'}
+                      <Badge variant="secondary">
+                        {user.role}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-center">
