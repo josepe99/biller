@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge'
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useAuth } from '@/components/auth/auth-provider'
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -18,6 +19,7 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname()
+  const { permissions } = useAuth()
 
   const [lowStockCount, setLowStockCount] = useState(0)
 
@@ -58,21 +60,23 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               <span className="text-xs mt-1">Facturar</span>
             </Button>
           </Link>
-          <Link href="/stock">
-            <Button
-              variant="ghost"
-              size="icon"
-              className={`relative h-14 w-14 rounded-xl flex flex-col items-center justify-center text-gray-600 hover:bg-gray-100 ${activeModule === 'inventory' ? 'bg-orange-100 text-orange-700' : ''}`}
-            >
-              <Package className="h-6 w-6" />
-              <span className="text-xs mt-1">Stock</span>
-              {lowStockCount > 0 && (
-                <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center rounded-full text-xs">
-                  {lowStockCount}
-                </Badge>
-              )}
-            </Button>
-          </Link>
+          {permissions.includes('inventory:manage') && (
+            <Link href="/stock">
+              <Button
+                variant="ghost"
+                size="icon"
+                className={`relative h-14 w-14 rounded-xl flex flex-col items-center justify-center text-gray-600 hover:bg-gray-100 ${activeModule === 'inventory' ? 'bg-orange-100 text-orange-700' : ''}`}
+              >
+                <Package className="h-6 w-6" />
+                <span className="text-xs mt-1">Stock</span>
+                {lowStockCount > 0 && (
+                  <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center rounded-full text-xs">
+                    {lowStockCount}
+                  </Badge>
+                )}
+              </Button>
+            </Link>
+          )}
           <Link href="/admin">
             <Button
               variant="ghost"

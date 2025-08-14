@@ -42,7 +42,8 @@ export class PermissionDatasource {
   async getAllPermissions(): Promise<{ id: string; name: string }[]> {
     const permissions = await prisma.permission.findMany({
       where: { deletedAt: null },
-      select: { id: true, name: true }
+      select: { id: true, name: true },
+      orderBy: { name: 'asc' }
     });
     return permissions;
   }
