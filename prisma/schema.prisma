@@ -279,13 +279,6 @@ model CashRegister {
   // Opening amounts
   initialCash Float @default(0) // Starting cash amount
 
-  // Closing amounts and summary
-  finalCash  Float? @default(0) // Final cash count
-  totalSales Float? @default(0) // Total sales during this session
-  totalCash  Float? @default(0) // Total cash sales
-  totalCard  Float? @default(0) // Total card sales
-  totalOther Float? @default(0) // Total other payment methods
-
   // Discrepancies
   expectedCash   Float? @default(0) // Expected cash (initial + cash sales)
   cashDifference Float? @default(0) // Difference between expected and actual cash
