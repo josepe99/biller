@@ -80,9 +80,9 @@ export default function UserManagement({ onBack }: UserManagementProps) {
     const role = formData.get('role') as string;
     const userRole = (role as UserRole);
     try {
-      if (editingUser) {
+      if (editingUser && canUpdate) {
         await updateUserAction(editingUser.id, { name, role: userRole });
-      } else {
+      } else if (canCreate) {
         const email = formData.get('email') as string;
         const password = formData.get('password') as string;
         await createUserAction({ name, email, password, role: userRole });

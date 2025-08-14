@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useAuth } from '@/components/auth/auth-provider'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -21,6 +22,11 @@ interface CategoryManagementProps {
 }
 
 export default function CategoryManagement({ onBack }: CategoryManagementProps) {
+  const { permissions } = useAuth();
+  const canRead = permissions.includes('categories:read');
+  const canCreate = permissions.includes('categories:create');
+  const canUpdate = permissions.includes('categories:update');
+  const canDelete = permissions.includes('categories:delete');
   const [categories, setCategories] = useState<Category[]>([]);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
@@ -78,100 +84,112 @@ export default function CategoryManagement({ onBack }: CategoryManagementProps) 
           </Button>
           <CardTitle className="text-orange-500">Gestión de Categorías</CardTitle>
         </div>
-        <Dialog open={isCategoryModalOpen} onOpenChange={setIsCategoryModalOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-orange-500 hover:bg-orange-600" onClick={() => setEditingCategory(null)}>
-              <Plus className="mr-2 h-4 w-4" /> Agregar Categoría
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{editingCategory ? 'Editar Categoría' : 'Agregar Nueva Categoría'}</DialogTitle>
-              <DialogDescription>
-                {editingCategory ? 'Modifica el nombre de la categoría.' : 'Ingresa el nombre de la nueva categoría.'}
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleAddEditCategory} className="grid gap-4 py-4">
-              <Input name="name" placeholder="Nombre de la Categoría" defaultValue={editingCategory?.name || ''} required />
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsCategoryModalOpen(false)} disabled={formLoading}>Cancelar</Button>
-                <Button type="submit" className="bg-orange-500 hover:bg-orange-600" disabled={formLoading}>
-                  {formLoading ? 'Cargando...' : (editingCategory ? 'Guardar Cambios' : 'Agregar')}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+        {canCreate && (
+          <Dialog open={isCategoryModalOpen} onOpenChange={setIsCategoryModalOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-orange-500 hover:bg-orange-600" onClick={() => setEditingCategory(null)}>
+                <Plus className="mr-2 h-4 w-4" /> Agregar Categoría
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>{editingCategory ? 'Editar Categoría' : 'Agregar Nueva Categoría'}</DialogTitle>
+                <DialogDescription>
+                  {editingCategory ? 'Modifica el nombre de la categoría.' : 'Ingresa el nombre de la nueva categoría.'}
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleAddEditCategory} className="grid gap-4 py-4">
+                <Input name="name" placeholder="Nombre de la Categoría" defaultValue={editingCategory?.name || ''} required />
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsCategoryModalOpen(false)} disabled={formLoading}>Cancelar</Button>
+                  <Button type="submit" className="bg-orange-500 hover:bg-orange-600" disabled={formLoading}>
+                    {formLoading ? 'Cargando...' : (editingCategory ? 'Guardar Cambios' : 'Agregar')}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+        )}
       </CardHeader>
       <CardContent className="flex-grow overflow-auto border rounded-lg">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>ID</TableHead>
-              <TableHead>Nombre</TableHead>
-              <TableHead className="text-center">Acciones</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
+        {canRead ? (
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={3} className="text-center text-muted-foreground py-8">
-                  Cargando categorías...
-                </TableCell>
+                <TableHead>ID</TableHead>
+                <TableHead>Nombre</TableHead>
+                <TableHead className="text-center">Acciones</TableHead>
               </TableRow>
-            ) : categories.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={3} className="text-center text-muted-foreground py-8">
-                  No hay categorías registradas.
-                </TableCell>
-              </TableRow>
-            ) : (
-              categories.map((category) => (
-                <TableRow key={category.id}>
-                  <TableCell className="font-medium">{category.id}</TableCell>
-                  <TableCell>{category.name}</TableCell>
-                  <TableCell className="text-center">
-                    <div className="flex justify-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          setEditingCategory(category)
-                          setIsCategoryModalOpen(true)
-                        }}
-                      >
-                        <Edit className="h-4 w-4 text-blue-500" />
-                      </Button>
-                      <Dialog open={isDeleteModalOpen && categoryToDelete === category.id} onOpenChange={setIsDeleteModalOpen}>
-                        <DialogTrigger asChild>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={3} className="text-center text-muted-foreground py-8">
+                    Cargando categorías...
+                  </TableCell>
+                </TableRow>
+              ) : categories.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={3} className="text-center text-muted-foreground py-8">
+                    No hay categorías registradas.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                categories.map((category) => (
+                  <TableRow key={category.id}>
+                    <TableCell className="font-medium">{category.id}</TableCell>
+                    <TableCell>{category.name}</TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex justify-center gap-2">
+                        {canUpdate && (
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => setCategoryToDelete(category.id)}
+                            onClick={() => {
+                              setEditingCategory(category)
+                              setIsCategoryModalOpen(true)
+                            }}
                           >
-                            <Trash2 className="h-4 w-4 text-red-500" />
+                            <Edit className="h-4 w-4 text-blue-500" />
                           </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Confirmar Eliminación</DialogTitle>
-                            <DialogDescription>
-                              ¿Estás seguro de que deseas eliminar la categoría "{category.name}"? Esta acción no se puede deshacer.
-                            </DialogDescription>
-                          </DialogHeader>
-                          <DialogFooter>
-                            <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)}>Cancelar</Button>
-                            <Button onClick={handleDeleteCategory} className="bg-red-500 hover:bg-red-600">Eliminar</Button>
-                          </DialogFooter>
-                        </DialogContent>
-                      </Dialog>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+                        )}
+                        {canDelete && (
+                          <Dialog open={isDeleteModalOpen && categoryToDelete === category.id} onOpenChange={setIsDeleteModalOpen}>
+                            <DialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setCategoryToDelete(category.id)}
+                              >
+                                <Trash2 className="h-4 w-4 text-red-500" />
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Confirmar Eliminación</DialogTitle>
+                                <DialogDescription>
+                                  ¿Estás seguro de que deseas eliminar la categoría "{category.name}"? Esta acción no se puede deshacer.
+                                </DialogDescription>
+                              </DialogHeader>
+                              <DialogFooter>
+                                <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)}>Cancelar</Button>
+                                <Button onClick={handleDeleteCategory} className="bg-red-500 hover:bg-red-600">Eliminar</Button>
+                              </DialogFooter>
+                            </DialogContent>
+                          </Dialog>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        ) : (
+          <div className="text-center text-muted-foreground py-8">
+            No tienes permiso para ver las categorías.
+          </div>
+        )}
       </CardContent>
     </Card>
   );

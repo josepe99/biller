@@ -4,6 +4,7 @@ import { useAuth } from '@/components/auth/auth-provider'
 // Permisos requeridos para roles
 const PERMISSION_CREATE = 'roles:create';
 const PERMISSION_UPDATE = 'roles:update';
+const PERMISSION_READ = 'roles:read';
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -25,6 +26,7 @@ export default function RoleManagement({ onBack }: RoleManagementProps) {
   // Validadores de permisos
   const canCreate = permissions.includes(PERMISSION_CREATE) || permissions.includes('roles:manage');
   const canUpdate = permissions.includes(PERMISSION_UPDATE) || permissions.includes('roles:manage');
+  const canRead = permissions.includes(PERMISSION_READ) || permissions.includes('roles:manage');
 
   const [roles, setRoles] = useState<any[]>([])
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false)
@@ -71,7 +73,7 @@ export default function RoleManagement({ onBack }: RoleManagementProps) {
     const name = formData.get('name') as string;
     const description = formData.get('description') as string;
     try {
-      if (editingRole) {
+      if (editingRole && canUpdate) {
         // Calcular permisos a agregar y quitar
         const prevPermissions: string[] = editingRole.permissions?.map((p: any) => p.id) || [];
         const permissionsToAdd = selectedPermissions.filter((id) => !prevPermissions.includes(id));
@@ -84,7 +86,7 @@ export default function RoleManagement({ onBack }: RoleManagementProps) {
           setFormLoading(false);
           return;
         }
-      } else {
+      } else if(canCreate) {
         const created = await createRoleAction({ name, description, permissionsToAdd: selectedPermissions });
         if (created && typeof created.id === 'string') {
           setRoles(prev => [{ ...created, description: created.description ?? undefined }, ...prev]);
@@ -142,7 +144,7 @@ export default function RoleManagement({ onBack }: RoleManagementProps) {
               </div>
             ))}
           </div>
-        ) : (
+        ) : canRead ? (
           <Table>
             <TableHeader>
               <TableRow>
@@ -166,6 +168,8 @@ export default function RoleManagement({ onBack }: RoleManagementProps) {
               ))}
             </TableBody>
           </Table>
+        ) : (
+          <div className="text-sm text-muted-foreground">No tienes permiso para ver los roles.</div>
         )}
       </CardContent>
       <Dialog open={isRoleModalOpen} onOpenChange={setIsRoleModalOpen}>
