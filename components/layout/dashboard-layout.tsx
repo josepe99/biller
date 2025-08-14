@@ -9,6 +9,8 @@ import { Clock } from '@/components/ui/clock'
 import { usePathname } from 'next/navigation'
 import { Badge } from '@/components/ui/badge'
 import { useState, useEffect } from 'react'
+import OpenCashRegisterModal from './OpenCashRegisterModal'
+import { openCheckout, getActiveCashRegisters } from '@/lib/actions/cashRegisterActions'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useAuth } from '@/components/auth/auth-provider'
@@ -23,6 +25,23 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { permissions } = useAuth()
 
   const [lowStockCount, setLowStockCount] = useState(0)
+  const { user } = useAuth();
+  const [isOpenModal, setIsOpenModal] = useState(false);
+  const [loadingOpen, setLoadingOpen] = useState(false);
+  const [cashRegister, setCashRegister] = useState<any>(null);
+
+  // Obtener estado de caja al cargar
+  useEffect(() => {
+    const fetchActiveCash = async () => {
+      try {
+        const actives = await getActiveCashRegisters();
+        setCashRegister(Array.isArray(actives) && actives.length > 0 ? actives[0] : null);
+      } catch {
+        setCashRegister(null);
+      }
+    };
+    fetchActiveCash();
+  }, []);
 
   useEffect(() => {
     const fetchLowStockCount = async () => {
@@ -100,6 +119,45 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             <h1 className="text-xl font-semibold text-orange-500">Biller</h1>
           </div>
           <div className="flex items-center space-x-4 text-gray-600">
+            {!cashRegister ? (
+              <>
+                <Button className="bg-orange-500 hover:bg-orange-600 text-white" size="sm" onClick={() => setIsOpenModal(true)}>
+                  Abrir caja
+                </Button>
+                <span>
+                  <Badge variant="destructive">Caja cerrada</Badge>
+                </span>
+              </>
+            ) : (
+              <span>
+                <Badge variant="default">Caja abierta</Badge>
+              </span>
+            )}
+            <OpenCashRegisterModal
+              open={isOpenModal}
+              onOpenChange={setIsOpenModal}
+              loading={loadingOpen}
+              onSubmit={async ({ initialCash, openingNotes }) => {
+                setLoadingOpen(true);
+                try {
+                  if (!user) throw new Error('Usuario no autenticado');
+                  const params = {
+                    checkoutId: 'main',
+                    openedById: user.id,
+                    initialCash,
+                    openingNotes,
+                    openedAt: new Date(),
+                  };
+                  const result = await openCheckout(params);
+                  setCashRegister(result);
+                  setIsOpenModal(false);
+                } catch (e) {
+                  alert('Error al abrir caja');
+                } finally {
+                  setLoadingOpen(false);
+                }
+              }}
+            />
             <Clock showDate={true} />
             <LogoutButton 
               variant="outline" 
