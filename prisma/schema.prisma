@@ -28,6 +28,7 @@ model User {
   userRoles           UserRoleAssignment[]
   openedCashRegisters CashRegister[]       @relation("CashRegisterOpenedBy")
   closedCashRegisters CashRegister[]       @relation("CashRegisterClosedBy")
+  transactions        Transaction[]        @relation("TransactionUser")
 }
 
 // Role model for defining user roles
@@ -103,15 +104,15 @@ model RolePermission {
 
 // Session model for authentication without JWT
 model Session {
-  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
   refreshBefore DateTime // Session must be refreshed before this time (will be set to createdAt + 5 days in application code)
-  userId        String   @db.ObjectId
-  loggedAt      DateTime @default(now()) // When the user logged in
+  userId        String    @db.ObjectId
+  loggedAt      DateTime  @default(now()) // When the user logged in
   expiresAt     DateTime // Session expiration (1 hour from creation)
   userAgent     String? // Browser/device info for security
   ipAddress     String? // IP address for security tracking
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
   deletedAt     DateTime?
 
   // Relations
@@ -124,18 +125,18 @@ model Session {
 
 // Product model for inventory management
 model Product {
-  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  id          String       @id @default(auto()) @map("_id") @db.ObjectId
   name        String
   description String?
   price       Float
   cost        Float?
-  barcode     String?   @unique
-  stock       Int       @default(0)
-  categoryId  String?   @db.ObjectId
-  discount    Int       @default(0)
+  barcode     String?      @unique
+  stock       Int          @default(0)
+  categoryId  String?      @db.ObjectId
+  discount    Int          @default(0)
   unity       ProductUnity @default(UN) // Unidad de medida: unidad, kg, l, etc.
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
   deletedAt   DateTime?
   iva         Int
 
@@ -169,7 +170,6 @@ model Sale {
   tax             Float      @default(0)
   discount        Float      @default(0)
   status          SaleStatus @default(COMPLETED)
-  paymentMethodId String     @db.ObjectId
   userId          String     @db.ObjectId
   customerId      String?    @db.ObjectId
   checkoutId      String     @db.ObjectId // Which checkout/cash register was used
@@ -182,11 +182,12 @@ model Sale {
   // Relations
   user          User          @relation(fields: [userId], references: [id])
   customer      Customer?     @relation(fields: [customerId], references: [id])
-  paymentMethod PaymentMethod @relation(fields: [paymentMethodId], references: [id])
+  paymentMethod PaymentMethod
   checkout      Checkout      @relation(fields: [checkoutId], references: [id])
   cashRegister  CashRegister? @relation(fields: [cashRegisterId], references: [id])
   saleItems     SaleItem[]
   salePayments  SalePayment[]
+  transactions  Transaction[]
 }
 
 // Sale item model for individual items in a sale
@@ -208,18 +209,17 @@ model SaleItem {
 
 // Sale payment model for tracking multiple payment methods per sale
 model SalePayment {
-  id              String    @id @default(auto()) @map("_id") @db.ObjectId
-  amount          Float
-  paymentMethodId String    @db.ObjectId
-  saleId          String    @db.ObjectId
-  paidAt          DateTime  @default(now())
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  deletedAt       DateTime?
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  amount    Float
+  saleId    String    @db.ObjectId
+  paidAt    DateTime  @default(now())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
   // Relations
   sale          Sale          @relation(fields: [saleId], references: [id])
-  paymentMethod PaymentMethod @relation(fields: [paymentMethodId], references: [id])
+  paymentMethod PaymentMethod
 }
 
 // Customer model for customer management (optional)
@@ -238,20 +238,6 @@ model Customer {
   sales Sale[]
 }
 
-// Payment method model for flexible payment options
-model PaymentMethod {
-  id          String    @id @default(auto()) @map("_id") @db.ObjectId
-  name        String    @unique // e.g., "Cash", "Credit Card", "Mobile Payment"
-  description String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime?
-
-  // Relations
-  sales        Sale[]
-  salePayments SalePayment[]
-}
-
 // Checkout model for managing multiple cash registers/checkouts
 model Checkout {
   id          String    @id @default(auto()) @map("_id") @db.ObjectId
@@ -264,6 +250,7 @@ model Checkout {
   // Relations
   sales         Sale[]
   cashRegisters CashRegister[]
+  transactions  Transaction[]  @relation("TransactionCheckout")
 }
 
 // Cash register model for tracking opening/closing sessions and cash summary
@@ -292,10 +279,11 @@ model CashRegister {
   deletedAt DateTime?
 
   // Relations
-  checkout Checkout @relation(fields: [checkoutId], references: [id], onDelete: Cascade)
-  openedBy User     @relation("CashRegisterOpenedBy", fields: [openedById], references: [id])
-  closedBy User?    @relation("CashRegisterClosedBy", fields: [closedById], references: [id])
-  sales    Sale[]
+  checkout     Checkout      @relation(fields: [checkoutId], references: [id], onDelete: Cascade)
+  openedBy     User          @relation("CashRegisterOpenedBy", fields: [openedById], references: [id])
+  closedBy     User?         @relation("CashRegisterClosedBy", fields: [closedById], references: [id])
+  sales        Sale[]
+  transactions Transaction[] @relation("TransactionCashRegister")
 
   @@index([checkoutId])
   @@index([openedById])
@@ -339,4 +327,53 @@ enum ProductUnity {
   CM
   MM
   OTRO
+}
+
+// Modelo para transacciones de cash, tarjeta, tigo money, etc.
+model Transaction {
+  id             String        @id @default(auto()) @map("_id") @db.ObjectId
+  paymentMethod  PaymentMethod
+  movement       MovementType
+  description    String?
+  amount         Float         @default(0)
+  // Relaciones polimórficas (solo una debe estar presente)
+  userId         String?       @db.ObjectId
+  checkoutId     String?       @db.ObjectId
+  cashRegisterId String?       @db.ObjectId
+  saleId         String?       @db.ObjectId
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  deletedAt      DateTime?
+
+  // Relaciones
+  user         User?         @relation("TransactionUser", fields: [userId], references: [id])
+  checkout     Checkout?     @relation("TransactionCheckout", fields: [checkoutId], references: [id])
+  cashRegister CashRegister? @relation("TransactionCashRegister", fields: [cashRegisterId], references: [id])
+  sale         Sale?         @relation(fields: [saleId], references: [id])
+
+  @@index([userId])
+  @@index([checkoutId])
+  @@index([cashRegisterId])
+  @@index([saleId])
+}
+
+enum PaymentMethod {
+  CASH // Efectivo (PYG)
+  DEBIT_CARD // Tarjeta de débito (Visa, Mastercard)
+  CREDIT_CARD // Tarjeta de crédito (Visa, Mastercard, Amex)
+  TIGO_MONEY // Tigo Money (mobile wallet)
+  PERSONAL_PAY // Personal Pay (Claro's mobile wallet)
+  PAGO_PY_WALLET // Billetera PagoPY (Bancard's wallet)
+  BANK_TRANSFER // Transferencia bancaria (TEF, deposito)
+  QR_PAYMENT // Pagos con QR (PagoExpress, Billetera PagoPY QR)
+  LUKITA // Lukita app payments
+  CRYPTO // Criptomonedas (Bitcoin, etc.)
+  CHEQUE // Cheque (raro, pero aún usado en algunos casos)
+  OTHER // Otros métodos no listados
+}
+
+enum MovementType {
+  INCOME
+  OUTGOING
+  TRANSFER
 }
