@@ -1,4 +1,4 @@
-import { CashRegister } from '@prisma/client';
+import { CashRegister, Checkout } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 
 export class CashRegisterDatasource {
@@ -56,8 +56,11 @@ export class CashRegisterDatasource {
     });
   }
 
-  async getActives(): Promise<CashRegister[]> {
-    return prisma.cashRegister.findMany({ where: { status: 'OPEN' } });
+  async getActives(): Promise<(CashRegister & { checkout: Checkout })[]> {
+    return prisma.cashRegister.findMany({
+      where: { status: 'OPEN' },
+      include: { checkout: true },
+    });
   }
 
   async getByUser(userId: string): Promise<CashRegister[]> {

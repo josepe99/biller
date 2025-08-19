@@ -57,6 +57,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const getActiveModule = () => {
     if (pathname.includes('/admin')) return 'admin'
     if (pathname.includes('/stock')) return 'inventory'
+    if (pathname.includes('/checkout-registers')) return 'checkout-registers'
     return 'billing'
   }
 
@@ -157,7 +158,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V5a4 4 0 018 0v2" />
                   </svg>
                 </span>
-                <span className="text-xs mt-1">Cajas</span>
+                <span className="text-xs mt-1">Cierres</span>
               </Button>
             </Link>
           )}
