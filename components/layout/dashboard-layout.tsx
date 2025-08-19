@@ -1,20 +1,21 @@
 'use client'
 
+import { openCheckout, getActiveCashRegisters, closeCheckout } from '@/lib/actions/cashRegisterActions'
 import { SessionValidator } from '@/components/auth/session-validator'
 import { getLowStockCountAction } from '@/lib/actions/productActions'
 import { LayoutDashboard, ShoppingCart, Package } from 'lucide-react'
 import { LogoutButton } from '@/components/auth/logout-button'
+import OpenCashRegisterModal from './OpenCashRegisterModal'
+import CloseCashRegisterModal from './CloseCashRegisterModal'
+import { useAuth } from '@/components/auth/auth-provider'
 import { Button } from '@/components/ui/button'
 import { Clock } from '@/components/ui/clock'
 import { usePathname } from 'next/navigation'
 import { Badge } from '@/components/ui/badge'
 import { useState, useEffect } from 'react'
-import OpenCashRegisterModal from './OpenCashRegisterModal'
-import { openCheckout, getActiveCashRegisters } from '@/lib/actions/cashRegisterActions'
+import { LOGO } from '@/settings'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useAuth } from '@/components/auth/auth-provider'
-import { LOGO } from '@/settings'
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -29,6 +30,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [isOpenModal, setIsOpenModal] = useState(false);
   const [loadingOpen, setLoadingOpen] = useState(false);
   const [cashRegister, setCashRegister] = useState<any>(null);
+  const [isCloseModal, setIsCloseModal] = useState(false);
 
   // Obtener estado de caja al cargar
   useEffect(() => {
@@ -59,6 +61,51 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   }
 
   const activeModule = getActiveModule()
+
+  // Handler para apertura de caja
+  const handleSubmit = async ({ initialCash, openingNotes, checkoutId }: { initialCash: number; openingNotes?: string; checkoutId: string }) => {
+    setLoadingOpen(true);
+    try {
+      if (!user) throw new Error('Usuario no autenticado');
+      const params = {
+        checkoutId,
+        openedById: user.id,
+        initialCash,
+        openingNotes,
+        openedAt: new Date(),
+      };
+      const result = await openCheckout(params);
+      setCashRegister(result);
+      setIsOpenModal(false);
+    } catch (e) {
+      alert('Error al abrir caja');
+    } finally {
+      setLoadingOpen(false);
+    }
+  };
+
+  // Handler para cerrar caja
+  // Handler para cerrar caja usando el modal
+  const handleCloseCashRegister = async ({ finalCash, closingNotes }: { finalCash: number; closingNotes?: string }) => {
+    if (!user || !cashRegister) return;
+    setLoadingOpen(true);
+    try {
+      await closeCheckout({
+        id: cashRegister.id,
+        closedById: user.id,
+        finalCash,
+        closingNotes: closingNotes || undefined,
+        closedAt: new Date(),
+      });
+      setCashRegister(null);
+      setIsCloseModal(false);
+      alert('Caja cerrada correctamente');
+    } catch (e) {
+      alert('Error al cerrar caja');
+    } finally {
+      setLoadingOpen(false);
+    }
+  };
 
   return (
     <>
@@ -121,42 +168,34 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           <div className="flex items-center space-x-4 text-gray-600">
             {!cashRegister ? (
               <>
-                <Button className="bg-orange-500 hover:bg-orange-600 text-white" size="sm" onClick={() => setIsOpenModal(true)}>
-                  Abrir caja
-                </Button>
                 <span>
                   <Badge variant="destructive">Caja cerrada</Badge>
                 </span>
+                <Button className="bg-orange-500 hover:bg-orange-600 text-white" size="sm" onClick={() => setIsOpenModal(true)}>
+                  Abrir caja
+                </Button>
               </>
             ) : (
-              <span>
-                <Badge variant="default">Caja abierta</Badge>
-              </span>
+              <>
+                <span>
+                  <Badge variant="default">Caja abierta</Badge>
+                </span>
+                <Button className="bg-red-500 hover:bg-red-600 text-white ml-2" size="sm" onClick={() => setIsCloseModal(true)}>
+                  Cerrar caja
+                </Button>
+                <CloseCashRegisterModal
+                  open={isCloseModal}
+                  onOpenChange={setIsCloseModal}
+                  loading={loadingOpen}
+                  onSubmit={handleCloseCashRegister}
+                />
+              </>
             )}
             <OpenCashRegisterModal
               open={isOpenModal}
               onOpenChange={setIsOpenModal}
               loading={loadingOpen}
-              onSubmit={async ({ initialCash, openingNotes }) => {
-                setLoadingOpen(true);
-                try {
-                  if (!user) throw new Error('Usuario no autenticado');
-                  const params = {
-                    checkoutId: 'main',
-                    openedById: user.id,
-                    initialCash,
-                    openingNotes,
-                    openedAt: new Date(),
-                  };
-                  const result = await openCheckout(params);
-                  setCashRegister(result);
-                  setIsOpenModal(false);
-                } catch (e) {
-                  alert('Error al abrir caja');
-                } finally {
-                  setLoadingOpen(false);
-                }
-              }}
+              onSubmit={handleSubmit}
             />
             <Clock showDate={true} />
             <LogoutButton 

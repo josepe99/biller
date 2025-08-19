@@ -1,7 +1,7 @@
-import { Button } from '@/components/ui/button';
-import { CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, ArrowRight, History, Receipt, User } from 'lucide-react';
+import { CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import React from 'react';
 
 interface BillingHeaderProps {
