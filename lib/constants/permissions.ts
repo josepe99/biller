@@ -1,676 +1,376 @@
-// All permissions needed for a comprehensive POS system
 export const permissions = [
-  // User Management Permissions
+  // Permisos de Gestión de Usuarios
   {
     name: 'users:create',
-    description: 'Create new users',
+    description: 'Crear nuevos usuarios',
     resource: 'users',
     action: 'create',
-    category: 'User Management'
+    category: 'Gestión de Usuarios'
   },
   {
     name: 'users:read',
-    description: 'View users and user details',
+    description: 'Ver usuarios y detalles de los usuarios',
     resource: 'users',
     action: 'read',
-    category: 'User Management'
+    category: 'Gestión de Usuarios'
   },
   {
     name: 'users:update',
-    description: 'Update user information and profiles',
+    description: 'Actualizar información y perfiles de usuarios',
     resource: 'users',
     action: 'update',
-    category: 'User Management'
+    category: 'Gestión de Usuarios'
   },
   {
     name: 'users:delete',
-    description: 'Delete or deactivate users',
+    description: 'Eliminar o desactivar usuarios',
     resource: 'users',
     action: 'delete',
-    category: 'User Management'
+    category: 'Gestión de Usuarios'
   },
   {
     name: 'users:manage',
-    description: 'Full user management access',
+    description: 'Acceso total a la gestión de usuarios',
     resource: 'users',
     action: 'manage',
-    category: 'User Management'
+    category: 'Gestión de Usuarios'
   },
 
-  // Product Management Permissions
+  // Permisos de Gestión de Productos
   {
     name: 'products:create',
-    description: 'Add new products to inventory',
+    description: 'Agregar nuevos productos al inventario',
     resource: 'products',
     action: 'create',
-    category: 'Product Management'
+    category: 'Gestión de Productos'
   },
   {
     name: 'products:read',
-    description: 'View products and product details',
+    description: 'Ver productos y sus detalles',
     resource: 'products',
     action: 'read',
-    category: 'Product Management'
+    category: 'Gestión de Productos'
   },
   {
     name: 'products:update',
-    description: 'Update product information, prices, and details',
+    description: 'Actualizar información, precios y detalles de productos',
     resource: 'products',
     action: 'update',
-    category: 'Product Management'
+    category: 'Gestión de Productos'
   },
   {
     name: 'products:delete',
-    description: 'Delete or deactivate products',
+    description: 'Eliminar o desactivar productos',
     resource: 'products',
     action: 'delete',
-    category: 'Product Management'
+    category: 'Gestión de Productos'
   },
   {
     name: 'products:manage',
-    description: 'Full product management access',
+    description: 'Acceso total a la gestión de productos',
     resource: 'products',
     action: 'manage',
-    category: 'Product Management'
+    category: 'Gestión de Productos'
   },
 
-  // Category Management Permissions
+  // Permisos de Gestión de Categorías
   {
     name: 'categories:create',
-    description: 'Create new product categories',
+    description: 'Crear nuevas categorías de productos',
     resource: 'categories',
     action: 'create',
-    category: 'Category Management'
+    category: 'Gestión de Categorías'
   },
   {
     name: 'categories:read',
-    description: 'View categories and category details',
+    description: 'Ver categorías y sus detalles',
     resource: 'categories',
     action: 'read',
-    category: 'Category Management'
+    category: 'Gestión de Categorías'
   },
   {
     name: 'categories:update',
-    description: 'Update category information',
+    description: 'Actualizar información de categorías',
     resource: 'categories',
     action: 'update',
-    category: 'Category Management'
+    category: 'Gestión de Categorías'
   },
   {
     name: 'categories:delete',
-    description: 'Delete or deactivate categories',
+    description: 'Eliminar o desactivar categorías',
     resource: 'categories',
     action: 'delete',
-    category: 'Category Management'
+    category: 'Gestión de Categorías'
   },
   {
     name: 'categories:manage',
-    description: 'Full category management access',
+    description: 'Acceso total a la gestión de categorías',
     resource: 'categories',
     action: 'manage',
-    category: 'Category Management'
+    category: 'Gestión de Categorías'
   },
 
-  // Sales Management Permissions
+  // Permisos de Gestión de Ventas
   {
     name: 'sales:create',
-    description: 'Process new sales and transactions',
+    description: 'Registrar nuevas ventas y transacciones',
     resource: 'sales',
     action: 'create',
-    category: 'Sales Management'
+    category: 'Gestión de Ventas'
   },
   {
     name: 'sales:read',
-    description: 'View sales history and transaction details',
+    description: 'Ver historial de ventas y detalles de transacciones',
     resource: 'sales',
     action: 'read',
-    category: 'Sales Management'
+    category: 'Gestión de Ventas'
   },
   {
     name: 'sales:update',
-    description: 'Modify existing sales (limited scenarios)',
+    description: 'Modificar ventas existentes (escenarios limitados)',
     resource: 'sales',
     action: 'update',
-    category: 'Sales Management'
+    category: 'Gestión de Ventas'
   },
   {
     name: 'sales:delete',
-    description: 'Cancel or void sales transactions',
+    description: 'Cancelar o anular transacciones de venta',
     resource: 'sales',
     action: 'delete',
-    category: 'Sales Management'
+    category: 'Gestión de Ventas'
   },
   {
     name: 'sales:refund',
-    description: 'Process refunds and returns',
+    description: 'Procesar reembolsos y devoluciones',
     resource: 'sales',
     action: 'refund',
-    category: 'Sales Management'
+    category: 'Gestión de Ventas'
   },
   {
     name: 'sales:discount',
-    description: 'Apply discounts to sales',
+    description: 'Aplicar descuentos en ventas',
     resource: 'sales',
     action: 'discount',
-    category: 'Sales Management'
+    category: 'Gestión de Ventas'
   },
   {
     name: 'sales:manage',
-    description: 'Full sales management access',
+    description: 'Acceso total a la gestión de ventas',
     resource: 'sales',
     action: 'manage',
-    category: 'Sales Management'
+    category: 'Gestión de Ventas'
   },
 
-  // Inventory Management Permissions
+   // Gestión de Cajas (cashRegister) - extendida
   {
-    name: 'inventory:read',
-    description: 'View inventory levels and stock information',
-    resource: 'inventory',
-    action: 'read',
-    category: 'Inventory Management'
-  },
-  {
-    name: 'inventory:update',
-    description: 'Adjust inventory levels and stock counts',
-    resource: 'inventory',
-    action: 'update',
-    category: 'Inventory Management'
-  },
-  {
-    name: 'inventory:restock',
-    description: 'Add new stock and manage restocking',
-    resource: 'inventory',
-    action: 'restock',
-    category: 'Inventory Management'
-  },
-  {
-    name: 'inventory:adjustment',
-    description: 'Make inventory adjustments and corrections',
-    resource: 'inventory',
-    action: 'adjustment',
-    category: 'Inventory Management'
-  },
-  {
-    name: 'inventory:manage',
-    description: 'Full inventory management access',
-    resource: 'inventory',
-    action: 'manage',
-    category: 'Inventory Management'
-  },
-
-  // Customer Management Permissions
-  {
-    name: 'customers:create',
-    description: 'Add new customers to the system',
-    resource: 'customers',
+    name: 'cashRegister:create',
+    description: 'Crear una nueva caja',
+    resource: 'cashRegister',
     action: 'create',
-    category: 'Customer Management'
+    category: 'Gestión de Cajas'
   },
   {
-    name: 'customers:read',
-    description: 'View customer information and history',
-    resource: 'customers',
-    action: 'read',
-    category: 'Customer Management'
-  },
-  {
-    name: 'customers:update',
-    description: 'Update customer information',
-    resource: 'customers',
+    name: 'cashRegister:update',
+    description: 'Actualizar información de la caja',
+    resource: 'cashRegister',
     action: 'update',
-    category: 'Customer Management'
+    category: 'Gestión de Cajas'
   },
   {
-    name: 'customers:delete',
-    description: 'Delete or deactivate customers',
-    resource: 'customers',
+    name: 'cashRegister:delete',
+    description: 'Eliminar o desactivar una caja',
+    resource: 'cashRegister',
     action: 'delete',
-    category: 'Customer Management'
+    category: 'Gestión de Cajas'
   },
   {
-    name: 'customers:manage',
-    description: 'Full customer management access',
-    resource: 'customers',
-    action: 'manage',
-    category: 'Customer Management'
-  },
-
-  // Payment Management Permissions
-  {
-    name: 'payments:process',
-    description: 'Process payments and handle payment methods',
-    resource: 'payments',
-    action: 'process',
-    category: 'Payment Management'
-  },
-  {
-    name: 'payments:read',
-    description: 'View payment history and details',
-    resource: 'payments',
+    name: 'cashRegister:read',
+    description: 'Ver información y listado de cajas',
+    resource: 'cashRegister',
     action: 'read',
-    category: 'Payment Management'
+    category: 'Gestión de Cajas'
   },
   {
-    name: 'payments:refund',
-    description: 'Process payment refunds',
-    resource: 'payments',
-    action: 'refund',
-    category: 'Payment Management'
+    name: 'cashRegister:open',
+    description: 'Abrir una caja para iniciar operaciones',
+    resource: 'cashRegister',
+    action: 'open',
+    category: 'Gestión de Cajas'
   },
   {
-    name: 'payments:methods',
-    description: 'Manage payment methods configuration',
-    resource: 'payments',
-    action: 'methods',
-    category: 'Payment Management'
+    name: 'cashRegister:close',
+    description: 'Cerrar una caja y registrar el arqueo final',
+    resource: 'cashRegister',
+    action: 'close',
+    category: 'Gestión de Cajas'
   },
   {
-    name: 'payments:manage',
-    description: 'Full payment management access',
-    resource: 'payments',
+    name: 'cashRegister:manage',
+    description: 'Acceso total a la gestión de cajas',
+    resource: 'cashRegister',
     action: 'manage',
-    category: 'Payment Management'
+    category: 'Gestión de Cajas'
   },
-
-  // Reports and Analytics Permissions
+  // Permisos de Checkout (cobro en caja)
   {
-    name: 'reports:sales',
-    description: 'View sales reports and analytics',
-    resource: 'reports',
-    action: 'sales',
-    category: 'Reports & Analytics'
-  },
-  {
-    name: 'reports:inventory',
-    description: 'View inventory reports and stock analytics',
-    resource: 'reports',
-    action: 'inventory',
-    category: 'Reports & Analytics'
+    name: 'checkout:start',
+    description: 'Iniciar un proceso de cobro en caja',
+    resource: 'checkout',
+    action: 'start',
+    category: 'Checkout'
   },
   {
-    name: 'reports:financial',
-    description: 'View financial reports and revenue analytics',
-    resource: 'reports',
-    action: 'financial',
-    category: 'Reports & Analytics'
+    name: 'checkout:add_items',
+    description: 'Agregar productos al carrito de venta',
+    resource: 'checkout',
+    action: 'add_items',
+    category: 'Checkout'
   },
   {
-    name: 'reports:customers',
-    description: 'View customer reports and analytics',
-    resource: 'reports',
-    action: 'customers',
-    category: 'Reports & Analytics'
+    name: 'checkout:remove_items',
+    description: 'Eliminar productos del carrito de venta',
+    resource: 'checkout',
+    action: 'remove_items',
+    category: 'Checkout'
   },
   {
-    name: 'reports:export',
-    description: 'Export reports in various formats',
-    resource: 'reports',
-    action: 'export',
-    category: 'Reports & Analytics'
+    name: 'checkout:apply_discount',
+    description: 'Aplicar descuentos durante el proceso de cobro',
+    resource: 'checkout',
+    action: 'apply_discount',
+    category: 'Checkout'
   },
   {
-    name: 'reports:manage',
-    description: 'Full reports and analytics access',
-    resource: 'reports',
+    name: 'checkout:apply_promotion',
+    description: 'Aplicar promociones disponibles al cobro',
+    resource: 'checkout',
+    action: 'apply_promotion',
+    category: 'Checkout'
+  },
+  {
+    name: 'checkout:select_payment',
+    description: 'Seleccionar el método de pago',
+    resource: 'checkout',
+    action: 'select_payment',
+    category: 'Checkout'
+  },
+  {
+    name: 'checkout:finalize',
+    description: 'Finalizar el cobro y generar el comprobante',
+    resource: 'checkout',
+    action: 'finalize',
+    category: 'Checkout'
+  },
+  {
+    name: 'checkout:cancel',
+    description: 'Cancelar el proceso de cobro en curso',
+    resource: 'checkout',
+    action: 'cancel',
+    category: 'Checkout'
+  },
+  {
+    name: 'checkout:manage',
+    description: 'Acceso total al proceso de checkout',
+    resource: 'checkout',
     action: 'manage',
-    category: 'Reports & Analytics'
+    category: 'Checkout'
   },
-
-  // Cash Management Permissions
-  {
-    name: 'cash:register_open',
-    description: 'Open cash register and start shift',
-    resource: 'cash',
-    action: 'register_open',
-    category: 'Cash Management'
-  },
-  {
-    name: 'cash:register_close',
-    description: 'Close cash register and end shift',
-    resource: 'cash',
-    action: 'register_close',
-    category: 'Cash Management'
-  },
-  {
-    name: 'cash:drawer_open',
-    description: 'Open cash drawer manually',
-    resource: 'cash',
-    action: 'drawer_open',
-    category: 'Cash Management'
-  },
-  {
-    name: 'cash:count',
-    description: 'Perform cash counts and reconciliation',
-    resource: 'cash',
-    action: 'count',
-    category: 'Cash Management'
-  },
-  {
-    name: 'cash:manage',
-    description: 'Full cash management access',
-    resource: 'cash',
-    action: 'manage',
-    category: 'Cash Management'
-  },
-
-  // System Settings Permissions
-  {
-    name: 'settings:general',
-    description: 'Modify general system settings',
-    resource: 'settings',
-    action: 'general',
-    category: 'System Settings'
-  },
-  {
-    name: 'settings:pos',
-    description: 'Configure POS-specific settings',
-    resource: 'settings',
-    action: 'pos',
-    category: 'System Settings'
-  },
-  {
-    name: 'settings:tax',
-    description: 'Configure tax rates and settings',
-    resource: 'settings',
-    action: 'tax',
-    category: 'System Settings'
-  },
-  {
-    name: 'settings:receipts',
-    description: 'Configure receipt templates and printing',
-    resource: 'settings',
-    action: 'receipts',
-    category: 'System Settings'
-  },
-  {
-    name: 'settings:backup',
-    description: 'Manage system backups and data export',
-    resource: 'settings',
-    action: 'backup',
-    category: 'System Settings'
-  },
-  {
-    name: 'settings:manage',
-    description: 'Full system settings access',
-    resource: 'settings',
-    action: 'manage',
-    category: 'System Settings'
-  },
-
-  // Role and Permission Management
   {
     name: 'roles:create',
-    description: 'Create new user roles',
+    description: 'Crear un nuevo rol de usuario',
     resource: 'roles',
     action: 'create',
-    category: 'Role Management'
-  },
-  {
-    name: 'roles:read',
-    description: 'View roles and role details',
-    resource: 'roles',
-    action: 'read',
-    category: 'Role Management'
+    category: 'Gestión de Roles'
   },
   {
     name: 'roles:update',
-    description: 'Update role information and permissions',
+    description: 'Actualizar información de roles',
     resource: 'roles',
     action: 'update',
-    category: 'Role Management'
+    category: 'Gestión de Roles'
   },
   {
     name: 'roles:delete',
-    description: 'Delete or deactivate roles',
+    description: 'Eliminar o desactivar roles',
     resource: 'roles',
     action: 'delete',
-    category: 'Role Management'
+    category: 'Gestión de Roles'
   },
   {
-    name: 'roles:assign',
-    description: 'Assign roles to users',
+    name: 'roles:get',
+    description: 'Ver información y listado de roles',
     resource: 'roles',
-    action: 'assign',
-    category: 'Role Management'
+    action: 'get',
+    category: 'Gestión de Roles'
   },
   {
     name: 'roles:manage',
-    description: 'Full role management access',
+    description: 'Acceso total a la gestión de roles',
     resource: 'roles',
     action: 'manage',
-    category: 'Role Management'
+    category: 'Gestión de Roles'
   },
 
+  // Permisos de Gestión de Inventario
   {
-    name: 'permissions:read',
-    description: 'View available permissions',
-    resource: 'permissions',
-    action: 'read',
-    category: 'Permission Management'
-  },
-  {
-    name: 'permissions:assign',
-    description: 'Assign permissions to roles',
-    resource: 'permissions',
-    action: 'assign',
-    category: 'Permission Management'
-  },
-  {
-    name: 'permissions:manage',
-    description: 'Full permission management access',
-    resource: 'permissions',
-    action: 'manage',
-    category: 'Permission Management'
-  },
-
-  // Barcode and Scanner Permissions
-  {
-    name: 'barcode:scan',
-    description: 'Use barcode scanner functionality',
-    resource: 'barcode',
-    action: 'scan',
-    category: 'Barcode Management'
-  },
-  {
-    name: 'barcode:generate',
-    description: 'Generate barcodes for products',
-    resource: 'barcode',
-    action: 'generate',
-    category: 'Barcode Management'
-  },
-  {
-    name: 'barcode:manage',
-    description: 'Full barcode management access',
-    resource: 'barcode',
-    action: 'manage',
-    category: 'Barcode Management'
-  },
-
-  // Promotions and Discounts
-  {
-    name: 'promotions:create',
-    description: 'Create new promotions and discount campaigns',
-    resource: 'promotions',
+    name: 'inventory:create',
+    description: 'Agregar productos al inventario',
+    resource: 'inventory',
     action: 'create',
-    category: 'Promotions & Discounts'
+    category: 'Gestión de Inventario'
   },
   {
-    name: 'promotions:read',
-    description: 'View promotions and discount details',
-    resource: 'promotions',
-    action: 'read',
-    category: 'Promotions & Discounts'
-  },
-  {
-    name: 'promotions:update',
-    description: 'Update promotion and discount information',
-    resource: 'promotions',
+    name: 'inventory:update',
+    description: 'Actualizar productos del inventario',
+    resource: 'inventory',
     action: 'update',
-    category: 'Promotions & Discounts'
+    category: 'Gestión de Inventario'
   },
   {
-    name: 'promotions:delete',
-    description: 'Delete or deactivate promotions',
-    resource: 'promotions',
+    name: 'inventory:delete',
+    description: 'Eliminar productos del inventario',
+    resource: 'inventory',
     action: 'delete',
-    category: 'Promotions & Discounts'
+    category: 'Gestión de Inventario'
   },
   {
-    name: 'promotions:apply',
-    description: 'Apply promotions and discounts to sales',
-    resource: 'promotions',
-    action: 'apply',
-    category: 'Promotions & Discounts'
+    name: 'inventory:get',
+    description: 'Ver información y listado de inventario',
+    resource: 'inventory',
+    action: 'get',
+    category: 'Gestión de Inventario'
   },
   {
-    name: 'promotions:manage',
-    description: 'Full promotions and discounts access',
-    resource: 'promotions',
+    name: 'inventory:manage',
+    description: 'Acceso total a la gestión de inventario',
+    resource: 'inventory',
     action: 'manage',
-    category: 'Promotions & Discounts'
+    category: 'Gestión de Inventario'
   },
-
-  // Supplier Management
-  {
-    name: 'suppliers:create',
-    description: 'Add new suppliers',
-    resource: 'suppliers',
-    action: 'create',
-    category: 'Supplier Management'
-  },
-  {
-    name: 'suppliers:read',
-    description: 'View supplier information',
-    resource: 'suppliers',
-    action: 'read',
-    category: 'Supplier Management'
-  },
-  {
-    name: 'suppliers:update',
-    description: 'Update supplier information',
-    resource: 'suppliers',
-    action: 'update',
-    category: 'Supplier Management'
-  },
-  {
-    name: 'suppliers:delete',
-    description: 'Delete or deactivate suppliers',
-    resource: 'suppliers',
-    action: 'delete',
-    category: 'Supplier Management'
-  },
-  {
-    name: 'suppliers:manage',
-    description: 'Full supplier management access',
-    resource: 'suppliers',
-    action: 'manage',
-    category: 'Supplier Management'
-  },
-
-  // Audit and Logs
-  {
-    name: 'audit:read',
-    description: 'View system audit logs and activity history',
-    resource: 'audit',
-    action: 'read',
-    category: 'Audit & Logs'
-  },
-  {
-    name: 'audit:export',
-    description: 'Export audit logs and reports',
-    resource: 'audit',
-    action: 'export',
-    category: 'Audit & Logs'
-  },
-  {
-    name: 'audit:manage',
-    description: 'Full audit and logging access',
-    resource: 'audit',
-    action: 'manage',
-    category: 'Audit & Logs'
-  },
-
-  // Notifications and Alerts
-  {
-    name: 'notifications:read',
-    description: 'View system notifications and alerts',
-    resource: 'notifications',
-    action: 'read',
-    category: 'Notifications'
-  },
-  {
-    name: 'notifications:create',
-    description: 'Create and send notifications',
-    resource: 'notifications',
-    action: 'create',
-    category: 'Notifications'
-  },
-  {
-    name: 'notifications:manage',
-    description: 'Full notification management access',
-    resource: 'notifications',
-    action: 'manage',
-    category: 'Notifications'
-  },
-
-  // System Administration
-  {
-    name: 'system:maintenance',
-    description: 'Perform system maintenance tasks',
-    resource: 'system',
-    action: 'maintenance',
-    category: 'System Administration'
-  },
-  {
-    name: 'system:database',
-    description: 'Access database administration features',
-    resource: 'system',
-    action: 'database',
-    category: 'System Administration'
-  },
-  {
-    name: 'system:logs',
-    description: 'Access system logs and debugging information',
-    resource: 'system',
-    action: 'logs',
-    category: 'System Administration'
-  },
-  {
-    name: 'system:manage',
-    description: 'Full system administration access',
-    resource: 'system',
-    action: 'manage',
-    category: 'System Administration'
-  }
 ] as const
 
-// Helper function to get permissions by category
+// Funciones helper (no cambian porque son lógicas internas)
 export const getPermissionsByCategory = (category: string) => {
   return permissions.filter(permission => permission.category === category)
 }
 
-// Helper function to get permissions by resource
 export const getPermissionsByResource = (resource: string) => {
   return permissions.filter(permission => permission.resource === resource)
 }
 
-// Helper function to get all unique categories
 export const getCategories = () => {
   return [...new Set(permissions.map(permission => permission.category))]
 }
 
-// Helper function to get all unique resources
 export const getResources = () => {
   return [...new Set(permissions.map(permission => permission.resource))]
 }
 
-// Helper function to get all unique actions
 export const getActions = () => {
   return [...new Set(permissions.map(permission => permission.action))]
 }
 
-// Type definitions for better TypeScript support
+// Tipos
 export type PermissionName = typeof permissions[number]['name']
 export type PermissionResource = typeof permissions[number]['resource']
 export type PermissionAction = typeof permissions[number]['action']

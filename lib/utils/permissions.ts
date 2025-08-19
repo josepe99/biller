@@ -19,7 +19,9 @@ export enum PermissionResource {
   REPORTS = 'reports',
   SETTINGS = 'settings',
   ROLES = 'roles',
-  PERMISSIONS = 'permissions'
+  PERMISSIONS = 'permissions',
+  CASH_REGISTER = 'cashRegister',
+  CHECKOUT = 'checkout'
 }
 
 /**

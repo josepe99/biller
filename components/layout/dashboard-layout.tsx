@@ -144,6 +144,23 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               </Button>
             </Link>
           )}
+          {permissions.includes('cashRegister:manage') && (
+            <Link href="/checkout-registers">
+              <Button
+                variant="ghost"
+                size="icon"
+                className={`relative h-14 w-14 rounded-xl flex flex-col items-center justify-center text-gray-600 hover:bg-gray-100 ${activeModule === 'checkout-registers' ? 'bg-orange-100 text-orange-700' : ''}`}
+              >
+                <span className="h-6 w-6 flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-6 w-6">
+                    <rect x="4" y="7" width="16" height="10" rx="2" stroke="currentColor" strokeWidth="1.5" fill="none" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V5a4 4 0 018 0v2" />
+                  </svg>
+                </span>
+                <span className="text-xs mt-1">Cajas</span>
+              </Button>
+            </Link>
+          )}
           <Link href="/admin">
             <Button
               variant="ghost"

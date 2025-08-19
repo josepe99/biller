@@ -310,29 +310,6 @@ async function main() {
     }
   })
 
-  console.log('✅ Created users with role assignments')
-
-  // Create payment methods
-  await prisma.paymentMethod.upsert({
-    where: { name: 'Efectivo' },
-    update: {},
-    create: {
-      name: 'Efectivo',
-      description: 'Pagos en efectivos',
-      deletedAt: null,
-    },
-  })
-
-  await prisma.paymentMethod.upsert({
-    where: { name: 'Tarjeta de crédito' },
-    update: {},
-    create: {
-      name: 'Tarjeta de crédito',
-      description: 'Pagos con tarjeta de crédito',
-      deletedAt: null,
-    },
-  })
-
   // Step 6: Create checkout points (cash registers)
   console.log('💰 Creating checkout points...')
 
