@@ -1,5 +1,6 @@
 import { AuthProvider } from "@/components/auth/auth-provider";
 import { ThemeProvider } from "@/components/theme-provider";
+import { CashRegisterProvider } from "@/components/checkout/CashRegisterContext";
 import { Roboto } from 'next/font/google';
 import type { Metadata } from "next";
 import "./globals.css";
@@ -25,7 +26,9 @@ export default function RootLayout({
         disableTransitionOnChange
       >
         <AuthProvider>
-          {children}
+          <CashRegisterProvider>
+            {children}
+          </CashRegisterProvider>
         </AuthProvider>
       </ThemeProvider>
     </body></html>

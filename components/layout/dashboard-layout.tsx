@@ -13,6 +13,7 @@ import { Clock } from '@/components/ui/clock'
 import { usePathname } from 'next/navigation'
 import { Badge } from '@/components/ui/badge'
 import { useState, useEffect } from 'react'
+import { useCashRegister } from '@/components/checkout/CashRegisterContext'
 import { LOGO } from '@/settings'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -29,21 +30,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { user } = useAuth();
   const [isOpenModal, setIsOpenModal] = useState(false);
   const [loadingOpen, setLoadingOpen] = useState(false);
-  const [cashRegister, setCashRegister] = useState<any>(null);
+  const { cashRegister, setCashRegister } = useCashRegister();
   const [isCloseModal, setIsCloseModal] = useState(false);
 
-  // Obtener estado de caja al cargar
-  useEffect(() => {
-    const fetchActiveCash = async () => {
-      try {
-        const actives = await getActiveCashRegisters();
-        setCashRegister(Array.isArray(actives) && actives.length > 0 ? actives[0] : null);
-      } catch {
-        setCashRegister(null);
-      }
-    };
-    fetchActiveCash();
-  }, []);
+  // Estado de caja ahora viene del contexto global
 
   useEffect(() => {
     const fetchLowStockCount = async () => {
