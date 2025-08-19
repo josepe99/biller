@@ -265,6 +265,7 @@ model CashRegister {
 
   // Opening amounts
   initialCash Float @default(0) // Starting cash amount
+  finalCash   Float?            // Cash counted at closing (efectivo final)
 
   // Discrepancies
   expectedCash   Float? @default(0) // Expected cash (initial + cash sales)

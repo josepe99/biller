@@ -1,17 +1,28 @@
+"use server"
+
 import { CashRegisterController } from '../controllers/cashRegister.controller';
 
 const controller = new CashRegisterController();
 
-export const getAllCashRegisters = () => controller.getAll();
-export const getCashRegisterById = (id: string) => controller.getById(id);
-export const openCheckout = (params: {
+export async function getAllCashRegisters() {
+	return await controller.getAll();
+}
+
+export async function getCashRegisterById(id: string) {
+	return await controller.getById(id);
+}
+
+export async function openCheckout(params: {
 	checkoutId: string;
 	openedById: string;
 	initialCash: number;
 	openingNotes?: string;
 	openedAt?: Date;
-}) => controller.openCheckout(params);
-export const closeCheckout = (params: {
+}) {
+	return await controller.openCheckout(params);
+}
+
+export async function closeCheckout(params: {
 	id: string;
 	closedById: string;
 	finalCash: number;
@@ -23,8 +34,22 @@ export const closeCheckout = (params: {
 	totalOther?: number;
 	expectedCash?: number;
 	cashDifference?: number;
-}) => controller.closeCheckout(params);
-export const getActiveCashRegisters = () => controller.getActives();
-export const getCashRegistersByUser = (userId: string) => controller.getByUser(userId);
-export const updateCashRegister = (id: string, data: any) => controller.update(id, data);
-export const deleteCashRegister = (id: string) => controller.delete(id);
+}) {
+	return await controller.closeCheckout(params);
+}
+
+export async function getActiveCashRegisters() {
+	return await controller.getActives();
+}
+
+export async function getCashRegistersByUser(userId: string) {
+	return await controller.getByUser(userId);
+}
+
+export async function updateCashRegister(id: string, data: any) {
+	return await controller.update(id, data);
+}
+
+export async function deleteCashRegister(id: string) {
+	return await controller.delete(id);
+}
