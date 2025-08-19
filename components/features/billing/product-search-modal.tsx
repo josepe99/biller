@@ -1,14 +1,28 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table'
-import { Product } from '@/lib/types'
-import { sampleProducts } from '@/lib/data/sample-data'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableRow
+} from '@/components/ui/table'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from '@/components/ui/dialog'
+// import { sampleProducts } from '@/lib/data/sample-data'
+import { getProductsAction } from '@/lib/actions/productActions'
 import { formatParaguayanCurrency } from '@/lib/utils'
+import { useState, useEffect, useRef } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
+import { Product } from '@/lib/types'
+
 
 interface ProductSearchModalProps {
   isOpen: boolean
@@ -27,14 +41,25 @@ export default function ProductSearchModal({
   const [filteredModalProducts, setFilteredModalProducts] = useState<Product[]>([])
   const modalSearchDebounceRef = useRef<NodeJS.Timeout | null>(null)
 
+  useEffect(() => {
+    async function fetchProducts() {
+      const products = await getProductsAction(30)
+      setFilteredModalProducts(products)
+    }
+    fetchProducts()
+  }, [])
+
   // Function to filter products for the modal
-  const filterProductsForModal = (term: string) => {
+  const filterProductsForModal = async (term: string) => {
     const lowerCaseTerm = term.toLowerCase().trim()
     if (!lowerCaseTerm) {
-      setFilteredModalProducts(sampleProducts) // Show all products if search term is empty
+      const products = await getProductsAction(30)
+      setFilteredModalProducts(products)
       return
     }
-    const results = sampleProducts.filter(p =>
+    // Buscar productos por nombre o código (puedes mejorar esto llamando a un action real si existe)
+    const products = await getProductsAction(100) // Trae más para buscar en memoria
+    const results = products.filter(p =>
       p.id.toLowerCase().includes(lowerCaseTerm) ||
       p.name.toLowerCase().includes(lowerCaseTerm)
     )
@@ -56,6 +81,7 @@ export default function ProductSearchModal({
         clearTimeout(modalSearchDebounceRef.current)
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modalSearchTerm, isOpen])
 
   // Set initial search term when modal opens
@@ -64,6 +90,7 @@ export default function ProductSearchModal({
       setModalSearchTerm(initialSearchTerm)
       filterProductsForModal(initialSearchTerm)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, initialSearchTerm])
 
   const handleProductSelection = (product: Product) => {

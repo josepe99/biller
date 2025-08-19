@@ -4,9 +4,10 @@ import { ProductController } from '@/lib/controllers/product.controller';
 
 const productController = new ProductController();
 
-export async function getProductsAction() {
+
+export async function getProductsAction(limit?: number) {
   try {
-    return productController.getAllProducts();
+    return productController.getAllProducts(limit);
   } catch (error) {
     return [];
   }

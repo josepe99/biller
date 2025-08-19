@@ -1,11 +1,12 @@
 import { prisma } from '../prisma';
 
 export class ProductDatasource {
-  async getAllProducts() {
+  async getAllProducts(limit?: number) {
     const products = await prisma.product.findMany({
       include: {
         category: true,
       },
+      ...(limit ? { take: limit } : {}),
     });
 
     // Transform the data to match the frontend Product type
@@ -18,7 +19,7 @@ export class ProductDatasource {
       category: product.category?.name || 'Sin categoría',
       iva: (product as any).iva || 10,
       discount: (product as any).discount || 0,
-  unity: (product as any).unity || 'UN',
+      unity: (product as any).unity || 'UN',
     }));
   }
 

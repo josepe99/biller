@@ -8,8 +8,8 @@ export class ProductController {
   }
 
 
-  async getAllProducts() {
-    return await this.productDatasource.getAllProducts();
+  async getAllProducts(limit?: number) {
+    return await this.productDatasource.getAllProducts(limit);
   }
 
 
