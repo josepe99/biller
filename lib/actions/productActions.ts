@@ -60,3 +60,12 @@ export async function getLowStockCountAction(threshold?: number) {
     return 0;
   }
 }
+
+export async function searchProductsAction(query: string) {
+  try {
+    return await productController.searchProducts(query);
+  } catch (error) {
+    console.error('Error searching products:', error);
+    return [];
+  }
+}

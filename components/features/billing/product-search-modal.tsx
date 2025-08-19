@@ -15,7 +15,7 @@ import {
   DialogTitle
 } from '@/components/ui/dialog'
 // import { sampleProducts } from '@/lib/data/sample-data'
-import { getProductsAction } from '@/lib/actions/productActions'
+import { getProductsAction, searchProductsAction } from '@/lib/actions/productActions'
 import { formatParaguayanCurrency } from '@/lib/utils'
 import { useState, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
@@ -49,20 +49,15 @@ export default function ProductSearchModal({
     fetchProducts()
   }, [])
 
-  // Function to filter products for the modal
+  // Function to filter products for the modal usando el action real
   const filterProductsForModal = async (term: string) => {
-    const lowerCaseTerm = term.toLowerCase().trim()
-    if (!lowerCaseTerm) {
+    const searchTerm = term.trim()
+    if (!searchTerm) {
       const products = await getProductsAction(30)
       setFilteredModalProducts(products)
       return
     }
-    // Buscar productos por nombre o código (puedes mejorar esto llamando a un action real si existe)
-    const products = await getProductsAction(100) // Trae más para buscar en memoria
-    const results = products.filter(p =>
-      p.id.toLowerCase().includes(lowerCaseTerm) ||
-      p.name.toLowerCase().includes(lowerCaseTerm)
-    )
+    const results = await searchProductsAction(searchTerm)
     setFilteredModalProducts(results)
   }
 

@@ -1,6 +1,33 @@
 import { prisma } from '../prisma';
 
 export class ProductDatasource {
+    /**
+     * Busca productos por coincidencia parcial en nombre o código de barras
+     * @param query texto a buscar
+     * @returns productos que coincidan
+     */
+    async searchProducts(query: string) {
+      const products = await prisma.product.findMany({
+        where: {
+          OR: [
+            { name: { contains: query, mode: 'insensitive' } },
+            { barcode: { contains: query, mode: 'insensitive' } },
+          ],
+        },
+        include: { category: true },
+      });
+      return products.map(product => ({
+        id: product.id,
+        barcode: product.barcode || '',
+        name: product.name,
+        price: product.price,
+        stock: product.stock,
+        category: product.category?.name || 'Sin categoría',
+        iva: (product as any).iva || 10,
+        discount: (product as any).discount || 0,
+        unity: (product as any).unity || 'UN',
+      }));
+    }
   async getAllProducts(limit?: number) {
     const products = await prisma.product.findMany({
       include: {

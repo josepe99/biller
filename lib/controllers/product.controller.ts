@@ -1,6 +1,14 @@
 import { ProductDatasource } from '@/lib/datasources/product.datasource';
 
 export class ProductController {
+
+  /**
+   * Busca productos por coincidencia parcial en nombre o código de barras
+   * @param query texto a buscar
+   */
+  async searchProducts(query: string) {
+    return await this.productDatasource.searchProducts(query);
+  }
   private productDatasource: ProductDatasource;
 
   constructor() {
