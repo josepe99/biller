@@ -337,7 +337,6 @@ model Transaction {
   movement       MovementType
   description    String?
   amount         Float         @default(0)
-  // Relaciones polimórficas (solo una debe estar presente)
   userId         String?       @db.ObjectId
   checkoutId     String?       @db.ObjectId
   cashRegisterId String?       @db.ObjectId

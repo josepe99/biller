@@ -35,7 +35,6 @@ export default function BillingModule() {
   const [lastAddedProductId, setLastAddedProductId] = useState<string | null>(null)
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false)
   const [currentInvoiceNumber, setCurrentInvoiceNumber] = useState<string>('')
-  const [invoiceHistory, setInvoiceHistory] = useState<any[]>([])
   const [currentHistoryIndex, setCurrentHistoryIndex] = useState<number>(-1)
   const [customerRuc, setCustomerRuc] = useState<string>('')
   const [customerInfo, setCustomerInfo] = useState<any>(null)
@@ -51,11 +50,11 @@ export default function BillingModule() {
   useEffect(() => {
     const initializeInvoice = async () => {
       await generateInvoiceNumber()
-      loadInvoiceHistory()
     }
     initializeInvoice()
   }, [])
 
+  const [invoiceHistory, setInvoiceHistory] = useState<any[]>([])
   const generateInvoiceNumber = async () => {
     try {
       const invoiceData = await generateInvoiceData()
@@ -66,56 +65,6 @@ export default function BillingModule() {
       const sequence = Math.floor(Math.random() * 9999999) + 1
       const fallbackNumber = `001-001-${sequence.toString().padStart(7, '0')}`
       setCurrentInvoiceNumber(fallbackNumber)
-    }
-  }
-
-  const loadInvoiceHistory = async () => {
-    try {
-      // TODO: Implement API call to fetch invoice history
-      // For now, we'll use mock data with new format and RUC
-      const mockHistory = [
-        {
-          id: '1',
-          invoiceNumber: '001-001-0000001',
-          total: 125000,
-          date: new Date('2024-08-10'),
-          cashier: 'María González',
-          customerRuc: '80012345-1',
-          customerName: 'Juan Pérez S.A.',
-          items: [
-            { name: 'Coca Cola 500ml', quantity: 2, unitPrice: 8000, total: 16000 },
-            { name: 'Pan de molde', quantity: 1, unitPrice: 12000, total: 12000 }
-          ]
-        },
-        {
-          id: '2',
-          invoiceNumber: '001-001-0000002',
-          total: 75000,
-          date: new Date('2024-08-10'),
-          cashier: 'Juan Pérez',
-          customerRuc: '80087654-3',
-          customerName: 'María González',
-          items: [
-            { name: 'Leche entera 1L', quantity: 3, unitPrice: 9500, total: 28500 }
-          ]
-        },
-        {
-          id: '3',
-          invoiceNumber: '001-001-0000003',
-          total: 45000,
-          date: new Date('2024-08-09'),
-          cashier: 'Ana López',
-          customerRuc: '80012345-1',
-          customerName: 'Juan Pérez S.A.',
-          items: [
-            { name: 'Agua mineral 1L', quantity: 5, unitPrice: 9000, total: 45000 }
-          ]
-        }
-      ]
-      setInvoiceHistory(mockHistory)
-      setFilteredHistory(mockHistory)
-    } catch (error) {
-      console.error('Error loading invoice history:', error)
     }
   }
 
@@ -258,9 +207,6 @@ export default function BillingModule() {
       }))
     }
     
-    // Add to history
-    setInvoiceHistory(prev => [newInvoice, ...prev])
-    setFilteredHistory(prev => [newInvoice, ...prev])
     
     alert(`Venta realizada con éxito!\nFactura: ${currentInvoiceNumber}${customerInfo ? `\nCliente: ${customerInfo.name}` : ''}`)
     setCart([])
@@ -282,8 +228,10 @@ export default function BillingModule() {
   }
 
   const showPreviousInvoice = () => {
-    if (invoiceHistory.length > 0 && currentHistoryIndex < invoiceHistory.length - 1) {
-      setCurrentHistoryIndex(prev => prev + 1)
+    if (currentHistoryIndex > 0) {
+      setCurrentHistoryIndex(prev => prev - 1)
+    } else if (currentHistoryIndex === 0) {
+      setCurrentHistoryIndex(-1) // Volver a la venta actual
     }
   }
 
@@ -399,9 +347,6 @@ export default function BillingModule() {
         searchType={searchType}
         setSearchType={setSearchType}
         historySearchTerm={historySearchTerm}
-        setHistorySearchTerm={setHistorySearchTerm}
-        invoiceHistory={invoiceHistory}
-        filteredHistory={filteredHistory}
         setFilteredHistory={setFilteredHistory}
         handleHistorySearch={handleHistorySearch}
         setCurrentHistoryIndex={setCurrentHistoryIndex}
