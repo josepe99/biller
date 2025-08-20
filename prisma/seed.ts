@@ -357,10 +357,14 @@ async function main() {
   ]
 
   for (const checkout of checkouts) {
+    const safeCheckout = {
+      ...checkout,
+      invoiceSequence: typeof checkout.invoiceSequence === 'number' && checkout.invoiceSequence !== null ? checkout.invoiceSequence : 0,
+    };
     await prisma.checkout.upsert({
       where: { name: checkout.name },
       update: {},
-      create: checkout,
+      create: safeCheckout,
     })
   }
 

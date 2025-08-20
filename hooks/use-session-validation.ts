@@ -39,7 +39,6 @@ export function useSessionValidation() {
   // Initialize session validation when user is authenticated
   useEffect(() => {
     if (!isLoading && sessionId && !isInitializedRef.current) {
-      console.log('Initializing session validation...')
       sessionManager.startValidation(handleSessionInvalid, handleSessionRefreshed)
       isInitializedRef.current = true
     }
@@ -47,7 +46,6 @@ export function useSessionValidation() {
     // Cleanup on unmount or when session changes
     return () => {
       if (isInitializedRef.current) {
-        console.log('Cleaning up session validation...')
         sessionManager.stopValidation()
         isInitializedRef.current = false
       }

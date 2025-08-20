@@ -240,14 +240,14 @@ model Customer {
 
 // Checkout model for managing multiple cash registers/checkouts
 model Checkout {
-  id          String    @id @default(auto()) @map("_id") @db.ObjectId
-  name        String    @unique // e.g., "Caja 1", "Caja Principal", "Caja Express"
-  description String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime?
-  invoicePrefix   String     @default("001") // First 3 digits (xxx)
-  invoiceMiddle   String     @default("001") // Middle 3 digits (xxx)
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  name            String    @unique // e.g., "Caja 1", "Caja Principal", "Caja Express"
+  description     String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
+  invoicePrefix   String    @default("001") // First 3 digits (xxx)
+  invoiceMiddle   String    @default("001") // Middle 3 digits (xxx)
   invoiceSequence Int // Last 7 digits (zzzzzzz) - sequential number
 
   // Relations
@@ -267,8 +267,8 @@ model CashRegister {
   status     CashRegisterStatus @default(OPEN)
 
   // Opening amounts
-  initialCash Float @default(0) // Starting cash amount
-  finalCash   Float?            // Cash counted at closing (efectivo final)
+  initialCash Float  @default(0) // Starting cash amount
+  finalCash   Float? // Cash counted at closing (efectivo final)
 
   // Discrepancies
   expectedCash   Float? @default(0) // Expected cash (initial + cash sales)

@@ -5,14 +5,6 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog';
-import {
-  Card,
-  CardContent,
-  CardHeader
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import React, { useEffect, useState } from 'react';
 
 import { getSalesHistoryAction, searchSalesAction } from '@/lib/actions/saleActions';
@@ -31,12 +23,7 @@ interface InvoiceHistoryModalProps {
 export function InvoiceHistoryModal({
   isOpen,
   setIsOpen,
-  searchType,
-  setSearchType,
   historySearchTerm,
-  setFilteredHistory,
-  handleHistorySearch,
-  setCurrentHistoryIndex,
 }: InvoiceHistoryModalProps) {
   const [invoices, setInvoices] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -70,7 +57,6 @@ export function InvoiceHistoryModal({
           <DialogTitle>Historial de Facturas</DialogTitle>
           <DialogDescription>Buscar y revisar facturas procesadas</DialogDescription>
         </DialogHeader>
-        {/* ...rest of the component rendering invoices... */}
       </DialogContent>
     </Dialog>
   );

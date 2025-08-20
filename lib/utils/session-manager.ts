@@ -37,7 +37,6 @@ export class SessionManager {
   startValidation(onSessionInvalid?: () => void, onSessionRefreshed?: (user: any) => void) {
     // Prevent multiple validation timers
     if (this.isValidationStarted) {
-      console.log('Session validation already started, skipping...')
       return
     }
 
@@ -46,14 +45,12 @@ export class SessionManager {
 
     const validate = async () => {
       if (this.isValidating) {
-        console.log('Session validation already in progress, skipping...')
         return
       }
 
       // Check minimum interval between validations
       const now = Date.now()
       if (now - this.lastValidationTime < this.MIN_VALIDATION_INTERVAL) {
-        console.log('Too soon since last validation, skipping...')
         return
       }
 
@@ -66,12 +63,9 @@ export class SessionManager {
       this.isValidating = true
       this.validationCount++
       this.lastValidationTime = now
-      console.log(`Session validation #${this.validationCount} starting...`)
 
       try {
         const result = await validateSessionAction(sessionId)
-
-        console.log(`Session validation #${this.validationCount} completed:`, result.success ? 'SUCCESS' : 'FAILED')
 
         if (!result.success) {
           // Session is invalid
