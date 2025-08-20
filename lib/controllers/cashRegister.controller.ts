@@ -12,6 +12,10 @@ export class CashRegisterController {
     return this.datasource.getAll();
   }
 
+  async getActiveByUser(userId: string) {
+    return this.datasource.getActiveByUser(userId);
+  }
+
   async getById(id: string) {
     return this.datasource.getById(id);
   }
@@ -40,10 +44,6 @@ export class CashRegisterController {
     cashDifference?: number;
   }) {
     return this.datasource.closeCheckout(params);
-  }
-
-  async getActives() {
-    return this.datasource.getActives();
   }
 
   async getByUser(userId: string) {

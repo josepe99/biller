@@ -1,11 +1,11 @@
-import { getActiveCashRegisters } from '@/lib/actions/cashRegisterActions';
+import { getAllCashRegisters } from '@/lib/actions/cashRegisterActions';
 import DashboardLayout from '@/components/layout/dashboard-layout';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 
 
 export default async function CheckoutRegistersPage() {
-  const activeCashRegisters = await getActiveCashRegisters()
+  const activeCashRegisters = await getAllCashRegisters()
 
   return (
     <DashboardLayout>

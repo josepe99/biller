@@ -2,8 +2,11 @@ import { CashRegister, Checkout } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 
 export class CashRegisterDatasource {
-  async getAll(): Promise<CashRegister[]> {
-    return prisma.cashRegister.findMany();
+  async getAll(): Promise<(CashRegister & { checkout: Checkout })[]> {
+    return prisma.cashRegister.findMany({
+      include: { checkout: true },
+      orderBy: { createdAt: 'desc' },
+    });
   }
 
   async getById(id: string): Promise<CashRegister | null> {
@@ -81,5 +84,15 @@ export class CashRegisterDatasource {
 
   async delete(id: string): Promise<CashRegister> {
     return prisma.cashRegister.delete({ where: { id } });
+  }
+
+  getActiveByUser(userId: string): Promise<CashRegister | null> {
+    return prisma.cashRegister.findFirst({
+      where: {
+        status: 'OPEN',
+        openedById: userId,
+      },
+      include: { checkout: true },
+    });
   }
 }

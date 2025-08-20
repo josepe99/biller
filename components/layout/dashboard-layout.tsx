@@ -1,6 +1,7 @@
 'use client'
 
-import { openCheckout, getActiveCashRegisters, closeCheckout } from '@/lib/actions/cashRegisterActions'
+import { openCheckout, closeCheckout } from '@/lib/actions/cashRegisterActions'
+import { useCashRegister } from '@/components/checkout/CashRegisterContext'
 import { SessionValidator } from '@/components/auth/session-validator'
 import { getLowStockCountAction } from '@/lib/actions/productActions'
 import { LayoutDashboard, ShoppingCart, Package } from 'lucide-react'
@@ -13,7 +14,6 @@ import { Clock } from '@/components/ui/clock'
 import { usePathname } from 'next/navigation'
 import { Badge } from '@/components/ui/badge'
 import { useState, useEffect } from 'react'
-import { useCashRegister } from '@/components/checkout/CashRegisterContext'
 import { LOGO } from '@/settings'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -32,8 +32,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [loadingOpen, setLoadingOpen] = useState(false);
   const { cashRegister, setCashRegister } = useCashRegister();
   const [isCloseModal, setIsCloseModal] = useState(false);
-
-  // Estado de caja ahora viene del contexto global
 
   useEffect(() => {
     const fetchLowStockCount = async () => {

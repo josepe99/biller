@@ -38,8 +38,8 @@ export async function closeCheckout(params: {
 	return await controller.closeCheckout(params);
 }
 
-export async function getActiveCashRegisters() {
-	return await controller.getActives();
+export async function getActiveCashRegisterByUser(userId: string) {
+	return await controller.getActiveByUser(userId);
 }
 
 export async function getCashRegistersByUser(userId: string) {
