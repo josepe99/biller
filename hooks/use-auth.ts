@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import type { AuthUser, Session } from '@/lib/types'
+import { useState, useEffect } from 'react'
 
 interface UseAuthReturn {
   user: AuthUser | null
@@ -19,7 +19,6 @@ export function useAuth(): UseAuthReturn {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Load auth data from localStorage on mount
     try {
       const storedSessionId = localStorage.getItem('sessionId')
       const storedUser = localStorage.getItem('user')

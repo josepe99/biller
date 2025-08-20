@@ -200,7 +200,7 @@ export default function BillingModule() {
       invoiceNumber: currentInvoiceNumber,
       total: total,
       date: new Date(),
-      cashier: user?.name || 'Usuario Desconocido',
+      cashier: user?.name,
       customerRuc: customerRuc || null,
       customerName: customerInfo?.name || null,
       items: cart.map(item => ({
@@ -248,10 +248,9 @@ export default function BillingModule() {
 
   const getCurrentDisplayData = () => {
     if (currentHistoryIndex === -1) {
-      // Current sale
       return {
         invoiceNumber: currentInvoiceNumber,
-        cashier: user?.name || 'Usuario Desconocido',
+        cashier: user?.name,
         items: cart,
         total: total,
         isCurrentSale: true

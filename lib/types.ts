@@ -25,3 +25,20 @@ export interface Product {
   discount?: number;
   unity: ProductUnity;
 }
+
+// Tipos para autenticación
+export interface AuthUser {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  [key: string]: any;
+}
+
+export interface Session {
+  id: string;
+  userId: string;
+  createdAt: Date;
+  expiresAt: Date;
+  [key: string]: any;
+}
