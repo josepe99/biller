@@ -12,6 +12,15 @@ import { Input } from '@/components/ui/input';
 import { Trash2 } from 'lucide-react';
 import React from 'react';
 
+const formatPYG = (value: number) => {
+  return value.toLocaleString('es-PY', {
+    style: 'currency',
+    currency: 'PYG',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  });
+};
+
 interface BillingTableProps {
   items: any[];
   isCurrentSale: boolean;
@@ -52,7 +61,7 @@ export function BillingTable({
               <TableRow key={item.id} className={lastAddedProductId === item.id ? 'bg-orange-50 transition-colors duration-500' : ''}>
                 <TableCell className="font-mono text-sm">{item.barcode}</TableCell>
                 <TableCell className="font-medium">{item.name}</TableCell>
-                <TableCell className="text-right">{item.unitPriceWithIVA || item.unitPrice || 0}</TableCell>
+                <TableCell className="text-right">{formatPYG(item.unitPriceWithIVA || item.unitPrice || 0)}</TableCell>
                 <TableCell className="text-center">
                   <Badge variant={item.ivaType === 'IVA 10%' ? 'default' : 'secondary'} className="text-xs">
                     {item.ivaType === 'IVA 10%' ? '10' : item.ivaType === 'IVA 5%' ? '5' : '10'}
@@ -60,17 +69,20 @@ export function BillingTable({
                 </TableCell>
                 <TableCell className="text-center">
                   {isCurrentSale ? (
-                    <Input
-                      type="number"
-                      value={isNaN(item.quantity) ? '' : item.quantity}
-                      onChange={e => handleQuantityChange(item.id, isNaN(parseInt(e.target.value))
-                        ? 0
-                        : parseInt(e.target.value))
-                      }
-                      className="w-20 text-center" min="0"
-                    />
+                    <div className="flex items-center justify-center gap-1">
+                      <Input
+                        type="number"
+                        value={isNaN(item.quantity) ? '' : item.quantity}
+                        onChange={e => handleQuantityChange(item.id, isNaN(parseInt(e.target.value))
+                          ? 0
+                          : parseInt(e.target.value))
+                        }
+                        className="w-20 text-center" min="0"
+                      />
+                      <span className="text-xs text-muted-foreground">{item.unity}</span>
+                    </div>
                   ) : (
-                    <span className="font-medium">{item.quantity}</span>
+                    <span className="font-medium">{item.quantity} <span className="text-xs text-muted-foreground">{item.unity}</span></span>
                   )}
                 </TableCell>
                 {isCurrentSale && (
