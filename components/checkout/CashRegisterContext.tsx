@@ -37,9 +37,8 @@ export function CashRegisterProvider({ children }: { children: ReactNode }) {
       if (!user?.id) return;
       try {
         const active = await getActiveCashRegisterByUser(user.id);
-        const register = Array.isArray(active) && active.length > 0 ? active[0] : null;
-        setCashRegister(register);
-        setCheckout(register?.checkout || null);
+        setCashRegister(active);
+        setCheckout(active?.checkout || null);
       } catch {
         setCashRegister(null);
         setCheckout(null);

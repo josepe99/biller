@@ -39,17 +39,17 @@ export async function closeCheckout(params: {
 }
 
 export async function getActiveCashRegisterByUser(userId: string) {
-	return await controller.getActiveByUser(userId);
+	return controller.getActiveByUser(userId);
 }
 
 export async function getCashRegistersByUser(userId: string) {
-	return await controller.getByUser(userId);
+	return controller.getByUser(userId);
 }
 
 export async function updateCashRegister(id: string, data: any) {
-	return await controller.update(id, data);
+	return controller.update(id, data);
 }
 
 export async function deleteCashRegister(id: string) {
-	return await controller.delete(id);
+	return controller.delete(id);
 }

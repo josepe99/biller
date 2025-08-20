@@ -86,7 +86,7 @@ export class CashRegisterDatasource {
     return prisma.cashRegister.delete({ where: { id } });
   }
 
-  getActiveByUser(userId: string): Promise<CashRegister | null> {
+  getActiveByUser(userId: string): Promise<CashRegister & { checkout: Checkout | null } | null> {
     return prisma.cashRegister.findFirst({
       where: {
         status: 'OPEN',
