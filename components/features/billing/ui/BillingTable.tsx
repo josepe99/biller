@@ -1,6 +1,13 @@
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Trash2 } from 'lucide-react';
 import React from 'react';
@@ -13,7 +20,13 @@ interface BillingTableProps {
   handleRemoveItem: (id: string) => void;
 }
 
-export function BillingTable({ items, isCurrentSale, lastAddedProductId, handleQuantityChange, handleRemoveItem }: BillingTableProps) {
+export function BillingTable({
+  items,
+  isCurrentSale,
+  lastAddedProductId,
+  handleQuantityChange,
+  handleRemoveItem,
+}: BillingTableProps) {
   return (
     <div className="flex-grow overflow-auto border rounded-lg">
       <Table>
@@ -37,7 +50,7 @@ export function BillingTable({ items, isCurrentSale, lastAddedProductId, handleQ
           ) : (
             items.map((item: any) => (
               <TableRow key={item.id} className={lastAddedProductId === item.id ? 'bg-orange-50 transition-colors duration-500' : ''}>
-                <TableCell className="font-mono text-sm">{item.id || item.code || 'N/A'}</TableCell>
+                <TableCell className="font-mono text-sm">{item.barcode}</TableCell>
                 <TableCell className="font-medium">{item.name}</TableCell>
                 <TableCell className="text-right">{item.unitPriceWithIVA || item.unitPrice || 0}</TableCell>
                 <TableCell className="text-center">
@@ -47,7 +60,15 @@ export function BillingTable({ items, isCurrentSale, lastAddedProductId, handleQ
                 </TableCell>
                 <TableCell className="text-center">
                   {isCurrentSale ? (
-                    <Input type="number" value={isNaN(item.quantity) ? '' : item.quantity} onChange={e => handleQuantityChange(item.id, isNaN(parseInt(e.target.value)) ? 0 : parseInt(e.target.value))} className="w-20 text-center" min="0" />
+                    <Input
+                      type="number"
+                      value={isNaN(item.quantity) ? '' : item.quantity}
+                      onChange={e => handleQuantityChange(item.id, isNaN(parseInt(e.target.value))
+                        ? 0
+                        : parseInt(e.target.value))
+                      }
+                      className="w-20 text-center" min="0"
+                    />
                   ) : (
                     <span className="font-medium">{item.quantity}</span>
                   )}
