@@ -317,27 +317,42 @@ async function main() {
     {
       name: 'Caja 1',
       description: 'Caja principal - Entrada principal',
-      deletedAt: null
+      deletedAt: null,
+      invoicePrefix: '001',
+      invoiceMiddle: '001',
+      invoiceSequence: 0
     },
     {
       name: 'Caja 2',
       description: 'Caja secundaria - Sector A',
-      deletedAt: null
+      deletedAt: null,
+      invoicePrefix: '001',
+      invoiceMiddle: '002',
+      invoiceSequence: 0
     },
     {
       name: 'Caja 3',
       description: 'Caja express - Compras rápidas',
-      deletedAt: null
+      deletedAt: null,
+      invoicePrefix: '001',
+      invoiceMiddle: '003',
+      invoiceSequence: 0
     },
     {
       name: 'Caja 4',
       description: 'Caja primer piso',
-      deletedAt: null
+      deletedAt: null,
+      invoicePrefix: '001',
+      invoiceMiddle: '004',
+      invoiceSequence: 0
     },
     {
       name: 'Caja 5',
       description: 'Caja autoservicio',
-      deletedAt: null
+      deletedAt: null,
+      invoicePrefix: '001',
+      invoiceMiddle: '005',
+      invoiceSequence: 0
     },
   ]
 

@@ -246,6 +246,9 @@ model Checkout {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   deletedAt   DateTime?
+  invoicePrefix   String     @default("001") // First 3 digits (xxx)
+  invoiceMiddle   String     @default("001") // Middle 3 digits (xxx)
+  invoiceSequence Int // Last 7 digits (zzzzzzz) - sequential number
 
   // Relations
   sales         Sale[]
