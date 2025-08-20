@@ -19,7 +19,7 @@ export interface InvoiceNumberConfig {
 export function generateInvoiceNumber(config: InvoiceNumberConfig): string {
   const prefix = (config.prefix || '001').padStart(3, '0')
   const middle = (config.middle || '001').padStart(3, '0')
-  const sequence = config.sequence.toString().padStart(7, '0')
+  const sequence = (config.sequence + 1).toString().padStart(7, '0')
   
   return `${prefix}-${middle}-${sequence}`
 }

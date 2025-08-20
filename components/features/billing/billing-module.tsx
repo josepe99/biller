@@ -11,6 +11,13 @@ import { BillingTable } from './ui/BillingTable'
 import { BillingSummary } from './ui/BillingSummary'
 import { InvoiceHistoryModal } from './ui/InvoiceHistoryModal'
 import { Product } from '@/lib/types'
+import { sampleProducts } from '@/lib/data/sample-data'
+import { calculateItemDetails, calculateCartTotals } from '@/lib/utils/cart-calculations'
+import { formatParaguayanCurrency } from '@/lib/utils'
+import { useAuth } from '@/hooks/use-auth'
+import { useCashRegister } from '@/components/checkout/CashRegisterContext'
+import { getCustomerByRucAction } from '@/lib/actions/customers'
+import { generateInvoiceNumber as buildInvoiceNumber } from '@/lib/utils/invoice-generator'
 
 // Define CartItem type locally if not exported from '@/lib/types'
 type CartItem = Product & {
@@ -18,15 +25,10 @@ type CartItem = Product & {
   unitPriceWithIVA: number
   lineTotalWithIVA: number
 }
-import { sampleProducts } from '@/lib/data/sample-data'
-import { calculateItemDetails, calculateCartTotals } from '@/lib/utils/cart-calculations'
-import { generateInvoiceData } from '@/lib/utils/invoice-generator'
-import { formatParaguayanCurrency } from '@/lib/utils'
-import { useAuth } from '@/hooks/use-auth'
-import { getCustomerByRucAction } from '@/lib/actions/customers'
 
 export default function BillingModule() {
   const { user } = useAuth()
+  const { checkout } = useCashRegister()
   const [cart, setCart] = useState<CartItem[]>([])
   const [searchTerm, setSearchTerm] = useState('') // For main barcode input
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
@@ -49,29 +51,33 @@ export default function BillingModule() {
   // Generate invoice number on component mount
   useEffect(() => {
     const initializeInvoice = async () => {
-      await generateInvoiceNumber()
+      await handleGenerateInvoiceNumber()
     }
     initializeInvoice()
-  }, [])
+  }, [checkout])
 
   const [invoiceHistory, setInvoiceHistory] = useState<any[]>([])
-  const generateInvoiceNumber = async () => {
+
+  const handleGenerateInvoiceNumber = async () => {
     try {
-      const invoiceData = await generateInvoiceData()
-      setCurrentInvoiceNumber(invoiceData.saleNumber)
+      if (checkout?.invoicePrefix && checkout?.invoiceMiddle && typeof checkout?.invoiceSequence === 'number') {
+        const invoiceNumber = buildInvoiceNumber({
+          prefix: checkout.invoicePrefix,
+          middle: checkout.invoiceMiddle,
+          sequence: checkout.invoiceSequence
+        });
+        setCurrentInvoiceNumber(invoiceNumber);
+        return;
+      }
     } catch (error) {
-      console.error('Error generating invoice number:', error)
-      // Fallback to simple format if generation fails
-      const sequence = Math.floor(Math.random() * 9999999) + 1
-      const fallbackNumber = `001-001-${sequence.toString().padStart(7, '0')}`
-      setCurrentInvoiceNumber(fallbackNumber)
+      console.error('Error generating invoice number from checkout:', error);
     }
   }
 
   const searchCustomerByRuc = async (ruc: string) => {
     try {
       const result = await getCustomerByRucAction(ruc)
-      
+
       if (result.success && result.customer) {
         setCustomerInfo(result.customer)
         return result.customer
@@ -100,17 +106,15 @@ export default function BillingModule() {
       setFilteredHistory(invoiceHistory)
       return
     }
-
     const filtered = invoiceHistory.filter(invoice => {
       if (type === 'invoice') {
-        return invoice.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase())
+        return invoice.invoiceNumber?.toLowerCase().includes(searchTerm.toLowerCase())
       } else if (type === 'ruc') {
         return invoice.customerRuc?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-               invoice.customerName?.toLowerCase().includes(searchTerm.toLowerCase())
+          invoice.customerName?.toLowerCase().includes(searchTerm.toLowerCase())
       }
       return false
     })
-
     setFilteredHistory(filtered)
   }
 
@@ -206,16 +210,15 @@ export default function BillingModule() {
         total: item.lineTotalWithIVA
       }))
     }
-    
-    
-    alert(`Venta realizada con éxito!\nFactura: ${currentInvoiceNumber}${customerInfo ? `\nCliente: ${customerInfo.name}` : ''}`)
+
+
     setCart([])
     setCustomerRuc('')
     setCustomerInfo(null)
     setIsPaymentModalOpen(false)
-    
+
     // Generate new invoice number for next sale
-    await generateInvoiceNumber()
+    await handleGenerateInvoiceNumber()
   }
 
   const handleConfirmCancel = async () => {
@@ -224,7 +227,7 @@ export default function BillingModule() {
     setCustomerInfo(null)
     setIsCancelModalOpen(false)
     // Generate new invoice number when canceling
-    await generateInvoiceNumber()
+    await handleGenerateInvoiceNumber()
   }
 
   const showPreviousInvoice = () => {
