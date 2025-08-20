@@ -1,24 +1,68 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from '@/components/ui/dialog'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle
+} from '@/components/ui/card'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from '@/components/ui/table'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
+import {
+  Plus,
+  Edit,
+  Trash2,
+  ChevronLeft
+} from 'lucide-react'
+import {
+  getAllUsersAction,
+  updateUserAction,
+  createUserAction
+} from '@/lib/actions/userActions'
+import { getAllRolesAction } from '@/lib/actions/roleActions'
 import { useAuth } from '@/components/auth/auth-provider'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
+import { useState, useEffect } from 'react'
+import { UserRole } from '@prisma/client'
+import { User } from '@prisma/client'
+
+// Tipo local para la lista de usuarios en la UI
+type UserListItem = Pick<User, 'id' | 'name' | 'email' | 'role'> & {
+  loginAttempts?: number;
+  lockedUntil?: Date;
+  lastLoginAt?: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
+  deletedAt?: Date;
+};
 // Permisos para acciones sobre usuarios
 const PERMISSION_CREATE = 'users:create';
 const PERMISSION_UPDATE = 'users:update';
 const PERMISSION_DELETE = 'users:delete';
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Badge } from '@/components/ui/badge'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Plus, Edit, Trash2, ChevronLeft } from 'lucide-react'
-import { User } from '@/lib/types'
-import { getAllUsersAction, updateUserAction, createUserAction } from '@/lib/actions/userActions'
-import { getAllRolesAction } from '@/lib/actions/roleActions'
-import { UserRole } from '@prisma/client'
-import { Skeleton } from '@/components/ui/skeleton'
 
 
 interface UserManagementProps {
@@ -32,9 +76,9 @@ export default function UserManagement({ onBack }: UserManagementProps) {
   const canCreate = permissions.includes(PERMISSION_CREATE) || permissions.includes('users:create');
   const canUpdate = permissions.includes(PERMISSION_UPDATE) || permissions.includes('users:update');
   const canDelete = permissions.includes(PERMISSION_DELETE) || permissions.includes('users:delete');
-  const [users, setUsers] = useState<User[]>([])
+  const [users, setUsers] = useState<UserListItem[]>([])
   const [isUserModalOpen, setIsUserModalOpen] = useState(false)
-  const [editingUser, setEditingUser] = useState<User | null>(null)
+  const [editingUser, setEditingUser] = useState<UserListItem | null>(null)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [userToDelete, setUserToDelete] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -48,7 +92,7 @@ export default function UserManagement({ onBack }: UserManagementProps) {
         getAllUsersAction(),
         getAllRolesAction(false)
       ]);
-      const mapped = Array.isArray(usersArr)
+      const mapped: UserListItem[] = Array.isArray(usersArr)
         ? usersArr.map((u: any) => ({
             id: u.id,
             name: u.name,
@@ -69,11 +113,9 @@ export default function UserManagement({ onBack }: UserManagementProps) {
     fetchData();
   }, []);
 
-  // TODO: Integrar create/update/delete con los actions reales
   const handleAddEditUser = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormLoading(true);
-  // ...existing code...
     const form = e.target as HTMLFormElement;
     const formData = new FormData(form);
     const name = formData.get('name') as string;
@@ -90,7 +132,7 @@ export default function UserManagement({ onBack }: UserManagementProps) {
       // Refrescar lista de usuarios y mapear como en useEffect
       setLoading(true);
       const usersArr = await getAllUsersAction();
-      const mapped = Array.isArray(usersArr)
+      const mapped: UserListItem[] = Array.isArray(usersArr)
         ? usersArr.map((u: any) => ({
             id: u.id,
             name: u.name,

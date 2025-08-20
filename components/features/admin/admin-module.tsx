@@ -9,7 +9,7 @@ import OverviewModule from './overview-module'
 import SettingsModule from './settings-module'
 import RoleManagement from './role-management'
 import ReportsModule from './reports-module'
-import { User, Category } from '@/lib/types'
+import { User, Category } from '@prisma/client'
 import { useState } from 'react'
 
 export default function AdminModule() {
@@ -27,7 +27,7 @@ export default function AdminModule() {
       case 'users':
         return <UserManagement onBack={() => setAdminSubModule('overview')} />
       case 'categories':
-        return <CategoryManagement categories={categories} setCategories={setCategories} onBack={() => setAdminSubModule('overview')} />
+        return <CategoryManagement onBack={() => setAdminSubModule('overview')} />
       case 'roles':
         return <RoleManagement onBack={() => setAdminSubModule('overview')} />
       case 'settings':
