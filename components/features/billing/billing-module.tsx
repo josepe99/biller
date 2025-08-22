@@ -16,8 +16,8 @@ import { calculateItemDetails, calculateCartTotals } from '@/lib/utils/cart-calc
 import { formatParaguayanCurrency } from '@/lib/utils'
 import { useAuth } from '@/hooks/use-auth'
 import { useCashRegister } from '@/components/checkout/CashRegisterContext'
-import { getCustomerByRucAction } from '@/lib/actions/customers'
 import { generateInvoiceNumber as buildInvoiceNumber } from '@/lib/utils/invoice-generator'
+import { findCustomerByRuc } from '@/lib/actions/customerActions'
 
 // Define CartItem type locally if not exported from '@/lib/types'
 type CartItem = Product & {
@@ -76,7 +76,7 @@ export default function BillingModule() {
 
   const searchCustomerByRuc = async (ruc: string) => {
     try {
-      const result = await getCustomerByRucAction(ruc)
+      const result = await findCustomerByRuc(ruc)
 
       if (result.success && result.customer) {
         setCustomerInfo(result.customer)
