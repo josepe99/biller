@@ -9,6 +9,10 @@ export class CustomerController extends BaseController<CustomerDataSource> {
   async findByRuc(ruc: string) {
     return await this.datasource.findByRuc(ruc);
   }
+
+  async search(query: string) {
+    return await this.datasource.search(query);
+  }
 }
 
 

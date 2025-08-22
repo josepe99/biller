@@ -25,3 +25,7 @@ export async function deleteCustomer(id: string) {
 export async function findCustomerByRuc(ruc: string) {
   return await customerController.findByRuc(ruc);
 }
+
+export async function searchCustomers(query: string) {
+  return await customerController.search(query);
+}

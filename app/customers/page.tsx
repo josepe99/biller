@@ -1,8 +1,9 @@
-import CustomerForm from '@/components/features/admin/customer-form';
+import { getAllCustomers, searchCustomers } from '@/lib/actions/customerActions';
 import CustomerEditCell from '@/components/features/admin/customer-edit-cell';
+import CustomerForm from '@/components/features/admin/customer-form';
 import DashboardLayout from '@/components/layout/dashboard-layout';
-import { getAllCustomers } from '@/lib/actions/customerActions';
 import { Button } from '@/components/ui/button';
+import { Customer } from '@prisma/client';
 import {
   Dialog,
   DialogContent,
@@ -10,11 +11,11 @@ import {
   DialogTitle,
   DialogTrigger
 } from '@/components/ui/dialog';
-import { Customer } from '@prisma/client';
 
 
-export default async function CustomersPage() {
-  const customers: Customer[] = await getAllCustomers();
+export default async function CustomersPage({ searchParams }: { searchParams?: { q?: string } }) {
+  const query = searchParams?.q || '';
+  const customers: Customer[] = query ? await searchCustomers(query) : await getAllCustomers();
 
   return (
     <DashboardLayout>
@@ -33,6 +34,17 @@ export default async function CustomersPage() {
             </DialogContent>
           </Dialog>
         </div>
+        <form method="get" className="mb-4 flex gap-2">
+          <input
+            type="text"
+            name="q"
+            defaultValue={query}
+            placeholder="Buscar por nombre, email o RUC..."
+            className="border rounded px-3 py-2 w-64"
+            aria-label="Buscar clientes"
+          />
+          <Button type="submit">Buscar</Button>
+        </form>
         <div className="bg-white rounded shadow p-4">
           <table className="w-full text-sm">
             <thead>
