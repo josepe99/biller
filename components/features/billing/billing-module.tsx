@@ -78,9 +78,9 @@ export default function BillingModule() {
     try {
       const result = await findCustomerByRuc(ruc)
 
-      if (result.success && result.customer) {
-        setCustomerInfo(result.customer)
-        return result.customer
+      if (result) {
+        setCustomerInfo(result)
+        return result
       } else {
         setCustomerInfo(null)
         return null
@@ -94,7 +94,7 @@ export default function BillingModule() {
 
   const handleCustomerRucChange = async (ruc: string) => {
     setCustomerRuc(ruc)
-    if (ruc.length >= 8) { // Basic RUC length validation
+    if (ruc.length >= 7) { // Basic RUC length validation
       await searchCustomerByRuc(ruc)
     } else {
       setCustomerInfo(null)
