@@ -226,7 +226,7 @@ model SalePayment {
 model Customer {
   id        String    @id @default(auto()) @map("_id") @db.ObjectId
   name      String
-  email     String?   @unique
+  email     String?
   phone     String?
   address   String?
   ruc       String?   @unique // Tax identification number

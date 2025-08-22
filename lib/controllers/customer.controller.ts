@@ -10,3 +10,6 @@ export class CustomerController extends BaseController<CustomerDataSource> {
     return await this.datasource.findByRuc(ruc);
   }
 }
+
+
+export const customerController = new CustomerController(new CustomerDataSource());

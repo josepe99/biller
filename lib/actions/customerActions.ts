@@ -1,8 +1,6 @@
-import { CustomerController } from '../controllers/customer.controller';
-import { CustomerDataSource } from '../datasources/customer.datasource';
+"use server"
 
-const customerDatasource = new CustomerDataSource();
-const customerController = new CustomerController(customerDatasource);
+import { customerController } from '../controllers/customer.controller';
 
 export async function getAllCustomers() {
   return await customerController.getAll();

@@ -46,6 +46,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     if (pathname.includes('/admin')) return 'admin'
     if (pathname.includes('/stock')) return 'inventory'
     if (pathname.includes('/checkout-registers')) return 'checkout-registers'
+    if (pathname.includes('/customers')) return 'customers'
     return 'billing'
   }
 
@@ -114,6 +115,22 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             >
               <ShoppingCart className="h-6 w-6" />
               <span className="text-xs mt-1">Facturar</span>
+            </Button>
+          </Link>
+          {/* Customers link */}
+          <Link href="/customers">
+            <Button
+              variant="ghost"
+              size="icon"
+              className={`relative h-14 w-14 rounded-xl flex flex-col items-center justify-center text-gray-600 hover:bg-gray-100 ${activeModule === 'customers' ? 'bg-orange-100 text-orange-700' : ''}`}
+            >
+              <span className="h-6 w-6 flex items-center justify-center">
+                {/* You can replace this SVG with a user icon if you have one */}
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-6 w-6">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9A3.75 3.75 0 1 1 8.25 9a3.75 3.75 0 0 1 7.5 0ZM4.5 19.5a7.5 7.5 0 0 1 15 0v.75a.75.75 0 0 1-.75.75h-13.5a.75.75 0 0 1-.75-.75V19.5Z" />
+                </svg>
+              </span>
+              <span className="text-xs mt-1">Clientes</span>
             </Button>
           </Link>
           {permissions.includes('inventory:manage') && (
