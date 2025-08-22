@@ -5,10 +5,13 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-// Funciones para formatear números paraguayos (Guaraníes)
+
+// Función para truncar decimales y formatear como moneda paraguaya
 export function formatParaguayanCurrency(value: number | string): string {
-  const numValue = typeof value === 'string' ? parseInt(value.replace(/\./g, '')) : value
+  // Convert to number, truncate decimals, and format with dots
+  let numValue = typeof value === 'string' ? Number(value.replace(/\./g, '').replace(/,/g, '.')) : value
   if (isNaN(numValue)) return ''
+  numValue = Math.trunc(numValue) // Remove decimals
   return `Gs ${numValue.toLocaleString('es-PY').replace(/,/g, '.')}`
 }
 

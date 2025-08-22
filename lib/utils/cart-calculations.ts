@@ -23,12 +23,12 @@ export const calculateCartTotals = (cart: CartItem[]) => {
   const subtotalWithoutIva = cart.reduce((sum, item) => sum + item.subtotal, 0)
   const iva5PercentAmount = cart
     .filter(item => item.iva === 5)
-    .reduce((sum, item) => sum + (item.subtotal * 0.05), 0)
+    .reduce((sum, item) => sum + (item.lineTotalWithIVA / 21), 0)
   const iva10PercentAmount = cart
     .filter(item => item.iva === 10)
-    .reduce((sum, item) => sum + (item.subtotal * 0.10), 0)
+    .reduce((sum, item) => sum + (item.lineTotalWithIVA / 11), 0)
   const totalIvaAmount = iva5PercentAmount + iva10PercentAmount
-  const total = subtotalWithoutIva + totalIvaAmount
+  const total = cart.reduce((sum, item) => sum + item.lineTotalWithIVA, 0)
 
   return {
     subtotalWithoutIva,

@@ -26,6 +26,16 @@ export interface Product {
   unity: ProductUnity;
 }
 
+// Cart item type for billing calculations
+export type CartItem = Product & {
+  quantity: number;
+  unitPriceWithIVA: number;
+  lineTotalWithIVA: number;
+  subtotal: number;
+  unitIVAAmount: number;
+  lineIVAAmount: number;
+};
+
 // Tipos para autenticación
 export interface AuthUser {
   id: string;
