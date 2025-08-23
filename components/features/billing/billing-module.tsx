@@ -1,23 +1,28 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
+import { useCashRegister } from '@/components/checkout/CashRegisterContext'
+import { findCustomerByRuc } from '@/lib/actions/customerActions'
+import { InvoiceHistoryModal } from './ui/InvoiceHistoryModal'
 import { Card, CardContent } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Search } from 'lucide-react'
+import { sampleProducts } from '@/lib/data/sample-data'
 import ProductSearchModal from './product-search-modal'
+import { formatParaguayanCurrency } from '@/lib/utils'
+import { BillingSummary } from './ui/BillingSummary'
 import { BillingHeader } from './ui/BillingHeader'
 import { BillingTable } from './ui/BillingTable'
-import { BillingSummary } from './ui/BillingSummary'
-import { InvoiceHistoryModal } from './ui/InvoiceHistoryModal'
-import { Product } from '@/lib/types'
-import { sampleProducts } from '@/lib/data/sample-data'
-import { calculateItemDetails, calculateCartTotals } from '@/lib/utils/cart-calculations'
-import { formatParaguayanCurrency } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { useAuth } from '@/hooks/use-auth'
-import { useCashRegister } from '@/components/checkout/CashRegisterContext'
-import { generateInvoiceNumber as buildInvoiceNumber } from '@/lib/utils/invoice-generator'
-import { findCustomerByRuc } from '@/lib/actions/customerActions'
+import { Search } from 'lucide-react'
+import { Product } from '@/lib/types'
+import {
+  calculateItemDetails,
+  calculateCartTotals
+} from '@/lib/utils/cart-calculations'
+import {
+  generateInvoiceNumber as buildInvoiceNumber
+} from '@/lib/utils/invoice-generator'
+import { useState, useEffect } from 'react'
 
 // Define CartItem type locally if not exported from '@/lib/types'
 type CartItem = Product & {

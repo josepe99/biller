@@ -1,10 +1,9 @@
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { DollarSign, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import React from 'react';
 import { CustomerInfo } from './CustomerInfo';
+import { PaymentMethodsDialog } from './PaymentMethodsDialog';
 
 interface BillingSummaryProps {
   displayData: any;
@@ -19,7 +18,7 @@ interface BillingSummaryProps {
   setIsPaymentModalOpen: (open: boolean) => void;
   isCancelModalOpen: boolean;
   setIsCancelModalOpen: (open: boolean) => void;
-  handleConfirmPayment: () => void;
+  handleConfirmPayment: (payments: { method: string; amount: number }[]) => void;
   handleConfirmCancel: () => void;
   currentInvoiceNumber: string;
   formatParaguayanCurrency: (n: number) => string;
@@ -91,46 +90,15 @@ export function BillingSummary({
       </div>
       {displayData.isCurrentSale && (
         <div className="grid grid-cols-2 gap-4 mt-6">
-          <Dialog open={isPaymentModalOpen} onOpenChange={setIsPaymentModalOpen}>
-            <DialogTrigger asChild>
-              <Button className="col-span-2 bg-orange-500 hover:bg-orange-600 text-lg py-6" disabled={cart.length === 0}>
-                <DollarSign className="mr-2 h-5 w-5" /> Pagar
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Confirmar Pago</DialogTitle>
-                <DialogDescription>
-                  ¿Estás seguro de que deseas procesar el pago por un total de <b>{formatParaguayanCurrency(total)}</b>?
-                  <br />
-                  <strong>Factura: {currentInvoiceNumber}</strong>
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsPaymentModalOpen(false)}>Cancelar</Button>
-                <Button onClick={handleConfirmPayment} className="bg-orange-500 hover:bg-orange-600">Confirmar</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-          <Dialog open={isCancelModalOpen} onOpenChange={setIsCancelModalOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" className="hover:bg-red-50 hover:text-red-600">
-                <X className="mr-2 h-4 w-4" /> Cancelar
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Confirmar Cancelación</DialogTitle>
-                <DialogDescription>
-                  ¿Estás seguro de que deseas cancelar la venta actual? Se perderán todos los artículos en el carrito.
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsCancelModalOpen(false)}>No</Button>
-                <Button onClick={handleConfirmCancel} className="bg-red-500 hover:bg-red-600">Sí, Cancelar</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <PaymentMethodsDialog
+            open={isPaymentModalOpen}
+            setOpen={setIsPaymentModalOpen}
+            total={total}
+            currentInvoiceNumber={currentInvoiceNumber}
+            formatParaguayanCurrency={formatParaguayanCurrency}
+            onConfirm={handleConfirmPayment}
+            cartIsEmpty={cart.length === 0}
+          />
         </div>
       )}
     </div>

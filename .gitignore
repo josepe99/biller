@@ -128,3 +128,4 @@ jspm_packages/
 .vscode-test
 
 /lib/generated/prisma
+.qodo
