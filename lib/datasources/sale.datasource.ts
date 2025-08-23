@@ -2,9 +2,76 @@ import { BaseDatasource } from './base.datasource';
 import { prisma } from '@/lib/prisma';
 
 
+
 export class SaleDatasource extends BaseDatasource<'sale'> {
   constructor() {
     super('sale');
+  }
+
+  /**
+   * Creates a sale, its items, and its transactions (multi-payment).
+   * @param saleData - Sale data, including items and payments.
+   * @returns The created sale with items and transactions.
+   */
+  async create(saleData: {
+    sale: {
+      saleNumber: string;
+      invoicePrefix?: string;
+      invoiceMiddle?: string;
+      invoiceSequence: number;
+      total: number;
+      subtotal: number;
+      tax?: number;
+      discount?: number;
+      status?: import('@prisma/client').SaleStatus;
+      userId: string;
+      customerId?: string;
+      checkoutId: string;
+      cashRegisterId?: string;
+      notes?: string;
+      createdAt?: Date;
+      updatedAt?: Date;
+      deletedAt?: Date | null;
+    },
+    items: Array<{
+      quantity: number;
+      unitPrice: number;
+      total: number;
+      productId: string;
+    }>,
+    payments: Array<{
+      paymentMethod: import('@prisma/client').PaymentMethod;
+      movement: import('@prisma/client').MovementType;
+      description?: string;
+      amount: number;
+      userId?: string;
+      checkoutId?: string;
+      cashRegisterId?: string;
+      createdAt?: Date;
+      updatedAt?: Date;
+      deletedAt?: Date | null;
+    }>,
+  }) {
+    return await prisma.sale.create({
+      data: {
+        ...saleData.sale,
+        saleItems: {
+          create: saleData.items.map(({ quantity, unitPrice, total, productId }) => ({
+            quantity,
+            unitPrice,
+            total,
+            product: { connect: { id: productId } },
+          })),
+        },
+        transactions: {
+          create: saleData.payments,
+        },
+      },
+      include: {
+        saleItems: true,
+        transactions: true,
+      },
+    });
   }
 
   async getByInvoice(saleNumber: string) {
