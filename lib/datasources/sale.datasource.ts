@@ -16,9 +16,6 @@ export class SaleDatasource extends BaseDatasource<'sale'> {
   async create(saleData: {
     sale: {
       saleNumber: string;
-      invoicePrefix?: string;
-      invoiceMiddle?: string;
-      invoiceSequence: number;
       total: number;
       subtotal: number;
       tax?: number;
@@ -75,7 +72,7 @@ export class SaleDatasource extends BaseDatasource<'sale'> {
     });
   }
 
-  async getByInvoice(saleNumber: string) {
+  async getBySaleNumber(saleNumber: string) {
     return await prisma.sale.findUnique({
       where: { saleNumber, deletedAt: null },
       include: {
@@ -98,7 +95,6 @@ export class SaleDatasource extends BaseDatasource<'sale'> {
   }
 
   async getSalesHistory(userId: string, limit = 50, offset = 0) {
-    console.log("userid: ", userId)
     return await prisma.sale.findMany({
       skip: offset,
       take: limit,

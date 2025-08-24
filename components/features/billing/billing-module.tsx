@@ -32,7 +32,11 @@ type CartItem = Product & {
   lineTotalWithIVA: number
 }
 
-export default function BillingModule() {
+interface BillingModuleProps {
+  saleByInvoice?: any;
+}
+
+export default function BillingModule({ saleByInvoice }: BillingModuleProps) {
   const { user } = useAuth()
   const { checkout } = useCashRegister()
   const [cart, setCart] = useState<CartItem[]>([])
@@ -49,6 +53,48 @@ export default function BillingModule() {
   const [historySearchTerm, setHistorySearchTerm] = useState<string>('')
   const [filteredHistory, setFilteredHistory] = useState<any[]>([])
   const [searchType, setSearchType] = useState<'invoice' | 'ruc'>('invoice')
+
+  // If saleByInvoice exists, show all its details in a simple form
+  if (saleByInvoice) {
+    return (
+      <div className="max-w-2xl mx-auto mt-8 p-6 bg-white rounded shadow">
+        <h2 className="text-2xl font-bold mb-4">Detalle de la Venta</h2>
+        <div className="mb-2"><b>Nro. Factura:</b> {saleByInvoice.saleNumber}</div>
+        <div className="mb-2"><b>Fecha:</b> {saleByInvoice.createdAt ? new Date(saleByInvoice.createdAt).toLocaleString() : '-'}</div>
+        <div className="mb-2"><b>Cajero:</b> {saleByInvoice.user?.name || '-'}</div>
+        <div className="mb-2"><b>Cliente:</b> {saleByInvoice.customer?.name || '-'}</div>
+        <div className="mb-2"><b>RUC Cliente:</b> {saleByInvoice.customer?.ruc || '-'}</div>
+        <div className="mb-2"><b>Subtotal:</b> {saleByInvoice.subtotal?.toLocaleString('es-PY', { style: 'currency', currency: 'PYG', minimumFractionDigits: 0 })}</div>
+        <div className="mb-2"><b>IVA:</b> {saleByInvoice.tax?.toLocaleString('es-PY', { style: 'currency', currency: 'PYG', minimumFractionDigits: 0 })}</div>
+        <div className="mb-2"><b>Total:</b> {saleByInvoice.total?.toLocaleString('es-PY', { style: 'currency', currency: 'PYG', minimumFractionDigits: 0 })}</div>
+        <div className="mb-2"><b>Estado:</b> {saleByInvoice.status}</div>
+        <div className="mb-4"><b>Notas:</b> {saleByInvoice.notes || '-'}</div>
+        <div className="mb-4">
+          <b>Items:</b>
+          <table className="w-full mt-2 border text-sm">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="border px-2 py-1">Producto</th>
+                <th className="border px-2 py-1">Cantidad</th>
+                <th className="border px-2 py-1">Precio Unitario</th>
+                <th className="border px-2 py-1">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {saleByInvoice.saleItems?.map((item: any) => (
+                <tr key={item.id}>
+                  <td className="border px-2 py-1">{item.product?.name || '-'}</td>
+                  <td className="border px-2 py-1 text-center">{item.quantity}</td>
+                  <td className="border px-2 py-1 text-right">{item.unitPrice?.toLocaleString('es-PY', { style: 'currency', currency: 'PYG', minimumFractionDigits: 0 })}</td>
+                  <td className="border px-2 py-1 text-right">{item.total?.toLocaleString('es-PY', { style: 'currency', currency: 'PYG', minimumFractionDigits: 0 })}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  }
 
   // Calculate totals based on the original price (without IVA) for consistency with tax breakdown
   const cartTotals = calculateCartTotals(cart)
@@ -205,9 +251,6 @@ export default function BillingModule() {
     const saleData = {
       sale: {
         saleNumber: currentInvoiceNumber,
-        invoicePrefix: checkout.invoicePrefix,
-        invoiceMiddle: checkout.invoiceMiddle,
-        invoiceSequence: checkout.invoiceSequence,
         total: total,
         subtotal: subtotalWithoutIva,
         tax: totalIvaAmount,

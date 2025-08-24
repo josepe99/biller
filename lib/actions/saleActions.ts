@@ -16,3 +16,8 @@ export async function createSaleAction(data: Parameters<SaleController['create']
   const saleController = new SaleController();
   return saleController.create(data);
 }
+
+export async function getSaleBySaleNumber(saleNumber: string) {
+  const saleController = new SaleController();
+  return saleController.getBySaleNumber(saleNumber);
+}

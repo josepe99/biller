@@ -162,9 +162,6 @@ model Category {
 model Sale {
   id              String     @id @default(auto()) @map("_id") @db.ObjectId
   saleNumber      String     @unique // Invoice/Sale number in format xxx-xxx-zzzzzzz
-  invoicePrefix   String     @default("001") // First 3 digits (xxx)
-  invoiceMiddle   String     @default("001") // Middle 3 digits (xxx)
-  invoiceSequence Int // Last 7 digits (zzzzzzz) - sequential number
   total           Float
   subtotal        Float
   tax             Float      @default(0)

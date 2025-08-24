@@ -29,8 +29,8 @@ export class SaleController extends BaseController<SaleDatasource> {
     return sale;
   }
 
-  async getByInvoice(saleNumber: string) {
-    return this.datasource.getByInvoice(saleNumber);
+  async getBySaleNumber(saleNumber: string) {
+    return this.datasource.getBySaleNumber(saleNumber);
   }
 
   async getSalesHistory(userId: string, limit = 50, offset = 0) {
