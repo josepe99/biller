@@ -29,7 +29,6 @@ export function InvoiceHistoryModal({
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    let ignore = false;
     const fetchInvoices = async () => {
       setLoading(true);
       try {
@@ -39,15 +38,15 @@ export function InvoiceHistoryModal({
         } else {
           data = await getSalesHistoryAction(50, 0);
         }
-        if (!ignore) setInvoices(data);
+        console.log(data)
+        setInvoices(data);
       } catch (e) {
-        if (!ignore) setInvoices([]);
+        setInvoices([]);
       } finally {
-        if (!ignore) setLoading(false);
+        setLoading(false);
       }
     };
     fetchInvoices();
-    return () => { ignore = true; };
   }, [historySearchTerm, isOpen]);
 
   return (
@@ -57,6 +56,44 @@ export function InvoiceHistoryModal({
           <DialogTitle>Historial de Facturas</DialogTitle>
           <DialogDescription>Buscar y revisar facturas procesadas</DialogDescription>
         </DialogHeader>
+        <div className="mt-4">
+          {loading ? (
+            <div className="text-center py-8">Cargando...</div>
+          ) : invoices.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">No se encontraron facturas.</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full border text-sm">
+                <thead>
+                  <tr className="bg-muted">
+                    <th className="px-3 py-2 border">Nro. Factura</th>
+                    <th className="px-3 py-2 border">Fecha</th>
+                    <th className="px-3 py-2 border">Cliente</th>
+                    <th className="px-3 py-2 border">RUC</th>
+                    <th className="px-3 py-2 border">Subtotal</th>
+                    <th className="px-3 py-2 border">IVA</th>
+                    <th className="px-3 py-2 border">Total</th>
+                    <th className="px-3 py-2 border">Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {invoices.map((inv) => (
+                    <tr key={inv.id} className="hover:bg-accent">
+                      <td className="px-3 py-2 border font-mono">{inv.saleNumber}</td>
+                      <td className="px-3 py-2 border">{inv.createdAt ? new Date(inv.createdAt).toLocaleString() : '-'}</td>
+                      <td className="px-3 py-2 border">{inv.customer?.name || '-'}</td>
+                      <td className="px-3 py-2 border">{inv.customer?.ruc || '-'}</td>
+                      <td className="px-3 py-2 border text-right">{inv.subtotal?.toLocaleString('es-PY', { style: 'currency', currency: 'PYG', minimumFractionDigits: 0 })}</td>
+                      <td className="px-3 py-2 border text-right">{inv.tax?.toLocaleString('es-PY', { style: 'currency', currency: 'PYG', minimumFractionDigits: 0 })}</td>
+                      <td className="px-3 py-2 border text-right">{inv.total?.toLocaleString('es-PY', { style: 'currency', currency: 'PYG', minimumFractionDigits: 0 })}</td>
+                      <td className="px-3 py-2 border">{inv.status}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );
