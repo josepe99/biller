@@ -12,7 +12,7 @@ export class SaleController extends BaseController<SaleDatasource> {
    * Creates a sale and updates the related checkout's invoiceSequence.
    * @param saleData - Sale data, including items and payments.
    */
-  async createSale(saleData: any) {
+  async create(saleData: any) {
     const checkoutController = new CheckoutController();
     const checkoutId = saleData.sale.checkoutId;
 
@@ -33,8 +33,8 @@ export class SaleController extends BaseController<SaleDatasource> {
     return this.datasource.getByInvoice(saleNumber);
   }
 
-  async getSalesHistory(limit = 50, offset = 0) {
-    return this.datasource.getSalesHistory(limit, offset);
+  async getSalesHistory(userId: string, limit = 50, offset = 0) {
+    return this.datasource.getSalesHistory(userId, limit, offset);
   }
 
   async searchSales(query: string, limit = 20) {

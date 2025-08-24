@@ -240,6 +240,8 @@ export default function BillingModule() {
     setCustomerInfo(null);
     setIsPaymentModalOpen(false);
     await handleGenerateInvoiceNumber();
+
+    window.location.reload();
   }
 
   const handleConfirmCancel = async () => {

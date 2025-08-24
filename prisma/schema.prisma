@@ -349,10 +349,8 @@ enum PaymentMethod {
   CREDIT_CARD // Tarjeta de crédito (Visa, Mastercard, Amex)
   TIGO_MONEY // Tigo Money (mobile wallet)
   PERSONAL_PAY // Personal Pay (Claro's mobile wallet)
-  PAGO_PY_WALLET // Billetera PagoPY (Bancard's wallet)
   BANK_TRANSFER // Transferencia bancaria (TEF, deposito)
   QR_PAYMENT // Pagos con QR (PagoExpress, Billetera PagoPY QR)
-  LUKITA // Lukita app payments
   CRYPTO // Criptomonedas (Bitcoin, etc.)
   CHEQUE // Cheque (raro, pero aún usado en algunos casos)
   OTHER // Otros métodos no listados

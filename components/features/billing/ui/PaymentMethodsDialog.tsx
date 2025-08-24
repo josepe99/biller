@@ -10,10 +10,8 @@ const PAYMENT_METHODS = [
   { value: 'CREDIT_CARD', label: 'Crédito' },
   { value: 'TIGO_MONEY', label: 'Tigo Money' },
   { value: 'PERSONAL_PAY', label: 'Personal Pay' },
-  { value: 'PAGO_PY_WALLET', label: 'PagoPY' },
   { value: 'BANK_TRANSFER', label: 'Transferencia' },
   { value: 'QR_PAYMENT', label: 'QR' },
-  { value: 'LUKITA', label: 'Lukita' },
   { value: 'CRYPTO', label: 'Cripto' },
   { value: 'CHEQUE', label: 'Cheque' },
   { value: 'OTHER', label: 'Otro' },
@@ -32,6 +30,10 @@ interface PaymentMethodsDialogProps {
   formatParaguayanCurrency: (n: number) => string;
   onConfirm: (payments: Payment[]) => void;
   cartIsEmpty?: boolean;
+  customer?: {
+    name?: string;
+    ruc?: string;
+  };
 }
 
 export function PaymentMethodsDialog({
@@ -42,6 +44,7 @@ export function PaymentMethodsDialog({
   formatParaguayanCurrency,
   onConfirm,
   cartIsEmpty,
+  customer,
 }: PaymentMethodsDialogProps) {
   const [payments, setPayments] = useState<Payment[]>([
     { method: 'CASH', amount: total }
@@ -73,7 +76,7 @@ export function PaymentMethodsDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button className="col-span-2 bg-orange-500 hover:bg-orange-600 text-lg py-6" disabled={!!cartIsEmpty}>
-          <DollarSign className="mr-2 h-5 w-5" /> Vender
+          <DollarSign className="mr-2 h-5 w-5" /> Pagar
         </Button>
       </DialogTrigger>
       <DialogContent>
@@ -81,7 +84,10 @@ export function PaymentMethodsDialog({
           <DialogTitle>Confirmar Pago</DialogTitle>
           <DialogDescription>
             Selecciona los métodos de pago y los montos.<br />
-            <strong>Factura: {currentInvoiceNumber}</strong>
+            <strong>Factura: {currentInvoiceNumber}</strong><br />
+            <span>
+              Cliente: <b>{customer?.name ? customer.name : 'Sin Cliente'}</b> &nbsp;|&nbsp; RUC: <b>{customer?.ruc ? customer.ruc : 'Sin RUC'}</b>
+            </span>
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-2">

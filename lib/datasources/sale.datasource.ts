@@ -55,6 +55,7 @@ export class SaleDatasource extends BaseDatasource<'sale'> {
     return await prisma.sale.create({
       data: {
         ...saleData.sale,
+        deletedAt: null,
         saleItems: {
           create: saleData.items.map(({ quantity, unitPrice, total, productId }) => ({
             quantity,
@@ -96,7 +97,8 @@ export class SaleDatasource extends BaseDatasource<'sale'> {
     });
   }
 
-  async getSalesHistory(limit = 50, offset = 0) {
+  async getSalesHistory(userId: string, limit = 50, offset = 0) {
+    console.log("userid: ", userId)
     return await prisma.sale.findMany({
       skip: offset,
       take: limit,
@@ -106,6 +108,7 @@ export class SaleDatasource extends BaseDatasource<'sale'> {
         user: true,
         customer: true,
       },
+      where: { deletedAt: null, userId: userId },
     });
   }
 

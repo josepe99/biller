@@ -8,6 +8,7 @@ import {
 import React, { useEffect, useState } from 'react';
 
 import { getSalesHistoryAction, searchSalesAction } from '@/lib/actions/saleActions';
+import { useAuth } from '@/hooks';
 
 interface InvoiceHistoryModalProps {
   isOpen: boolean;
@@ -25,6 +26,9 @@ export function InvoiceHistoryModal({
   setIsOpen,
   historySearchTerm,
 }: InvoiceHistoryModalProps) {
+
+  const { user } = useAuth();
+  const userId = user?.id;
   const [invoices, setInvoices] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -32,11 +36,13 @@ export function InvoiceHistoryModal({
     const fetchInvoices = async () => {
       setLoading(true);
       try {
-        let data = [];
+        let data: any[] = [];
         if (historySearchTerm && historySearchTerm.trim().length > 0) {
           data = await searchSalesAction(historySearchTerm, 50);
+        } else if (userId) {
+          data = await getSalesHistoryAction(userId, 50, 0);
         } else {
-          data = await getSalesHistoryAction(50, 0);
+          data = [];
         }
         console.log(data)
         setInvoices(data);

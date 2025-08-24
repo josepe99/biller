@@ -98,6 +98,7 @@ export function BillingSummary({
             formatParaguayanCurrency={formatParaguayanCurrency}
             onConfirm={handleConfirmPayment}
             cartIsEmpty={cart.length === 0}
+            customer={customerInfo}
           />
         </div>
       )}
