@@ -11,3 +11,8 @@ export async function searchSalesAction(query: string, limit = 20) {
   const saleController = new SaleController();
   return saleController.searchSales(query, limit);
 }
+
+export async function createSaleAction(data: Parameters<SaleController['create']>[0]) {
+  const saleController = new SaleController();
+  return saleController.create(data);
+}

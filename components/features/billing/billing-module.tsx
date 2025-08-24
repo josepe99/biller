@@ -3,6 +3,7 @@
 import { useCashRegister } from '@/components/checkout/CashRegisterContext'
 import { findCustomerByRuc } from '@/lib/actions/customerActions'
 import { InvoiceHistoryModal } from './ui/InvoiceHistoryModal'
+import { createSaleAction } from '@/lib/actions/saleActions'
 import { Card, CardContent } from '@/components/ui/card'
 import { sampleProducts } from '@/lib/data/sample-data'
 import ProductSearchModal from './product-search-modal'
@@ -198,32 +199,47 @@ export default function BillingModule() {
     setCart(prevCart => prevCart.filter(item => item.id !== id))
   }
 
-  const handleConfirmPayment = async () => {
-    // Create invoice record
-    const newInvoice = {
-      id: Date.now().toString(),
-      invoiceNumber: currentInvoiceNumber,
-      total: total,
-      date: new Date(),
-      cashier: user?.name,
-      customerRuc: customerRuc || null,
-      customerName: customerInfo?.name || null,
+  const handleConfirmPayment = async (payments: { method: string; amount: number }[]) => {
+    // Compose sale data for createSaleAction
+    if (!user || !checkout) return;
+    const saleData = {
+      sale: {
+        saleNumber: currentInvoiceNumber,
+        invoicePrefix: checkout.invoicePrefix,
+        invoiceMiddle: checkout.invoiceMiddle,
+        invoiceSequence: checkout.invoiceSequence,
+        total: total,
+        subtotal: subtotalWithoutIva,
+        tax: totalIvaAmount,
+        discount: 0,
+        status: 'COMPLETED',
+        userId: user.id,
+        customerId: customerInfo?.id,
+        checkoutId: checkout.id,
+        cashRegisterId: checkout.cashRegisterId,
+        notes: '',
+      },
       items: cart.map(item => ({
-        name: item.name,
         quantity: item.quantity,
         unitPrice: item.unitPriceWithIVA,
-        total: item.lineTotalWithIVA
-      }))
-    }
-
-
-    setCart([])
-    setCustomerRuc('')
-    setCustomerInfo(null)
-    setIsPaymentModalOpen(false)
-
-    // Generate new invoice number for next sale
-    await handleGenerateInvoiceNumber()
+        total: item.lineTotalWithIVA,
+        productId: item.id,
+      })),
+      payments: payments.map(p => ({
+        paymentMethod: p.method,
+        movement: 'INCOME',
+        amount: p.amount,
+        userId: user.id,
+        checkoutId: checkout.id,
+        cashRegisterId: checkout.cashRegisterId,
+      })),
+    };
+    await createSaleAction(saleData);
+    setCart([]);
+    setCustomerRuc('');
+    setCustomerInfo(null);
+    setIsPaymentModalOpen(false);
+    await handleGenerateInvoiceNumber();
   }
 
   const handleConfirmCancel = async () => {
