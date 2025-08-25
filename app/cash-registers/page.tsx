@@ -2,10 +2,10 @@ import { getAllCashRegisters } from '@/lib/actions/cashRegisterActions';
 import DashboardLayout from '@/components/layout/dashboard-layout';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
-
+import Link from 'next/link';
 
 export default async function CheckoutRegistersPage() {
-  const activeCashRegisters = await getAllCashRegisters()
+  const activeCashRegisters = await getAllCashRegisters();
 
   return (
     <DashboardLayout>
@@ -24,30 +24,71 @@ export default async function CheckoutRegistersPage() {
               </tr>
             </thead>
             <tbody>
-              {activeCashRegisters.map(reg => (
-                <tr key={reg.id} className="border-b last:border-0">
-                  <td className="py-2">{reg.checkout?.name || '-'}</td>
-                  <td className="py-2">
-                    {reg.status === 'OPEN' ? (
-                      <Badge variant="default">Abierta</Badge>
-                    ) : (
-                      <Badge variant="destructive">Cerrada</Badge>
-                    )}
-                  </td>
-                  <td className="py-2">
-                    {reg.openedAt ? format(new Date(reg.openedAt), 'dd/MM/yyyy HH:mm') : '-'}
-                  </td>
-                  <td className="py-2">
-                    {typeof reg.initialCash === 'number' ? reg.initialCash.toLocaleString('es-PY', { style: 'currency', currency: 'PYG', maximumFractionDigits: 0 }) : '-'}
-                  </td>
-                  <td className="py-2">
-                    {reg.closedAt ? format(new Date(reg.closedAt), 'dd/MM/yyyy HH:mm') : '-'}
-                  </td>
-                  <td className="py-2">
-                    {typeof reg.finalCash === 'number' ? reg.finalCash.toLocaleString('es-PY', { style: 'currency', currency: 'PYG', maximumFractionDigits: 0 }) : '-'}
-                  </td>
-                </tr>
-              ))}
+              {activeCashRegisters.map((reg) => {
+                const href = `/cash-registers/${reg.id}`;
+                return (
+                  <tr
+                    key={reg.id}
+                    className="group border-b last:border-0 hover:bg-gray-50 cursor-pointer"
+                  >
+                    <td className="p-0">
+                      <Link href={href} className="block px-3 py-2 w-full h-full">
+                        {reg.checkout?.name || '-'}
+                      </Link>
+                    </td>
+
+                    <td className="p-0">
+                      <Link href={href} className="block px-3 py-2 w-full h-full">
+                        {reg.status === 'OPEN' ? (
+                          <Badge variant="default">Abierta</Badge>
+                        ) : (
+                          <Badge variant="destructive">Cerrada</Badge>
+                        )}
+                      </Link>
+                    </td>
+
+                    <td className="p-0">
+                      <Link href={href} className="block px-3 py-2 w-full h-full">
+                        {reg.openedAt
+                          ? format(new Date(reg.openedAt), 'dd/MM/yyyy HH:mm')
+                          : '-'}
+                      </Link>
+                    </td>
+
+                    <td className="p-0">
+                      <Link href={href} className="block px-3 py-2 w-full h-full">
+                        {typeof reg.initialCash === 'number'
+                          ? reg.initialCash.toLocaleString('es-PY', {
+                            style: 'currency',
+                            currency: 'PYG',
+                            maximumFractionDigits: 0,
+                          })
+                          : '-'}
+                      </Link>
+                    </td>
+
+                    <td className="p-0">
+                      <Link href={href} className="block px-3 py-2 w-full h-full">
+                        {reg.closedAt
+                          ? format(new Date(reg.closedAt), 'dd/MM/yyyy HH:mm')
+                          : '-'}
+                      </Link>
+                    </td>
+
+                    <td className="p-0">
+                      <Link href={href} className="block px-3 py-2 w-full h-full">
+                        {typeof reg.finalCash === 'number'
+                          ? reg.finalCash.toLocaleString('es-PY', {
+                            style: 'currency',
+                            currency: 'PYG',
+                            maximumFractionDigits: 0,
+                          })
+                          : '-'}
+                      </Link>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
