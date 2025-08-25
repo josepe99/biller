@@ -35,7 +35,7 @@ export default async function CheckoutDetailPage({ params }: Props) {
         {checkout?.isPrincipal && (
           <div className="mb-4">
             <Button asChild size="sm" variant="secondary">
-              <Link href={`/admin/checkout/${checkoutId}?action=registerIncome`}>Registrar Ingreso</Link>
+              Registrar Ingreso
             </Button>
           </div>
         )}
