@@ -1,6 +1,7 @@
 "use server"
 
 import { CheckoutController } from '@/lib/controllers/checkout.controller';
+import { prisma } from '@/lib/prisma';
 
 const checkoutController = new CheckoutController();
 
@@ -75,5 +76,39 @@ export async function getCheckoutWithSalesAction(id: string) {
   } catch (error) {
     console.error('Error fetching checkout with sales:', error);
     return null;
+  }
+}
+
+// Compute totals per payment method for a given checkout
+export async function getCheckoutTotalsAction(id: string) {
+  try {
+    // Fetch transactions linked to the checkout
+    const txs = await prisma.transaction.findMany({
+      where: { checkoutId: id, deletedAt: null },
+      select: { paymentMethod: true, amount: true },
+    });
+
+    const paymentMethodToKey = (pm: string | null | undefined) => {
+      if (!pm) return 'other';
+      return String(pm)
+        .toLowerCase()
+        .split(/_|\s+/)
+        .map((part, idx) => (idx === 0 ? part : part[0].toUpperCase() + part.slice(1)))
+        .join('');
+    };
+
+    const totals: Record<string, number> = {};
+    let grandTotal = 0;
+    for (const t of txs) {
+      const key = paymentMethodToKey(String(t.paymentMethod));
+      const amount = Number(t.amount ?? 0);
+      totals[key] = (totals[key] || 0) + amount;
+      grandTotal += amount;
+    }
+
+    return { totals, grandTotal };
+  } catch (error) {
+    console.error('Error computing checkout totals:', error);
+    return { totals: {}, grandTotal: 0 };
   }
 }
