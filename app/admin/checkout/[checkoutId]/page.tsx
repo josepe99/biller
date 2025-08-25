@@ -19,8 +19,6 @@ export default async function CheckoutDetailPage({ params }: Props) {
     getCheckoutTotalsAction(checkoutId)
   ]);
 
-  console.log(checkout)
-
   const totals = totalsRes?.totals ?? {}
   const grandTotal = totalsRes?.grandTotal ?? 0
 
@@ -32,13 +30,18 @@ export default async function CheckoutDetailPage({ params }: Props) {
           {checkout?.description}
         </div>
 
-        {checkout?.isPrincipal && (
-          <div className="mb-4">
-            <Button asChild size="sm" variant="secondary">
-              Registrar Ingreso
-            </Button>
-          </div>
-        )}
+        <Button
+          className="bg-orange-500 hover:bg-orange-600 text-white mb-3 me-3"
+          size="sm"
+        >
+          Registrar Ingreso
+        </Button>
+        <Button
+          className="bg-orange-500 hover:bg-orange-600 text-white mb-3"
+          size="sm"
+        >
+          Transferir
+        </Button>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <div className="bg-white rounded shadow p-4">
