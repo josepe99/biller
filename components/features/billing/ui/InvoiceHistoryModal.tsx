@@ -6,6 +6,7 @@ import {
   DialogTitle
 } from '@/components/ui/dialog';
 import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
 
 import { getSalesHistoryAction, searchSalesAction } from '@/lib/actions/saleActions';
 import { useAuth } from '@/hooks';
@@ -31,6 +32,7 @@ export function InvoiceHistoryModal({
   const userId = user?.id;
   const [invoices, setInvoices] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  // removed useRouter, using Link instead
 
   useEffect(() => {
     const fetchInvoices = async () => {
@@ -84,15 +86,47 @@ export function InvoiceHistoryModal({
                 </thead>
                 <tbody>
                   {invoices.map((inv) => (
-                    <tr key={inv.id} className="hover:bg-accent">
-                      <td className="px-3 py-2 border font-mono">{inv.saleNumber}</td>
-                      <td className="px-3 py-2 border">{inv.createdAt ? new Date(inv.createdAt).toLocaleString() : '-'}</td>
-                      <td className="px-3 py-2 border">{inv.customer?.name || '-'}</td>
-                      <td className="px-3 py-2 border">{inv.customer?.ruc || '-'}</td>
-                      <td className="px-3 py-2 border text-right">{inv.subtotal?.toLocaleString('es-PY', { style: 'currency', currency: 'PYG', minimumFractionDigits: 0 })}</td>
-                      <td className="px-3 py-2 border text-right">{inv.tax?.toLocaleString('es-PY', { style: 'currency', currency: 'PYG', minimumFractionDigits: 0 })}</td>
-                      <td className="px-3 py-2 border text-right">{inv.total?.toLocaleString('es-PY', { style: 'currency', currency: 'PYG', minimumFractionDigits: 0 })}</td>
-                      <td className="px-3 py-2 border">{inv.status}</td>
+                    <tr key={inv.id} className="hover:bg-accent cursor-pointer">
+                      <td className="px-3 py-2 border font-mono">
+                        <Link href={`/${inv.saleNumber}`} className="block w-full h-full">
+                          {inv.saleNumber}
+                        </Link>
+                      </td>
+                      <td className="px-3 py-2 border">
+                        <Link href={`/${inv.saleNumber}`} className="block w-full h-full">
+                          {inv.createdAt ? new Date(inv.createdAt).toLocaleString() : '-'}
+                        </Link>
+                      </td>
+                      <td className="px-3 py-2 border">
+                        <Link href={`/${inv.saleNumber}`} className="block w-full h-full">
+                          {inv.customer?.name || '-'}
+                        </Link>
+                      </td>
+                      <td className="px-3 py-2 border">
+                        <Link href={`/${inv.saleNumber}`} className="block w-full h-full">
+                          {inv.customer?.ruc || '-'}
+                        </Link>
+                      </td>
+                      <td className="px-3 py-2 border text-right">
+                        <Link href={`/${inv.saleNumber}`} className="block w-full h-full">
+                          {inv.subtotal?.toLocaleString('es-PY', { style: 'currency', currency: 'PYG', minimumFractionDigits: 0 })}
+                        </Link>
+                      </td>
+                      <td className="px-3 py-2 border text-right">
+                        <Link href={`/${inv.saleNumber}`} className="block w-full h-full">
+                          {inv.tax?.toLocaleString('es-PY', { style: 'currency', currency: 'PYG', minimumFractionDigits: 0 })}
+                        </Link>
+                      </td>
+                      <td className="px-3 py-2 border text-right">
+                        <Link href={`/${inv.saleNumber}`} className="block w-full h-full">
+                          {inv.total?.toLocaleString('es-PY', { style: 'currency', currency: 'PYG', minimumFractionDigits: 0 })}
+                        </Link>
+                      </td>
+                      <td className="px-3 py-2 border">
+                        <Link href={`/${inv.saleNumber}`} className="block w-full h-full">
+                          {inv.status}
+                        </Link>
+                      </td>
                     </tr>
                   ))}
                 </tbody>

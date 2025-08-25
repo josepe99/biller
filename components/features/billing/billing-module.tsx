@@ -54,43 +54,95 @@ export default function BillingModule({ saleByInvoice }: BillingModuleProps) {
   const [filteredHistory, setFilteredHistory] = useState<any[]>([])
   const [searchType, setSearchType] = useState<'invoice' | 'ruc'>('invoice')
 
-  // If saleByInvoice exists, show all its details in a simple form
+  // If saleByInvoice exists, show all its details in a modern, orange-accented, two-column card layout
   if (saleByInvoice) {
+    // Import icons inline to avoid import issues in this block
+    const { Receipt, User, UserCircle, FileText, Calendar, BadgeDollarSign, StickyNote } = require('lucide-react');
     return (
-      <div className="max-w-2xl mx-auto mt-8 p-6 bg-white rounded shadow">
-        <h2 className="text-2xl font-bold mb-4">Detalle de la Venta</h2>
-        <div className="mb-2"><b>Nro. Factura:</b> {saleByInvoice.saleNumber}</div>
-        <div className="mb-2"><b>Fecha:</b> {saleByInvoice.createdAt ? new Date(saleByInvoice.createdAt).toLocaleString() : '-'}</div>
-        <div className="mb-2"><b>Cajero:</b> {saleByInvoice.user?.name || '-'}</div>
-        <div className="mb-2"><b>Cliente:</b> {saleByInvoice.customer?.name || '-'}</div>
-        <div className="mb-2"><b>RUC Cliente:</b> {saleByInvoice.customer?.ruc || '-'}</div>
-        <div className="mb-2"><b>Subtotal:</b> {saleByInvoice.subtotal?.toLocaleString('es-PY', { style: 'currency', currency: 'PYG', minimumFractionDigits: 0 })}</div>
-        <div className="mb-2"><b>IVA:</b> {saleByInvoice.tax?.toLocaleString('es-PY', { style: 'currency', currency: 'PYG', minimumFractionDigits: 0 })}</div>
-        <div className="mb-2"><b>Total:</b> {saleByInvoice.total?.toLocaleString('es-PY', { style: 'currency', currency: 'PYG', minimumFractionDigits: 0 })}</div>
-        <div className="mb-2"><b>Estado:</b> {saleByInvoice.status}</div>
-        <div className="mb-4"><b>Notas:</b> {saleByInvoice.notes || '-'}</div>
-        <div className="mb-4">
-          <b>Items:</b>
-          <table className="w-full mt-2 border text-sm">
-            <thead>
-              <tr className="bg-gray-100">
-                <th className="border px-2 py-1">Producto</th>
-                <th className="border px-2 py-1">Cantidad</th>
-                <th className="border px-2 py-1">Precio Unitario</th>
-                <th className="border px-2 py-1">Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {saleByInvoice.saleItems?.map((item: any) => (
-                <tr key={item.id}>
-                  <td className="border px-2 py-1">{item.product?.name || '-'}</td>
-                  <td className="border px-2 py-1 text-center">{item.quantity}</td>
-                  <td className="border px-2 py-1 text-right">{item.unitPrice?.toLocaleString('es-PY', { style: 'currency', currency: 'PYG', minimumFractionDigits: 0 })}</td>
-                  <td className="border px-2 py-1 text-right">{item.total?.toLocaleString('es-PY', { style: 'currency', currency: 'PYG', minimumFractionDigits: 0 })}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      <div className="max-w-4xl mx-auto mt-8">
+        <div className="bg-white rounded-lg shadow p-0 md:p-6 border">
+          <div className="flex flex-col md:flex-row md:justify-between md:items-center border-b pb-4 mb-4">
+            <div className="flex items-center gap-2 mb-2 md:mb-0">
+              <Receipt className="text-orange-500 h-6 w-6" />
+              <span className="text-2xl font-bold text-orange-500">Factura #{saleByInvoice.saleNumber}</span>
+            </div>
+            <div className="flex items-center gap-2 text-gray-500">
+              <Calendar className="h-5 w-5" />
+              <span>{saleByInvoice.createdAt ? new Date(saleByInvoice.createdAt).toLocaleString() : '-'}</span>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <User className="h-5 w-5 text-gray-400" />
+                <span className="font-semibold">Cajero:</span>
+                <span>{saleByInvoice.user?.name || '-'}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <UserCircle className="h-5 w-5 text-gray-400" />
+                <span className="font-semibold">Cliente:</span>
+                <span>{saleByInvoice.customer?.name || '-'}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <FileText className="h-5 w-5 text-gray-400" />
+                <span className="font-semibold">RUC Cliente:</span>
+                <span>{saleByInvoice.customer?.ruc || '-'}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <StickyNote className="h-5 w-5 text-gray-400" />
+                <span className="font-semibold">Notas:</span>
+                <span>{saleByInvoice.notes || '-'}</span>
+              </div>
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="font-semibold">Subtotal:</span>
+                <span>{saleByInvoice.subtotal?.toLocaleString('es-PY', { style: 'currency', currency: 'PYG', minimumFractionDigits: 0 })}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="font-semibold">IVA:</span>
+                <span>{saleByInvoice.tax?.toLocaleString('es-PY', { style: 'currency', currency: 'PYG', minimumFractionDigits: 0 })}</span>
+              </div>
+              <div className="flex items-center gap-2 text-2xl font-bold text-orange-500">
+                <BadgeDollarSign className="h-6 w-6" />
+                <span>Total:</span>
+                <span>{saleByInvoice.total?.toLocaleString('es-PY', { style: 'currency', currency: 'PYG', minimumFractionDigits: 0 })}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="font-semibold">Estado:</span>
+                <span className={
+                  saleByInvoice.status === 'COMPLETED'
+                    ? 'text-green-600 font-semibold'
+                    : 'text-gray-600 font-semibold'
+                }>{saleByInvoice.status}</span>
+              </div>
+            </div>
+          </div>
+          <div className="mt-8">
+            <div className="font-semibold text-lg mb-2 text-gray-700">Items</div>
+            <div className="overflow-x-auto rounded-lg border">
+              <table className="min-w-full text-sm">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-2 text-left font-semibold text-gray-600">Producto</th>
+                    <th className="px-4 py-2 text-center font-semibold text-gray-600">Cantidad</th>
+                    <th className="px-4 py-2 text-right font-semibold text-gray-600">Precio Unitario</th>
+                    <th className="px-4 py-2 text-right font-semibold text-gray-600">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {saleByInvoice.saleItems?.map((item: any) => (
+                    <tr key={item.id} className="border-t hover:bg-orange-50">
+                      <td className="px-4 py-2">{item.product?.name || '-'}</td>
+                      <td className="px-4 py-2 text-center">{item.quantity}</td>
+                      <td className="px-4 py-2 text-right">{item.unitPrice?.toLocaleString('es-PY', { style: 'currency', currency: 'PYG', minimumFractionDigits: 0 })}</td>
+                      <td className="px-4 py-2 text-right">{item.total?.toLocaleString('es-PY', { style: 'currency', currency: 'PYG', minimumFractionDigits: 0 })}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
     );
