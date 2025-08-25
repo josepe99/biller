@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useAuth } from '@/components/auth/auth-provider'
 import { Button } from '@/components/ui/button'
@@ -20,6 +21,7 @@ export default function CheckoutManagement({ onBack }: CheckoutManagementProps) 
   const [checkouts, setCheckouts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
 
   useEffect(() => {
     setLoading(true)
@@ -62,7 +64,14 @@ export default function CheckoutManagement({ onBack }: CheckoutManagementProps) 
             </TableHeader>
             <TableBody>
               {checkouts.map(c => (
-                <TableRow key={c.id}>
+                <TableRow
+                  key={c.id}
+                  className="cursor-pointer"
+                  role="link"
+                  tabIndex={0}
+                  onClick={() => router.push(`/admin/checkout/${c.id}`)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') router.push(`/admin/checkout/${c.id}`) }}
+                >
                   <TableCell>{c.name}</TableCell>
                   <TableCell>{c.description}</TableCell>
                   <TableCell>{c.isPrincipal ? 'Caja Principal' : ''}</TableCell>
