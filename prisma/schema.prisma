@@ -229,11 +229,15 @@ model Checkout {
   invoicePrefix   String    @default("001") // First 3 digits (xxx)
   invoiceMiddle   String    @default("001") // Middle 3 digits (xxx)
   invoiceSequence Int // Last 7 digits (zzzzzzz) - sequential number
+  isPrincipal     Boolean  @default(false) // Whether this checkout is the principal/default checkout
+  
 
   // Relations
-  sales         Sale[]
-  cashRegisters CashRegister[]
-  transactions  Transaction[]  @relation("TransactionCheckout")
+  sales              Sale[]
+  cashRegisters      CashRegister[]
+  transactions       Transaction[]  @relation("TransactionCheckout")
+  sourceTransactions Transaction[]  @relation("TransactionCheckoutSource")
+  targetTransactions Transaction[]  @relation("TransactionCheckoutTarget")
 }
 
 // Cash register model for tracking opening/closing sessions and cash summary
@@ -316,27 +320,33 @@ enum ProductUnity {
 
 // Modelo para transacciones de cash, tarjeta, tigo money, etc.
 model Transaction {
-  id             String        @id @default(auto()) @map("_id") @db.ObjectId
-  paymentMethod  PaymentMethod
-  movement       MovementType
-  description    String?
-  amount         Float         @default(0)
-  userId         String?       @db.ObjectId
-  checkoutId     String?       @db.ObjectId
-  cashRegisterId String?       @db.ObjectId
-  saleId         String?       @db.ObjectId
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-  deletedAt      DateTime?
+  id               String        @id @default(auto()) @map("_id") @db.ObjectId
+  paymentMethod    PaymentMethod
+  movement         MovementType
+  description      String?
+  amount           Float         @default(0)
+  userId           String?       @db.ObjectId
+  checkoutId       String?       @db.ObjectId
+  checkoutSourceId String?       @db.ObjectId
+  checkoutTargetId String?       @db.ObjectId
+  cashRegisterId   String?       @db.ObjectId
+  saleId           String?       @db.ObjectId
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  deletedAt        DateTime?
 
   // Relaciones
-  user         User?         @relation("TransactionUser", fields: [userId], references: [id])
-  checkout     Checkout?     @relation("TransactionCheckout", fields: [checkoutId], references: [id])
-  cashRegister CashRegister? @relation("TransactionCashRegister", fields: [cashRegisterId], references: [id])
-  sale         Sale?         @relation(fields: [saleId], references: [id])
+  user           User?         @relation("TransactionUser", fields: [userId], references: [id])
+  checkout       Checkout?     @relation("TransactionCheckout", fields: [checkoutId], references: [id])
+  checkoutSource Checkout?     @relation("TransactionCheckoutSource", fields: [checkoutSourceId], references: [id])
+  checkoutTarget Checkout?     @relation("TransactionCheckoutTarget", fields: [checkoutTargetId], references: [id])
+  cashRegister   CashRegister? @relation("TransactionCashRegister", fields: [cashRegisterId], references: [id])
+  sale           Sale?         @relation(fields: [saleId], references: [id])
 
   @@index([userId])
   @@index([checkoutId])
+  @@index([checkoutSourceId])
+  @@index([checkoutTargetId])
   @@index([cashRegisterId])
   @@index([saleId])
 }

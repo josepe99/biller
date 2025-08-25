@@ -317,6 +317,7 @@ async function main() {
     {
       name: 'Caja 1',
       description: 'Caja principal - Entrada principal',
+      isPrincipal: true,
       deletedAt: null,
       invoicePrefix: '001',
       invoiceMiddle: '001',
@@ -325,6 +326,7 @@ async function main() {
     {
       name: 'Caja 2',
       description: 'Caja secundaria - Sector A',
+      isPrincipal: false,
       deletedAt: null,
       invoicePrefix: '001',
       invoiceMiddle: '002',
@@ -333,6 +335,7 @@ async function main() {
     {
       name: 'Caja 3',
       description: 'Caja express - Compras rápidas',
+      isPrincipal: false,
       deletedAt: null,
       invoicePrefix: '001',
       invoiceMiddle: '003',
@@ -341,6 +344,7 @@ async function main() {
     {
       name: 'Caja 4',
       description: 'Caja primer piso',
+      isPrincipal: false,
       deletedAt: null,
       invoicePrefix: '001',
       invoiceMiddle: '004',
@@ -349,6 +353,7 @@ async function main() {
     {
       name: 'Caja 5',
       description: 'Caja autoservicio',
+      isPrincipal: false,
       deletedAt: null,
       invoicePrefix: '001',
       invoiceMiddle: '005',
