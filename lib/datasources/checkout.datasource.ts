@@ -106,15 +106,7 @@ export class CheckoutDatasource extends BaseDatasource<'checkout'> {
 
     if (!checkout) return null;
 
-    return {
-      id: checkout.id,
-      name: checkout.name,
-      description: checkout.description,
-      createdAt: checkout.createdAt,
-      updatedAt: checkout.updatedAt,
-      sales: checkout.sales,
-      cashRegisters: checkout.cashRegisters,
-    };
+    return checkout;
   }
 
   async updateCheckout(id: string, data: any) {

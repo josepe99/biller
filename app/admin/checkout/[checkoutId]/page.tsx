@@ -1,16 +1,25 @@
 import DashboardLayout from '@/components/layout/dashboard-layout'
 import { getCheckoutByIdAction, getCheckoutTotalsAction } from '@/lib/actions/checkouts'
 import { format } from 'date-fns'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
 
 type Props = {
-  params: { checkoutId: string }
+  params: Promise<{ checkoutId: string }>
 }
 
 export default async function CheckoutDetailPage({ params }: Props) {
-  const { checkoutId } = params
+  const { checkoutId } = await params
 
-  const checkout = await getCheckoutByIdAction(checkoutId)
-  const totalsRes = await getCheckoutTotalsAction(checkoutId)
+  const [
+    checkout,
+    totalsRes
+  ] = await Promise.all([
+    getCheckoutByIdAction(checkoutId),
+    getCheckoutTotalsAction(checkoutId)
+  ]);
+
+  console.log(checkout)
 
   const totals = totalsRes?.totals ?? {}
   const grandTotal = totalsRes?.grandTotal ?? 0
@@ -22,6 +31,14 @@ export default async function CheckoutDetailPage({ params }: Props) {
         <div className="mb-4 text-sm text-muted-foreground">
           {checkout?.description}
         </div>
+
+        {checkout?.isPrincipal && (
+          <div className="mb-4">
+            <Button asChild size="sm" variant="secondary">
+              <Link href={`/admin/checkout/${checkoutId}?action=registerIncome`}>Registrar Ingreso</Link>
+            </Button>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <div className="bg-white rounded shadow p-4">
