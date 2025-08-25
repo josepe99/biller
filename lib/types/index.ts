@@ -73,6 +73,7 @@ export interface Checkout {
   id: string
   name: string
   description?: string | null
+  isPrincipal?: boolean
   createdAt: Date
   updatedAt: Date
   deletedAt?: Date | null

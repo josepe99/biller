@@ -6,6 +6,18 @@ export class CheckoutDatasource extends BaseDatasource<'checkout'> {
   constructor() {
     super('checkout');
   }
+
+  getList() {
+    return prisma.checkout.findMany({
+      where: {
+        deletedAt: null,
+      },
+      orderBy: {
+        name: 'asc',
+      },
+    });
+  }
+
   async getAllCheckouts(): Promise<CheckoutSummary[]> {
     const checkouts = await prisma.checkout.findMany({
       where: {
@@ -40,7 +52,7 @@ export class CheckoutDatasource extends BaseDatasource<'checkout'> {
         },
       },
       orderBy: {
-        createdAt: 'desc',
+        name: 'asc',
       },
     });
 
@@ -48,6 +60,7 @@ export class CheckoutDatasource extends BaseDatasource<'checkout'> {
       id: checkout.id,
       name: checkout.name,
       description: checkout.description,
+  isPrincipal: checkout.isPrincipal ?? false,
       createdAt: checkout.createdAt,
       updatedAt: checkout.updatedAt,
       salesCount: checkout.sales.length,

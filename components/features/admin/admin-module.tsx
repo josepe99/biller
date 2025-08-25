@@ -9,12 +9,13 @@ import OverviewModule from './overview-module'
 import SettingsModule from './settings-module'
 import RoleManagement from './role-management'
 import ReportsModule from './reports-module'
+import CheckoutManagement from './checkout-management'
 import { User, Category } from '@prisma/client'
 import { useState } from 'react'
 
 export default function AdminModule() {
   const { permissions = [] } = useAuth();
-  const [adminSubModule, setAdminSubModule] = useState<'overview' | 'users' | 'categories' | 'settings' | 'reports' | 'roles'>('overview')
+  const [adminSubModule, setAdminSubModule] = useState<'overview' | 'users' | 'categories' | 'settings' | 'reports' | 'roles' | 'checkouts'>('overview')
   const [users, setUsers] = useState<User[]>(sampleUsers)
   const [categories, setCategories] = useState<Category[]>(sampleCategories)
 
@@ -30,6 +31,8 @@ export default function AdminModule() {
         return <CategoryManagement onBack={() => setAdminSubModule('overview')} />
       case 'roles':
         return <RoleManagement onBack={() => setAdminSubModule('overview')} />
+      case 'checkouts':
+        return <CheckoutManagement onBack={() => setAdminSubModule('overview')} />
       case 'settings':
         return <SettingsModule onBack={() => setAdminSubModule('overview')} />
       case 'reports':
