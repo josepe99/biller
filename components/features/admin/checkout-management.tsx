@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { ChevronLeft } from 'lucide-react'
-import { getAllCheckouts } from '@/lib/actions/checkoutActions'
+import { getAllCheckouts, getCheckoutList } from '@/lib/actions/checkoutActions'
 
 interface CheckoutManagementProps {
   onBack: () => void
@@ -23,7 +23,7 @@ export default function CheckoutManagement({ onBack }: CheckoutManagementProps) 
 
   useEffect(() => {
     setLoading(true)
-    getAllCheckouts()
+    getCheckoutList()
       .then((data: any) => setCheckouts(data || []))
       .catch(() => setError('Error al cargar cajas'))
       .finally(() => setLoading(false))
@@ -57,8 +57,6 @@ export default function CheckoutManagement({ onBack }: CheckoutManagementProps) 
               <TableRow>
                 <TableHead>Nombre</TableHead>
                 <TableHead>Descripción</TableHead>
-                <TableHead>Ventas</TableHead>
-                <TableHead>Turnos</TableHead>
                 <TableHead>Tipo</TableHead>
               </TableRow>
             </TableHeader>
@@ -67,8 +65,6 @@ export default function CheckoutManagement({ onBack }: CheckoutManagementProps) 
                 <TableRow key={c.id}>
                   <TableCell>{c.name}</TableCell>
                   <TableCell>{c.description}</TableCell>
-                  <TableCell>{c.salesCount ?? 0}</TableCell>
-                  <TableCell>{c.cashRegistersCount ?? 0}</TableCell>
                   <TableCell>{c.isPrincipal ? 'Caja Principal' : ''}</TableCell>
                 </TableRow>
               ))}
