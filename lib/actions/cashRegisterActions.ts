@@ -1,6 +1,6 @@
 "use server"
 
-import { CashRegisterController } from '../controllers/cashRegister.controller';
+import { CashRegisterController } from '@/lib/controllers/cashRegister.controller';
 
 const controller = new CashRegisterController();
 
@@ -25,15 +25,14 @@ export async function openCheckout(params: {
 export async function closeCheckout(params: {
 	id: string;
 	closedById: string;
-	finalCash: number;
+	finalAmounts: Record<string, number>;
 	closingNotes?: string;
 	closedAt?: Date;
 	totalSales?: number;
 	totalCash?: number;
 	totalCard?: number;
 	totalOther?: number;
-	expectedCash?: number;
-	cashDifference?: number;
+	// expectedMoney and missingMoney are computed server-side in the controller
 }) {
 	return await controller.closeCheckout(params);
 }

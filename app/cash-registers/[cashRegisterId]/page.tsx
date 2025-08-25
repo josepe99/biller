@@ -11,9 +11,8 @@ const editableFields: Record<string, boolean> = {
 	openedBy: false,
 	openedAt: false,
 	initialCash: false,
-	finalCash: false,
-	expectedCash: false,
-	cashDifference: false,
+	expectedMoney: false,
+	missingMoney: false,
 	openingNotes: true,
 	closingNotes: true,
 };
@@ -32,9 +31,8 @@ interface CashRegister {
 	openedById?: string;
 	openedAt?: string | Date;
 	initialCash: number;
-	finalCash?: number | string | null;
-	expectedCash?: number | string | null;
-	cashDifference?: number | string | null;
+	expectedMoney?: any | null;
+	missingMoney?: any | null;
 	openingNotes?: string;
 	closingNotes?: string;
 }
@@ -52,10 +50,17 @@ export default async function CashRegisterPage({ params }: CashRegisterPageProps
 		openedBy: cashRegister.openedBy ?? undefined,
 		openedById: cashRegister.openedById ?? undefined,
 		openedAt: cashRegister.openedAt ? new Date(cashRegister.openedAt).toString() : undefined,
+		closedAt: cashRegister.closedAt ? new Date(cashRegister.closedAt).toString() : undefined,
+		checkout: cashRegister.checkout ?? undefined,
+		checkoutId: cashRegister.checkout?.id ?? undefined,
+		checkoutName: cashRegister.checkout?.name ?? undefined,
+		closedBy: cashRegister.closedBy ?? undefined,
 		initialCash: cashRegister.initialCash,
-		finalCash: cashRegister.finalCash ?? undefined,
-		expectedCash: cashRegister.expectedCash ?? undefined,
-		cashDifference: cashRegister.cashDifference ?? undefined,
+		expectedMoney: cashRegister.expectedMoney ?? undefined,
+		missingMoney: cashRegister.missingMoney ?? undefined,
+		// Lists for UI: convert object-shaped Json into arrays of { method, amount }
+		expectedMoneyList: cashRegister.expectedMoney ? Object.entries(cashRegister.expectedMoney).map(([method, amount]) => ({ method, amount })) : [],
+		missingMoneyList: cashRegister.missingMoney ? Object.entries(cashRegister.missingMoney).map(([method, amount]) => ({ method, amount })) : [],
 		openingNotes: cashRegister.openingNotes ?? undefined,
 		closingNotes: cashRegister.closingNotes ?? undefined,
 	} as any;

@@ -102,8 +102,30 @@ export interface CashRegister {
   totalCash?: number | null
   totalCard?: number | null
   totalOther?: number | null
-  expectedCash?: number | null
-  cashDifference?: number | null
+  expectedMoney?: {
+    cash?: number | null
+    debitCard?: number | null
+    creditCard?: number | null
+    tigoMoney?: number | null
+    personalPay?: number | null
+    bankTransfer?: number | null
+    qrPayment?: number | null
+    crypto?: number | null
+    cheque?: number | null
+    other?: number | null
+  } | null
+  missingMoney?: {
+    cash?: number | null
+    debitCard?: number | null
+    creditCard?: number | null
+    tigoMoney?: number | null
+    personalPay?: number | null
+    bankTransfer?: number | null
+    qrPayment?: number | null
+    crypto?: number | null
+    cheque?: number | null
+    other?: number | null
+  } | null
   openingNotes?: string | null
   closingNotes?: string | null
   createdAt: Date

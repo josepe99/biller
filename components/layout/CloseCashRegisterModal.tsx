@@ -1,27 +1,79 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { useState } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter
+} from '@/components/ui/dialog';
 
 interface CloseCashRegisterModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: { finalCash: number; closingNotes?: string }) => void;
+  // finalAmounts: map of payment method keys (camelCase) to final numeric amounts
+  onSubmit: (data: { finalAmounts: Record<string, number>; closingNotes?: string }) => void;
   loading: boolean;
 }
 
 export default function CloseCashRegisterModal({ open, onOpenChange, onSubmit, loading }: CloseCashRegisterModalProps) {
-  const [finalCash, setFinalCash] = useState('');
+  // store numeric values per payment method (as strings for controlled inputs)
+  const paymentMethods = [
+    { key: 'cash', label: 'Efectivo' },
+    { key: 'debitCard', label: 'Tarjeta débito' },
+    { key: 'creditCard', label: 'Tarjeta crédito' },
+    { key: 'tigoMoney', label: 'Tigo Money' },
+    { key: 'personalPay', label: 'Personal Pay' },
+    { key: 'bankTransfer', label: 'Transferencia bancaria' },
+    { key: 'qrPayment', label: 'Pago QR' },
+    { key: 'crypto', label: 'Cripto' },
+    { key: 'cheque', label: 'Cheque' },
+    { key: 'other', label: 'Otro' },
+  ];
+
+  const initialAmounts: Record<string, string> = {};
+  paymentMethods.forEach(m => (initialAmounts[m.key] = ''));
+
+  const [finalAmounts, setFinalAmounts] = useState<Record<string, string>>(initialAmounts);
   const [closingNotes, setClosingNotes] = useState('');
   const [error, setError] = useState<string | null>(null);
 
+  const [editingKey, setEditingKey] = useState<string | null>(null);
+
+  const formatNumber = (value?: number | null) => {
+    if (value == null || Number.isNaN(value)) return '';
+    try {
+      return value.toLocaleString('es-PY');
+    } catch (e) {
+      return String(value);
+    }
+  };
+
+  const parseInputToNumber = (str: string) => {
+    if (!str) return 0;
+    // Remove dots used as thousand separators and spaces; allow comma as decimal
+    const normalized = str.replace(/\./g, '').replace(/\s/g, '').replace(',', '.');
+    const n = Number(normalized);
+    return Number.isNaN(n) ? 0 : n;
+  };
+
   const handleSubmit = () => {
     setError(null);
-    if (!finalCash || isNaN(Number(finalCash))) {
-      setError('Ingrese un monto válido.');
+    // parse amounts
+    const parsed: Record<string, number> = {};
+    let anyPositive = false;
+    for (const key of Object.keys(finalAmounts)) {
+      const n = parseInputToNumber(finalAmounts[key]);
+      parsed[key] = n;
+      if (n > 0) anyPositive = true;
+    }
+    if (!anyPositive) {
+      setError('Ingrese al menos un monto mayor que 0.');
       return;
     }
-    onSubmit({ finalCash: Number(finalCash), closingNotes });
+
+    onSubmit({ finalAmounts: parsed, closingNotes });
   };
 
   return (
@@ -32,15 +84,32 @@ export default function CloseCashRegisterModal({ open, onOpenChange, onSubmit, l
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm mb-1">Efectivo final en caja</label>
-            <Input
-              type="number"
-              value={finalCash}
-              onChange={e => setFinalCash(e.target.value)}
-              min={0}
-              placeholder="Ej: 100000"
-              disabled={loading}
-            />
+            <label className="block text-sm mb-1">Montos finales por método</label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              {paymentMethods.map(m => {
+                const raw = finalAmounts[m.key] ?? '';
+                const numeric = parseInputToNumber(raw);
+                const display = editingKey === m.key ? raw : formatNumber(numeric);
+                return (
+                  <div key={m.key}>
+                    <label className="block text-xs text-gray-600 mb-1">{m.label}</label>
+                    <Input
+                      type="text"
+                      value={display}
+                      onFocus={() => setEditingKey(m.key)}
+                      onBlur={() => setEditingKey(null)}
+                      onChange={(e) => {
+                        // accept digits, dots and commas
+                        const v = e.target.value.replace(/[^0-9\.,]/g, '');
+                        setFinalAmounts(prev => ({ ...prev, [m.key]: v }));
+                      }}
+                      placeholder="Ej: 10.000"
+                      disabled={loading}
+                    />
+                  </div>
+                );
+              })}
+            </div>
           </div>
           <div>
             <label className="block text-sm mb-1">Notas de cierre (opcional)</label>
@@ -55,7 +124,7 @@ export default function CloseCashRegisterModal({ open, onOpenChange, onSubmit, l
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>Cancelar</Button>
-          <Button onClick={handleSubmit} className="bg-red-500 hover:bg-red-600" disabled={loading || !finalCash}>
+          <Button onClick={handleSubmit} className="bg-red-500 hover:bg-red-600" disabled={loading}>
             {loading ? 'Cerrando...' : 'Cerrar Caja'}
           </Button>
         </DialogFooter>

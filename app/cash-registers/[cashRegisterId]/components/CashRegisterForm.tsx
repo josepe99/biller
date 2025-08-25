@@ -1,5 +1,9 @@
 "use client";
+
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
 import { useState } from "react";
+import Link from "next/link";
 
 type CashRegister = {
   id: string;
@@ -7,10 +11,14 @@ type CashRegister = {
   openedBy?: { name?: string };
   openedById?: string;
   openedAt?: string;
+  checkout?: { id?: string; name?: string };
+  checkoutId?: string;
+  checkoutName?: string;
+  closedBy?: { name?: string } | string | null;
   initialCash: number;
-  finalCash?: number | string;
-  expectedCash?: number | string;
-  cashDifference?: number | string;
+  // New shape: objects per payment method (camelCase keys). UI shows only the 'cash' slot.
+  expectedMoney?: any;
+  missingMoney?: any;
   openingNotes?: string;
   closingNotes?: string;
 };
@@ -18,7 +26,7 @@ type CashRegister = {
 type EditableFields = Record<string, boolean>;
 
 interface CashRegisterFormProps {
-  cashRegister: CashRegister;
+  cashRegister: CashRegister & { expectedMoneyList?: { method: string; amount: any }[]; missingMoneyList?: { method: string; amount: any }[] };
   editableFields: EditableFields;
 }
 
@@ -26,14 +34,17 @@ export default function CashRegisterForm({ cashRegister, editableFields }: CashR
   const initialForm = {
     id: cashRegister.id,
     status: cashRegister.status,
-    openedBy: cashRegister.openedBy?.name || cashRegister.openedById || "",
+  openedBy: cashRegister.openedBy?.name || cashRegister.openedById || "",
     openedAt: cashRegister.openedAt ? new Date(cashRegister.openedAt).toLocaleString() : "",
     initialCash: cashRegister.initialCash,
-    finalCash: cashRegister.finalCash ?? "",
-    expectedCash: cashRegister.expectedCash ?? "",
-    cashDifference: cashRegister.cashDifference ?? "",
+  // expose the 'cash' entry from the new objects as simple numeric inputs in the UI
+  expectedMoneyCash: (cashRegister.expectedMoney && (cashRegister.expectedMoney as any).cash) ?? "",
+  missingMoneyCash: (cashRegister.missingMoney && (cashRegister.missingMoney as any).cash) ?? "",
     openingNotes: cashRegister.openingNotes ?? "",
     closingNotes: cashRegister.closingNotes ?? "",
+  checkoutName: (cashRegister as any).checkout?.name ?? (cashRegister as any).checkoutName ?? '',
+  closedByName: (cashRegister as any).closedBy?.name ?? (typeof cashRegister.closedBy === 'string' ? cashRegister.closedBy : ''),
+  closedAt: (cashRegister as any).closedAt ? new Date((cashRegister as any).closedAt).toLocaleString() : '',
   };
 
   const [form, setForm] = useState(initialForm);
@@ -55,42 +66,59 @@ export default function CashRegisterForm({ cashRegister, editableFields }: CashR
 
   return (
     <div className="bg-white shadow-lg rounded-xl p-8">
-      <h1 className="text-3xl font-bold mb-6 text-gray-800 flex items-center gap-2">
-        <span
-          className="inline-block w-3 h-3 rounded-full mr-2"
-          style={{ background: form.status === "OPEN" ? "#22c55e" : "#ef4444" }}
-          aria-label={form.status === "OPEN" ? "Caja abierta" : "Caja cerrada"}
-        ></span>
-        Caja #{form.id.slice(-5)}
-      </h1>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <Link href="/">
+            <Button variant="outline" size="icon" className="border-orange-200 text-orange-600 hover:bg-orange-50">
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+          </Link>
+          <span className="font-semibold text-lg text-orange-500">
+            Caja {form.id.slice(-5)}
+          </span>
+        </div>
+      </div>
       <form className="grid grid-cols-1 md:grid-cols-2 gap-6" onSubmit={handleSave}>
-        {/* ID */}
-        <div>
-          <label htmlFor="id" className="block text-sm font-semibold text-gray-600 mb-1">ID</label>
-          <input
-            id="id"
-            className="w-full border rounded-lg px-3 py-2 bg-gray-100"
-            name="id"
-            value={form.id}
-            disabled={!editableFields.id}
-            onChange={handleChange}
-            aria-readonly={!editableFields.id}
-          />
+        {/* ID, Checkout Name and Status - responsive row */}
+        <div className="md:col-span-2 flex flex-col md:flex-row gap-6">
+          <div className="flex-1">
+            <label htmlFor="id" className="block text-sm font-semibold text-gray-600 mb-1">ID</label>
+            <input
+              id="id"
+              className="w-full border rounded-lg px-3 py-2 bg-gray-100"
+              name="id"
+              value={form.id}
+              disabled={!editableFields.id}
+              onChange={handleChange}
+              aria-readonly={!editableFields.id}
+            />
+          </div>
+          <div className="flex-1">
+            <label htmlFor="checkoutName" className="block text-sm font-semibold text-gray-600 mb-1">Caja / Checkout</label>
+            <input
+              id="checkoutName"
+              className="w-full border rounded-lg px-3 py-2 bg-gray-100"
+              name="checkoutName"
+              value={form.checkoutName}
+              disabled={true}
+              onChange={handleChange}
+              aria-readonly={true}
+            />
+          </div>
+          <div className="flex-1">
+            <label htmlFor="status" className="block text-sm font-semibold text-gray-600 mb-1">Estado</label>
+            <input
+              id="status"
+              className="w-full border rounded-lg px-3 py-2 bg-gray-100"
+              name="status"
+              value={form.status}
+              disabled={!editableFields.status}
+              onChange={handleChange}
+              aria-readonly={!editableFields.status}
+            />
+          </div>
         </div>
-        {/* Status */}
-        <div>
-          <label htmlFor="status" className="block text-sm font-semibold text-gray-600 mb-1">Estado</label>
-          <input
-            id="status"
-            className="w-full border rounded-lg px-3 py-2 bg-gray-100"
-            name="status"
-            value={form.status}
-            disabled={!editableFields.status}
-            onChange={handleChange}
-            aria-readonly={!editableFields.status}
-          />
-        </div>
-        {/* Opened By */}
+        {/* Abierto por (left) and Fecha de apertura (right) */}
         <div>
           <label htmlFor="openedBy" className="block text-sm font-semibold text-gray-600 mb-1">Abierto por</label>
           <input
@@ -103,7 +131,6 @@ export default function CashRegisterForm({ cashRegister, editableFields }: CashR
             aria-readonly={!editableFields.openedBy}
           />
         </div>
-        {/* Opened At */}
         <div>
           <label htmlFor="openedAt" className="block text-sm font-semibold text-gray-600 mb-1">Fecha de apertura</label>
           <input
@@ -114,6 +141,31 @@ export default function CashRegisterForm({ cashRegister, editableFields }: CashR
             disabled={!editableFields.openedAt}
             onChange={handleChange}
             aria-readonly={!editableFields.openedAt}
+          />
+        </div>
+
+        {/* Cerrada por (left) and Fecha de cierre (right) */}
+        <div>
+          <label htmlFor="closedBy" className="block text-sm font-semibold text-gray-600 mb-1">Cerrada por</label>
+          <input
+            id="closedBy"
+            className="w-full border rounded-lg px-3 py-2 bg-gray-100"
+            name="closedByName"
+            value={form.closedByName}
+            disabled={true}
+            onChange={handleChange}
+            aria-readonly={true}
+          />
+        </div>
+        <div>
+          <label htmlFor="closedAt" className="block text-sm font-semibold text-gray-600 mb-1">Fecha de cierre</label>
+          <input
+            id="closedAt"
+            className="w-full border rounded-lg px-3 py-2 bg-gray-100"
+            name="closedAt"
+            value={form.closedAt}
+            disabled={true}
+            aria-readonly={true}
           />
         </div>
         {/* Initial Cash */}
@@ -130,46 +182,32 @@ export default function CashRegisterForm({ cashRegister, editableFields }: CashR
             aria-readonly={!editableFields.initialCash}
           />
         </div>
-        {/* Final Cash */}
+        {/* Expected Money (cash slot) */}
         <div>
-          <label htmlFor="finalCash" className="block text-sm font-semibold text-gray-600 mb-1">Efectivo final</label>
+          <label htmlFor="expectedMoneyCash" className="block text-sm font-semibold text-gray-600 mb-1">Efectivo esperado</label>
           <input
-            id="finalCash"
-            type="number"
-            className={`w-full border rounded-lg px-3 py-2 ${editableFields.finalCash ? "bg-white" : "bg-gray-100"}`}
-            name="finalCash"
-            value={form.finalCash}
-            disabled={!editableFields.finalCash}
-            onChange={handleChange}
-            aria-readonly={!editableFields.finalCash}
-          />
-        </div>
-        {/* Expected Cash */}
-        <div>
-          <label htmlFor="expectedCash" className="block text-sm font-semibold text-gray-600 mb-1">Efectivo esperado</label>
-          <input
-            id="expectedCash"
+            id="expectedMoneyCash"
             type="number"
             className="w-full border rounded-lg px-3 py-2 bg-gray-100"
-            name="expectedCash"
-            value={form.expectedCash}
-            disabled={!editableFields.expectedCash}
+            name="expectedMoneyCash"
+            value={form.expectedMoneyCash}
+            disabled={!editableFields.expectedMoney}
             onChange={handleChange}
-            aria-readonly={!editableFields.expectedCash}
+            aria-readonly={!editableFields.expectedMoney}
           />
         </div>
-        {/* Cash Difference */}
+        {/* Missing Money (cash slot) */}
         <div>
-          <label htmlFor="cashDifference" className="block text-sm font-semibold text-gray-600 mb-1">Diferencia de efectivo</label>
+          <label htmlFor="missingMoneyCash" className="block text-sm font-semibold text-gray-600 mb-1">Diferencia de efectivo</label>
           <input
-            id="cashDifference"
+            id="missingMoneyCash"
             type="number"
             className="w-full border rounded-lg px-3 py-2 bg-gray-100"
-            name="cashDifference"
-            value={form.cashDifference}
-            disabled={!editableFields.cashDifference}
+            name="missingMoneyCash"
+            value={form.missingMoneyCash}
+            disabled={!editableFields.missingMoney}
             onChange={handleChange}
-            aria-readonly={!editableFields.cashDifference}
+            aria-readonly={!editableFields.missingMoney}
           />
         </div>
         {/* Opening Notes */}
@@ -198,6 +236,31 @@ export default function CashRegisterForm({ cashRegister, editableFields }: CashR
             aria-readonly={!editableFields.closingNotes}
           />
         </div>
+        {/* Expected money breakdown (read-only list) */}
+        <div className="md:col-span-2">
+          <label className="block text-sm font-semibold text-gray-600 mb-2">Desglose esperado por método de pago</label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            {(cashRegister.expectedMoneyList || []).map((item) => (
+              <div key={item.method} className="flex items-center gap-3">
+                <div className="w-1/2 text-sm text-gray-700 capitalize">{item.method}</div>
+                <div className="w-1/2 text-sm text-gray-900">{item.amount ?? 0}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+        {/* Missing money breakdown (read-only list) */}
+        <div className="md:col-span-2">
+          <label className="block text-sm font-semibold text-gray-600 mb-2">Faltantes por método</label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            {(cashRegister.missingMoneyList || []).map((item) => (
+              <div key={item.method} className="flex items-center gap-3">
+                <div className="w-1/2 text-sm text-gray-700 capitalize">{item.method}</div>
+                <div className="w-1/2 text-sm text-gray-900">{item.amount ?? 0}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+  {/* removed duplicate Closed By (moved earlier) */}
         {/* Actions */}
         <div className="md:col-span-2 flex gap-4 justify-end mt-6">
           <button

@@ -10,7 +10,15 @@ export class CashRegisterDatasource {
   }
 
   async getById(id: string): Promise<CashRegister | null> {
-    return prisma.cashRegister.findUnique({ where: { id } });
+    return prisma.cashRegister.findUnique({
+      where: { id },
+      include: {
+        checkout: { select: {name: true, id: true} },
+        openedBy: { select: { name: true } },
+        closedBy: { select: { name: true } },
+
+      }
+    });
   }
 
   async openCheckout(params: {
@@ -35,28 +43,26 @@ export class CashRegisterDatasource {
   async closeCheckout(params: {
     id: string;
     closedById: string;
-    finalCash: number;
     closingNotes?: string;
     closedAt?: Date;
     totalSales?: number;
     totalCash?: number;
     totalCard?: number;
     totalOther?: number;
-    expectedCash?: number;
-    cashDifference?: number;
+  // expectedMoney and missingMoney are computed server-side and may be present in params
   }): Promise<CashRegister> {
-    return prisma.cashRegister.update({
-      where: { id: params.id },
-      data: {
-        closedById: params.closedById,
-        finalCash: params.finalCash,
-        closingNotes: params.closingNotes,
-        closedAt: params.closedAt ?? new Date(),
-        status: 'CLOSED',
-        expectedCash: params.expectedCash,
-        cashDifference: params.cashDifference,
-      },
-    });
+    const p: any = params as any;
+    const updateData: any = {
+      closedById: params.closedById,
+            // finalCash is intentionally not set here - final amounts are stored per payment method
+      closingNotes: params.closingNotes,
+      closedAt: params.closedAt ?? new Date(),
+      status: 'CLOSED',
+      expectedMoney: p.expectedMoney,
+      missingMoney: p.missingMoney,
+    };
+
+    return prisma.cashRegister.update({ where: { id: params.id }, data: updateData });
   }
 
   async getActives(): Promise<(CashRegister & { checkout: Checkout })[]> {

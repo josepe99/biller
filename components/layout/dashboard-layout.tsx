@@ -76,14 +76,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   // Handler para cerrar caja
   // Handler para cerrar caja usando el modal
-  const handleCloseCashRegister = async ({ finalCash, closingNotes }: { finalCash: number; closingNotes?: string }) => {
+  const handleCloseCashRegister = async ({ finalAmounts, closingNotes }: { finalAmounts: Record<string, number>; closingNotes?: string }) => {
     if (!user || !cashRegister) return;
     setLoadingOpen(true);
     try {
       await closeCheckout({
         id: cashRegister.id,
         closedById: user.id,
-        finalCash,
+        finalAmounts,
         closingNotes: closingNotes || undefined,
         closedAt: new Date(),
       });

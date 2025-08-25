@@ -160,29 +160,29 @@ model Category {
 
 // Sale model for transactions
 model Sale {
-  id              String     @id @default(auto()) @map("_id") @db.ObjectId
-  saleNumber      String     @unique // Invoice/Sale number in format xxx-xxx-zzzzzzz
-  total           Float
-  subtotal        Float
-  tax             Float      @default(0)
-  discount        Float      @default(0)
-  status          SaleStatus @default(COMPLETED)
-  userId          String     @db.ObjectId
-  customerId      String?    @db.ObjectId
-  checkoutId      String     @db.ObjectId // Which checkout/cash register was used
-  cashRegisterId  String?    @db.ObjectId // Which cash register session this sale belongs to
-  notes           String?
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
-  deletedAt       DateTime?
+  id             String     @id @default(auto()) @map("_id") @db.ObjectId
+  saleNumber     String     @unique // Invoice/Sale number in format xxx-xxx-zzzzzzz
+  total          Float
+  subtotal       Float
+  tax            Float      @default(0)
+  discount       Float      @default(0)
+  status         SaleStatus @default(COMPLETED)
+  userId         String     @db.ObjectId
+  customerId     String?    @db.ObjectId
+  checkoutId     String     @db.ObjectId // Which checkout/cash register was used
+  cashRegisterId String?    @db.ObjectId // Which cash register session this sale belongs to
+  notes          String?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  deletedAt      DateTime?
 
   // Relations
-  user          User          @relation(fields: [userId], references: [id])
-  customer      Customer?     @relation(fields: [customerId], references: [id])
-  checkout      Checkout      @relation(fields: [checkoutId], references: [id])
-  cashRegister  CashRegister? @relation(fields: [cashRegisterId], references: [id])
-  saleItems     SaleItem[]
-  transactions  Transaction[]
+  user         User          @relation(fields: [userId], references: [id])
+  customer     Customer?     @relation(fields: [customerId], references: [id])
+  checkout     Checkout      @relation(fields: [checkoutId], references: [id])
+  cashRegister CashRegister? @relation(fields: [cashRegisterId], references: [id])
+  saleItems    SaleItem[]
+  transactions Transaction[]
 }
 
 // Sale item model for individual items in a sale
@@ -247,12 +247,13 @@ model CashRegister {
   status     CashRegisterStatus @default(OPEN)
 
   // Opening amounts
-  initialCash Float  @default(0) // Starting cash amount
-  finalCash   Float? // Cash counted at closing (efectivo final)
+  initialCash Float @default(0) // Starting cash amount
 
-  // Discrepancies
-  expectedCash   Float? @default(0) // Expected cash (initial + cash sales)
-  cashDifference Float? @default(0) // Difference between expected and actual cash
+  // Discrepancies (per payment method)
+  // Store expected and missing/extra money broken down by payment method using camelCase keys.
+  // Example shape: { cash: 0, debitCard: 0, creditCard: 0, tigoMoney: 0, personalPay: 0, bankTransfer: 0, qrPayment: 0, crypto: 0, cheque: 0, other: 0 }
+  expectedMoney Json? // Expected money (object with floats per payment method)
+  missingMoney  Json? // Missing/extra money (object with floats per payment method)
 
   // Notes and observations
   openingNotes String? // Notes when opening
