@@ -45,7 +45,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const getActiveModule = () => {
     if (pathname.includes('/admin')) return 'admin'
     if (pathname.includes('/stock')) return 'inventory'
-    if (pathname.includes('/checkout-registers')) return 'checkout-registers'
+    if (pathname.includes('/cash-registers')) return 'cash-registers'
     if (pathname.includes('/customers')) return 'customers'
     return 'billing'
   }
@@ -151,11 +151,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             </Link>
           )}
           {permissions.includes('cashRegister:manage') && (
-            <Link href="/checkout-registers">
+            <Link href="/cash-registers">
               <Button
                 variant="ghost"
                 size="icon"
-                className={`relative h-14 w-14 rounded-xl flex flex-col items-center justify-center text-gray-600 hover:bg-gray-100 ${activeModule === 'checkout-registers' ? 'bg-orange-100 text-orange-700' : ''}`}
+                className={`relative h-14 w-14 rounded-xl flex flex-col items-center justify-center text-gray-600 hover:bg-gray-100 ${activeModule === 'cash-registers' ? 'bg-orange-100 text-orange-700' : ''}`}
               >
                 <span className="h-6 w-6 flex items-center justify-center">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-6 w-6">

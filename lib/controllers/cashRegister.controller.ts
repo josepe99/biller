@@ -2,22 +2,22 @@ import { CashRegisterDatasource } from '@/lib/datasources/cashRegister.datasourc
 import { CashRegister } from '@prisma/client';
 
 export class CashRegisterController {
-  private datasource: CashRegisterDatasource;
+  private cashRegisterDatasource: CashRegisterDatasource;
 
   constructor() {
-    this.datasource = new CashRegisterDatasource();
+    this.cashRegisterDatasource = new CashRegisterDatasource();
   }
 
   async getAll() {
-    return this.datasource.getAll();
+    return this.cashRegisterDatasource.getAll();
   }
 
   async getActiveByUser(userId: string) {
-    return this.datasource.getActiveByUser(userId);
+    return this.cashRegisterDatasource.getActiveByUser(userId);
   }
 
   async getById(id: string) {
-    return this.datasource.getById(id);
+    return this.cashRegisterDatasource.getById(id);
   }
 
   async openCheckout(params: {
@@ -27,7 +27,7 @@ export class CashRegisterController {
     openingNotes?: string;
     openedAt?: Date;
   }) {
-    return this.datasource.openCheckout(params);
+    return this.cashRegisterDatasource.openCheckout(params);
   }
 
   async closeCheckout(params: {
@@ -43,18 +43,18 @@ export class CashRegisterController {
     expectedCash?: number;
     cashDifference?: number;
   }) {
-    return this.datasource.closeCheckout(params);
+    return this.cashRegisterDatasource.closeCheckout(params);
   }
 
   async getByUser(userId: string) {
-    return this.datasource.getByUser(userId);
+    return this.cashRegisterDatasource.getByUser(userId);
   }
 
   async update(id: string, data: Partial<CashRegister>) {
-    return this.datasource.update(id, data);
+    return this.cashRegisterDatasource.update(id, data);
   }
 
   async delete(id: string) {
-    return this.datasource.delete(id);
+    return this.cashRegisterDatasource.delete(id);
   }
 }
