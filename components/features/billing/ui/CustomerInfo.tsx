@@ -1,5 +1,14 @@
+import CustomerForm from '@/components/features/admin/customer-form';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import React from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from '@/components/ui/dialog';
 
 interface CustomerInfoProps {
   customerRuc: string;
@@ -14,7 +23,25 @@ export function CustomerInfo({ customerRuc, customerInfo, handleCustomerRucChang
       <div className="space-y-2">
         <div>
           <label className="text-xs text-gray-600">RUC del Cliente (opcional)</label>
-          <Input placeholder="Ej: 80012345-1" value={customerRuc} onChange={e => handleCustomerRucChange(e.target.value)} className="text-sm" />
+          <div className="mt-1 flex items-center gap-2">
+            <Input
+              placeholder="Ej: 80012345-1"
+              value={customerRuc}
+              onChange={e => handleCustomerRucChange(e.target.value)}
+              className="text-sm flex-1"
+            />
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button type="button" className="h-9 w-9 flex items-center justify-center">+</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Agregar Cliente</DialogTitle>
+                </DialogHeader>
+                <CustomerForm />
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
         {customerInfo && (
           <div className="text-xs text-green-600 bg-green-50 p-2 rounded">
