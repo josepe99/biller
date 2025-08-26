@@ -1,8 +1,10 @@
 import DashboardLayout from '@/components/layout/dashboard-layout'
-import { getCheckoutByIdAction, getCheckoutTotalsAction } from '@/lib/actions/checkouts'
+import WithdrawButtonClient from '@/components/checkout/WithdrawButtonClient'
 import { format } from 'date-fns'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
+import {
+  getCheckoutByIdAction,
+  getCheckoutTotalsAction
+} from '@/lib/actions/checkouts'
 
 type Props = {
   params: Promise<{ checkoutId: string }>
@@ -30,18 +32,9 @@ export default async function CheckoutDetailPage({ params }: Props) {
           {checkout?.description}
         </div>
 
-        <Button
-          className="bg-orange-500 hover:bg-orange-600 text-white mb-3 me-3"
-          size="sm"
-        >
-          Registrar Ingreso
-        </Button>
-        <Button
-          className="bg-orange-500 hover:bg-orange-600 text-white mb-3"
-          size="sm"
-        >
-          Transferir
-        </Button>
+        <div className="mb-4">
+          <WithdrawButtonClient checkoutId={checkoutId} />
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <div className="bg-white rounded shadow p-4">
