@@ -9,12 +9,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { ChevronLeft } from 'lucide-react'
 import { getAllCheckouts, getCheckoutList } from '@/lib/actions/checkoutActions'
+import Link from 'next/link'
 
-interface CheckoutManagementProps {
-  onBack: () => void
-}
 
-export default function CheckoutManagement({ onBack }: CheckoutManagementProps) {
+export default function CheckoutManagement() {
   const { permissions } = useAuth()
   const canRead = permissions.includes('checkout:manage') || permissions.includes('checkout:finalize') || permissions.includes('checkout:manage') || permissions.includes('cashRegister:manage') || permissions.includes('cashRegister:read')
 
@@ -31,13 +29,12 @@ export default function CheckoutManagement({ onBack }: CheckoutManagementProps) 
       .finally(() => setLoading(false))
   }, [])
 
-  const handleBack = () => onBack()
 
   return (
     <Card className="h-full flex flex-col">
       <CardHeader className="flex flex-row items-center justify-between">
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={handleBack}><ChevronLeft /></Button>
+          <Link href="/admin"><ChevronLeft /></Link>
           <CardTitle>Gestión de Cajas</CardTitle>
         </div>
       </CardHeader>
@@ -69,7 +66,7 @@ export default function CheckoutManagement({ onBack }: CheckoutManagementProps) 
                   className="cursor-pointer"
                   role="link"
                   tabIndex={0}
-                  onClick={() => router.push(`/admin/checkout/${c.id}`)}
+                  onClick={() => router.push(`/admin/checkouts/${c.id}`)}
                   onKeyDown={(e) => { if (e.key === 'Enter') router.push(`/admin/checkout/${c.id}`) }}
                 >
                   <TableCell>{c.name}</TableCell>

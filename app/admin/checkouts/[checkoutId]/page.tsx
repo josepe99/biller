@@ -1,6 +1,8 @@
-import DashboardLayout from '@/components/layout/dashboard-layout'
 import WithdrawButtonClient from '@/components/checkout/WithdrawButtonClient'
+import DashboardLayout from '@/components/layout/dashboard-layout'
+import { ChevronLeft } from 'lucide-react'
 import { format } from 'date-fns'
+import Link from 'next/link'
 import {
   getCheckoutByIdAction,
   getCheckoutTotalsAction
@@ -27,7 +29,12 @@ export default async function CheckoutDetailPage({ params }: Props) {
   return (
     <DashboardLayout>
       <div className="mx-auto p-6">
-        <h1 className="text-2xl font-bold mb-4">Detalle de Caja: {checkout?.name || checkoutId}</h1>
+        <div className="flex items-center gap-3 mb-4">
+          <Link href="/admin" className="inline-flex items-center p-1 rounded hover:bg-slate-100">
+            <ChevronLeft />
+          </Link>
+          <h1 className="text-2xl font-bold">Detalle de Caja: {checkout?.name || checkoutId}</h1>
+        </div>
         <div className="mb-4 text-sm text-muted-foreground">
           {checkout?.description}
         </div>
