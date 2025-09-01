@@ -99,6 +99,7 @@ export function BillingSummary({
             onConfirm={handleConfirmPayment}
             cartIsEmpty={cart.length === 0}
             customer={customerInfo}
+            checkoutClosed={typeof displayData.checkoutClosed !== 'undefined' ? displayData.checkoutClosed : false}
           />
         </div>
       )}

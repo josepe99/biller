@@ -110,7 +110,8 @@ export default function BillingModule() {
       cashier: user?.name,
       items: cart,
       total: total,
-      isCurrentSale: true
+      isCurrentSale: true,
+      checkoutClosed: checkout?.closed ?? false
     }
   }
 

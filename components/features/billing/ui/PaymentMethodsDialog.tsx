@@ -30,6 +30,7 @@ interface PaymentMethodsDialogProps {
   formatParaguayanCurrency: (n: number) => string;
   onConfirm: (payments: Payment[]) => void;
   cartIsEmpty?: boolean;
+  checkoutClosed?: boolean;
   customer?: {
     name?: string;
     ruc?: string;
@@ -44,6 +45,7 @@ export function PaymentMethodsDialog({
   formatParaguayanCurrency,
   onConfirm,
   cartIsEmpty,
+  checkoutClosed,
   customer,
 }: PaymentMethodsDialogProps) {
   const [payments, setPayments] = useState<Payment[]>([
@@ -75,7 +77,7 @@ export function PaymentMethodsDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="col-span-2 bg-orange-500 hover:bg-orange-600 text-lg py-6" disabled={!!cartIsEmpty}>
+        <Button className="col-span-2 bg-orange-500 hover:bg-orange-600 text-lg py-6" disabled={!!cartIsEmpty || !!checkoutClosed}>
           <DollarSign className="mr-2 h-5 w-5" /> Pagar
         </Button>
       </DialogTrigger>
