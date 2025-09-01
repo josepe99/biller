@@ -89,7 +89,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       });
       setCashRegister(null);
       setIsCloseModal(false);
-      alert('Caja cerrada correctamente');
     } catch (e) {
       alert('Error al cerrar caja');
     } finally {

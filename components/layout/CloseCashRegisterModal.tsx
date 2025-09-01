@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
+import { formatNumberWithDots } from '@/lib/utils';
 import {
   Dialog,
   DialogContent,
@@ -43,11 +44,7 @@ export default function CloseCashRegisterModal({ open, onOpenChange, onSubmit, l
 
   const formatNumber = (value?: number | null) => {
     if (value == null || Number.isNaN(value)) return '';
-    try {
-      return value.toLocaleString('es-PY');
-    } catch (e) {
-      return String(value);
-    }
+    return formatNumberWithDots(value);
   };
 
   const parseInputToNumber = (str: string) => {
@@ -88,20 +85,24 @@ export default function CloseCashRegisterModal({ open, onOpenChange, onSubmit, l
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               {paymentMethods.map(m => {
                 const raw = finalAmounts[m.key] ?? '';
-                const numeric = parseInputToNumber(raw);
-                const display = editingKey === m.key ? raw : formatNumber(numeric);
+                const display = formatNumberWithDots(raw);
                 return (
                   <div key={m.key}>
                     <label className="block text-xs text-gray-600 mb-1">{m.label}</label>
                     <Input
                       type="text"
+                      inputMode="numeric"
                       value={display}
-                      onFocus={() => setEditingKey(m.key)}
-                      onBlur={() => setEditingKey(null)}
-                      onChange={(e) => {
-                        // accept digits, dots and commas
-                        const v = e.target.value.replace(/[^0-9\.,]/g, '');
-                        setFinalAmounts(prev => ({ ...prev, [m.key]: v }));
+                      onChange={e => {
+                        let value = e.target.value.replace(/\D/g, '');
+                        value = value.replace(/^0+(?!$)/, '');
+                        setFinalAmounts(prev => ({ ...prev, [m.key]: value }));
+                      }}
+                      onPaste={e => {
+                        e.preventDefault();
+                        let paste = e.clipboardData.getData('Text').replace(/\D/g, '');
+                        paste = paste.replace(/^0+(?!$)/, '');
+                        setFinalAmounts(prev => ({ ...prev, [m.key]: paste }));
                       }}
                       placeholder="Ej: 10.000"
                       disabled={loading}
