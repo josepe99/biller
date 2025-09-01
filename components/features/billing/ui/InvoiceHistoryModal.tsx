@@ -14,39 +14,31 @@ import { useAuth } from '@/hooks';
 interface InvoiceHistoryModalProps {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
-  searchType: 'invoice' | 'ruc';
-  setSearchType: (type: 'invoice' | 'ruc') => void;
-  historySearchTerm: string;
-  setFilteredHistory: (history: any[]) => void;
-  handleHistorySearch: () => void;
-  setCurrentHistoryIndex: (idx: number) => void;
 }
 
 export function InvoiceHistoryModal({
   isOpen,
   setIsOpen,
-  historySearchTerm,
 }: InvoiceHistoryModalProps) {
 
   const { user } = useAuth();
   const userId = user?.id;
   const [invoices, setInvoices] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  // removed useRouter, using Link instead
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     const fetchInvoices = async () => {
       setLoading(true);
       try {
         let data: any[] = [];
-        if (historySearchTerm && historySearchTerm.trim().length > 0) {
-          data = await searchSalesAction(historySearchTerm, 50);
+        if (searchTerm && searchTerm.trim().length > 0) {
+          data = await searchSalesAction(searchTerm, 50);
         } else if (userId) {
           data = await getSalesHistoryAction(userId, 50, 0);
         } else {
           data = [];
         }
-        console.log(data)
         setInvoices(data);
       } catch (e) {
         setInvoices([]);
@@ -55,7 +47,7 @@ export function InvoiceHistoryModal({
       }
     };
     fetchInvoices();
-  }, [historySearchTerm, isOpen]);
+  }, [isOpen, searchTerm, userId]);
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -65,6 +57,14 @@ export function InvoiceHistoryModal({
           <DialogDescription>Buscar y revisar facturas procesadas</DialogDescription>
         </DialogHeader>
         <div className="mt-4">
+          <input
+            type="text"
+            className="w-full mb-4 px-3 py-2 border rounded focus:outline-none focus:ring"
+            placeholder="Buscar por número de factura, cliente, RUC, etc."
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            autoFocus
+          />
           {loading ? (
             <div className="text-center py-8">Cargando...</div>
           ) : invoices.length === 0 ? (
