@@ -26,7 +26,7 @@ import {
 } from './index'
 
 export default function InventoryModule({ initialProducts }: { initialProducts: Product[] }) {
-  const { permissions = [] } = useAuth();
+  const { permissions = [], sessionId } = useAuth();
   const canRead = permissions.includes('products:read');
   const canCreate = permissions.includes('products:create');
   const canUpdate = permissions.includes('products:update');
@@ -45,14 +45,16 @@ export default function InventoryModule({ initialProducts }: { initialProducts: 
   useEffect(() => {
     const loadCategories = async () => {
       try {
-        const categories = await getCategoriesAction()
+        const categories = await getCategoriesAction(sessionId!)
         setCategoriesData(categories)
       } catch (error) {
         console.error('Error loading categories:', error)
       }
     }
-    loadCategories()
-  }, [])
+    if (sessionId) {
+      loadCategories()
+    }
+  }, [sessionId])
 
   const categories = Array.from(new Set(initialProducts.map(p => typeof p.category === 'string' ? p.category : 'Sin categoría')))
 

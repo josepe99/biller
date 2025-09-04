@@ -22,7 +22,7 @@ interface CategoryManagementProps {
 }
 
 export default function CategoryManagement({ onBack }: CategoryManagementProps) {
-  const { permissions } = useAuth();
+  const { permissions, sessionId } = useAuth();
   const canRead = permissions.includes('categories:read');
   const canCreate = permissions.includes('categories:create');
   const canUpdate = permissions.includes('categories:update');
@@ -38,12 +38,14 @@ export default function CategoryManagement({ onBack }: CategoryManagementProps) 
   useEffect(() => {
     async function fetchCategories() {
       setLoading(true);
-      const result = await getCategoriesAction();
+      const result = await getCategoriesAction(sessionId!);
       setCategories(result || []);
       setLoading(false);
     }
-    fetchCategories();
-  }, []);
+    if (sessionId) {
+      fetchCategories();
+    }
+  }, [sessionId]);
 
   const handleAddEditCategory = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,12 +53,12 @@ export default function CategoryManagement({ onBack }: CategoryManagementProps) 
     const formData = new FormData(e.target as HTMLFormElement);
     const name = formData.get('name') as string;
     if (editingCategory) {
-      const updated = await updateCategoryAction(editingCategory.id, { name });
+      const updated = await updateCategoryAction(sessionId!, editingCategory.id, { name });
       if (updated) {
         setCategories(prev => prev.map(c => (c.id === editingCategory.id ? { ...c, name } : c)));
       }
     } else {
-      const created = await createCategoryAction({ name });
+      const created = await createCategoryAction(sessionId!, { name });
       if (created && created.data) {
         setCategories(prev => [...prev, created.data as Category]);
       }
@@ -68,7 +70,7 @@ export default function CategoryManagement({ onBack }: CategoryManagementProps) 
 
   const handleDeleteCategory = async () => {
     if (categoryToDelete) {
-      await deleteCategoryAction(categoryToDelete);
+      await deleteCategoryAction(sessionId!, categoryToDelete);
       setCategories(prev => prev.filter(c => c.id !== categoryToDelete));
       setIsDeleteModalOpen(false);
       setCategoryToDelete(null);

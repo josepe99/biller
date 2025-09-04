@@ -13,14 +13,16 @@ export default function OverviewModule({ onSelect }: OverviewModuleProps) {
   const { permissions } = useAuth();
   return (
     <CardContent className="flex-grow grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {/* Configuración: ejemplo sin permiso específico */}
-  <Card className="hover:shadow-xl transition-shadow duration-200 cursor-pointer h-56" onClick={() => onSelect('settings')}>
-        <CardContent className="flex flex-col items-center justify-center p-6 text-center">
-          <Settings className="h-12 w-12 text-orange-500 mb-3" />
-          <h3 className="text-lg font-semibold">Configuración</h3>
-          <p className="text-sm text-muted-foreground">IVA, moneda, impresora.</p>
-        </CardContent>
-      </Card>
+      {/* Configuración: requiere settings:read o settings:manage */}
+      {(permissions.includes('settings:manage') || permissions.includes('settings:read')) && (
+        <Card className="hover:shadow-xl transition-shadow duration-200 cursor-pointer h-56" onClick={() => onSelect('settings')}>
+          <CardContent className="flex flex-col items-center justify-center p-6 text-center">
+            <Settings className="h-12 w-12 text-orange-500 mb-3" />
+            <h3 className="text-lg font-semibold">Configuración</h3>
+            <p className="text-sm text-muted-foreground">IVA, moneda, impresora.</p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Usuarios: requiere users:manage */}
       {permissions.includes('users:manage') && (
