@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useEffect, useState } from 'react'
+import { useAuth } from '@/components/auth/auth-provider'
 import { Category } from '@prisma/client'
 import { Product } from '@/lib/types'
 import {
@@ -40,12 +41,13 @@ export function ProductForm({
   const [categories, setCategories] = useState<Category[]>([])
   const [isLoadingCategories, setIsLoadingCategories] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const { sessionId } = useAuth()
 
   useEffect(() => {
     const fetchCategories = async () => {
       setIsLoadingCategories(true)
       try {
-        const categoriesData = await getCategoriesAction()
+        const categoriesData = await getCategoriesAction(sessionId!)
         setCategories(categoriesData)
       } catch (error) {
         console.error('Error fetching categories:', error)
@@ -58,7 +60,7 @@ export function ProductForm({
     if (isOpen) {
       fetchCategories()
     }
-  }, [isOpen])
+  }, [isOpen, sessionId])
   // Opciones de unidad
   const unityOptions = [
     { value: 'UN', label: 'Unidad' },

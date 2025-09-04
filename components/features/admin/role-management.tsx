@@ -21,8 +21,8 @@ interface RoleManagementProps {
 }
 
 export default function RoleManagement({ onBack }: RoleManagementProps) {
-  // Obtener permisos del usuario actual
-  const { permissions } = useAuth();
+  // Obtener permisos y session del usuario actual
+  const { permissions, sessionId } = useAuth();
   // Validadores de permisos
   const canCreate = permissions.includes(PERMISSION_CREATE) || permissions.includes('roles:manage');
   const canUpdate = permissions.includes(PERMISSION_UPDATE) || permissions.includes('roles:manage');
@@ -41,8 +41,8 @@ export default function RoleManagement({ onBack }: RoleManagementProps) {
   useEffect(() => {
     setLoading(true)
     Promise.all([
-      getAllRolesAction(true),
-      getAllPermissions()
+      getAllRolesAction(sessionId!, true),
+      getAllPermissions(sessionId!)
     ])
       .then(([roles, permissions]) => {
         setRoles(roles.map((r: any) => ({
@@ -53,7 +53,7 @@ export default function RoleManagement({ onBack }: RoleManagementProps) {
       })
       .catch(() => setError('Error al cargar roles o permisos'))
       .finally(() => setLoading(false))
-  }, [])
+  }, [sessionId])
 
   // Cuando se abre el modal, setear permisos seleccionados
   useEffect(() => {
@@ -78,7 +78,7 @@ export default function RoleManagement({ onBack }: RoleManagementProps) {
         const prevPermissions: string[] = editingRole.permissions?.map((p: any) => p.id) || [];
         const permissionsToAdd = selectedPermissions.filter((id) => !prevPermissions.includes(id));
         const permissionsToRemove = prevPermissions.filter((id) => !selectedPermissions.includes(id));
-        const updated = await updateRoleAction(editingRole.id, { name, description, permissionsToAdd, permissionsToRemove });
+        const updated = await updateRoleAction(sessionId!, editingRole.id, { name, description, permissionsToAdd, permissionsToRemove });
         if (updated && typeof updated.id === 'string') {
           setRoles(prev => prev.map(r => (r.id === updated.id ? { ...r, ...updated, description: updated.description ?? undefined } : r)));
         } else {
@@ -87,7 +87,7 @@ export default function RoleManagement({ onBack }: RoleManagementProps) {
           return;
         }
       } else if(canCreate) {
-        const created = await createRoleAction({ name, description, permissionsToAdd: selectedPermissions });
+        const created = await createRoleAction(sessionId!, { name, description, permissionsToAdd: selectedPermissions });
         if (created && typeof created.id === 'string') {
           setRoles(prev => [{ ...created, description: created.description ?? undefined }, ...prev]);
         } else {

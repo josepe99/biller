@@ -70,8 +70,8 @@ interface UserManagementProps {
 }
 
 export default function UserManagement({ onBack }: UserManagementProps) {
-  // Obtener permisos del usuario actual
-  const { permissions } = useAuth()
+  // Obtener permisos y session del usuario actual
+  const { permissions, sessionId } = useAuth()
   // Validadores de permisos
   const canCreate = permissions.includes(PERMISSION_CREATE) || permissions.includes('users:create');
   const canUpdate = permissions.includes(PERMISSION_UPDATE) || permissions.includes('users:update');
@@ -90,7 +90,7 @@ export default function UserManagement({ onBack }: UserManagementProps) {
       setLoading(true);
       const [usersArr, rolesArr] = await Promise.all([
         getAllUsersAction(),
-        getAllRolesAction(false)
+        getAllRolesAction(sessionId!, false)
       ]);
       const mapped: UserListItem[] = Array.isArray(usersArr)
         ? usersArr.map((u: any) => ({
@@ -110,8 +110,10 @@ export default function UserManagement({ onBack }: UserManagementProps) {
       setRoles(Array.isArray(rolesArr) ? rolesArr : []);
       setLoading(false);
     }
-    fetchData();
-  }, []);
+    if (sessionId) {
+      fetchData();
+    }
+  }, [sessionId]);
 
   const handleAddEditUser = async (e: React.FormEvent) => {
     e.preventDefault();

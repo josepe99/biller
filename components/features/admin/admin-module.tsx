@@ -25,15 +25,25 @@ export default function AdminModule() {
       case 'overview':
         return <OverviewModule onSelect={setAdminSubModule as (m: 'users'|'categories'|'settings'|'reports'|'roles'|'checkouts') => void} />
       case 'users':
-        return <UserManagement onBack={() => setAdminSubModule('overview')} />
+        return permissions.includes('users:manage')
+          ? <UserManagement onBack={() => setAdminSubModule('overview')} />
+          : <div className="p-4 text-center text-muted-foreground">No tienes permiso para ver esta sección.</div>
       case 'categories':
-        return <CategoryManagement onBack={() => setAdminSubModule('overview')} />
+        return permissions.includes('categories:manage')
+          ? <CategoryManagement onBack={() => setAdminSubModule('overview')} />
+          : <div className="p-4 text-center text-muted-foreground">No tienes permiso para ver esta sección.</div>
       case 'roles':
-        return <RoleManagement onBack={() => setAdminSubModule('overview')} />
+        return permissions.includes('roles:manage')
+          ? <RoleManagement onBack={() => setAdminSubModule('overview')} />
+          : <div className="p-4 text-center text-muted-foreground">No tienes permiso para ver esta sección.</div>
       case 'settings':
-        return <SettingsModule onBack={() => setAdminSubModule('overview')} />
+        return (permissions.includes('settings:manage') || permissions.includes('settings:read'))
+          ? <SettingsModule onBack={() => setAdminSubModule('overview')} />
+          : <div className="p-4 text-center text-muted-foreground">No tienes permiso para ver esta sección.</div>
       case 'reports':
-        return <ReportsModule onBack={() => setAdminSubModule('overview')} />
+        return permissions.includes('reports:view')
+          ? <ReportsModule onBack={() => setAdminSubModule('overview')} />
+          : <div className="p-4 text-center text-muted-foreground">No tienes permiso para ver esta sección.</div>
       default:
         return null
     }

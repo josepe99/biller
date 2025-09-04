@@ -6,12 +6,19 @@ import {
   UpdateCategoryData,
   CategoryFilters
 } from '@/lib/datasources/category.datasource';
+import { AuthController } from '@/lib/controllers/auth.controller';
+
+const authController = new AuthController();
 
 /**
  * Get all categories
  */
-export async function getCategoriesAction(filters: CategoryFilters = {}) {
+export async function getCategoriesAction(sessionId: string, filters: CategoryFilters = {}) {
   try {
+    const perms = await authController.getPermissionsBySessionId(sessionId);
+    if (!perms.includes('categories:read') && !perms.includes('categories:manage')) {
+      throw new Error('Unauthorized');
+    }
     return categoryController.getAll(filters);
   } catch (error) {
     return [];
@@ -21,8 +28,12 @@ export async function getCategoriesAction(filters: CategoryFilters = {}) {
 /**
  * Get a category by ID
  */
-export async function getCategoryByIdAction(id: string, includeDeleted = false) {
+export async function getCategoryByIdAction(sessionId: string, id: string, includeDeleted = false) {
   try {
+    const perms = await authController.getPermissionsBySessionId(sessionId);
+    if (!perms.includes('categories:read') && !perms.includes('categories:manage')) {
+      throw new Error('Unauthorized');
+    }
     const result = await categoryController.getById(id, includeDeleted);
     return result;
   } catch (error) {
@@ -38,8 +49,12 @@ export async function getCategoryByIdAction(id: string, includeDeleted = false) 
 /**
  * Create a new category
  */
-export async function createCategoryAction(data: CreateCategoryData) {
+export async function createCategoryAction(sessionId: string, data: CreateCategoryData) {
   try {
+    const perms = await authController.getPermissionsBySessionId(sessionId);
+    if (!perms.includes('categories:create') && !perms.includes('categories:manage')) {
+      throw new Error('Unauthorized');
+    }
     const result = await categoryController.create(data);
     return result;
   } catch (error) {
@@ -54,8 +69,12 @@ export async function createCategoryAction(data: CreateCategoryData) {
 /**
  * Update an existing category
  */
-export async function updateCategoryAction(id: string, data: UpdateCategoryData) {
+export async function updateCategoryAction(sessionId: string, id: string, data: UpdateCategoryData) {
   try {
+    const perms = await authController.getPermissionsBySessionId(sessionId);
+    if (!perms.includes('categories:update') && !perms.includes('categories:manage')) {
+      throw new Error('Unauthorized');
+    }
     const result = await categoryController.update(id, data);
     return result;
   } catch (error) {
@@ -70,8 +89,12 @@ export async function updateCategoryAction(id: string, data: UpdateCategoryData)
 /**
  * Soft delete a category
  */
-export async function deleteCategoryAction(id: string) {
+export async function deleteCategoryAction(sessionId: string, id: string) {
   try {
+    const perms = await authController.getPermissionsBySessionId(sessionId);
+    if (!perms.includes('categories:delete') && !perms.includes('categories:manage')) {
+      throw new Error('Unauthorized');
+    }
     const result = await categoryController.delete(id);
     return result;
   } catch (error) {
@@ -86,8 +109,12 @@ export async function deleteCategoryAction(id: string) {
 /**
  * Restore a soft deleted category
  */
-export async function restoreCategoryAction(id: string) {
+export async function restoreCategoryAction(sessionId: string, id: string) {
   try {
+    const perms = await authController.getPermissionsBySessionId(sessionId);
+    if (!perms.includes('categories:update') && !perms.includes('categories:manage')) {
+      throw new Error('Unauthorized');
+    }
     const result = await categoryController.restore(id);
     return result;
   } catch (error) {
@@ -102,8 +129,12 @@ export async function restoreCategoryAction(id: string) {
 /**
  * Get categories with product count
  */
-export async function getCategoriesWithProductCountAction() {
+export async function getCategoriesWithProductCountAction(sessionId: string) {
   try {
+    const perms = await authController.getPermissionsBySessionId(sessionId);
+    if (!perms.includes('categories:read') && !perms.includes('categories:manage')) {
+      throw new Error('Unauthorized');
+    }
     const result = await categoryController.getCategoriesWithProductCount();
     return result;
   } catch (error) {
