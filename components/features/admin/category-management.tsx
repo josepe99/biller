@@ -7,8 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Plus, Edit, Trash2, ChevronLeft } from 'lucide-react'
+import { Plus, Edit, Trash2, ChevronLeft, ArrowLeft } from 'lucide-react'
 import { Category } from '@prisma/client'
+import Link from 'next/link'
 import {
   getCategoriesAction,
   createCategoryAction,
@@ -18,10 +19,11 @@ import {
 
 
 interface CategoryManagementProps {
-  onBack: () => void
+  onBack?: () => void;
+  standalone?: boolean;
 }
 
-export default function CategoryManagement({ onBack }: CategoryManagementProps) {
+export default function CategoryManagement({ onBack, standalone = false }: CategoryManagementProps) {
   const { permissions } = useAuth();
   const canRead = permissions.includes('categories:read');
   const canCreate = permissions.includes('categories:create');
@@ -76,12 +78,22 @@ export default function CategoryManagement({ onBack }: CategoryManagementProps) 
   };
 
   return (
-    <Card className="h-full flex flex-col">
+    <Card className="h-full flex flex-col overflow-hidden">
       <CardHeader className="flex flex-row items-center justify-between">
         <div className="flex items-center">
-          <Button variant="ghost" size="icon" onClick={onBack} className="mr-2">
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
+          {!standalone && onBack && (
+            <Button variant="ghost" size="icon" onClick={onBack} className="mr-2">
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
+          )}
+          {standalone && (
+            <Link href="/admin">
+              <Button variant="ghost" className="flex items-center mr-4">
+                <ArrowLeft className="h-5 w-5 mr-2" />
+                Volver al panel
+              </Button>
+            </Link>
+          )}
           <CardTitle className="text-orange-500">Gestión de Categorías</CardTitle>
         </div>
         {canCreate && (
@@ -111,80 +123,82 @@ export default function CategoryManagement({ onBack }: CategoryManagementProps) 
           </Dialog>
         )}
       </CardHeader>
-      <CardContent className="flex-grow overflow-auto border rounded-lg">
+      <CardContent className="flex-grow p-4">
         {canRead ? (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>Nombre</TableHead>
-                <TableHead className="text-center">Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
+          <div className="overflow-auto border rounded-lg h-[calc(100vh-230px)]">
+            <Table className="min-w-full table-auto">
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={3} className="text-center text-muted-foreground py-8">
-                    Cargando categorías...
-                  </TableCell>
+                  <TableHead className="whitespace-nowrap">ID</TableHead>
+                  <TableHead className="whitespace-nowrap">Nombre</TableHead>
+                  <TableHead className="text-center whitespace-nowrap">Acciones</TableHead>
                 </TableRow>
-              ) : categories.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={3} className="text-center text-muted-foreground py-8">
-                    No hay categorías registradas.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                categories.map((category) => (
-                  <TableRow key={category.id}>
-                    <TableCell className="font-medium">{category.id}</TableCell>
-                    <TableCell>{category.name}</TableCell>
-                    <TableCell className="text-center">
-                      <div className="flex justify-center gap-2">
-                        {canUpdate && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => {
-                              setEditingCategory(category)
-                              setIsCategoryModalOpen(true)
-                            }}
-                          >
-                            <Edit className="h-4 w-4 text-blue-500" />
-                          </Button>
-                        )}
-                        {canDelete && (
-                          <Dialog open={isDeleteModalOpen && categoryToDelete === category.id} onOpenChange={setIsDeleteModalOpen}>
-                            <DialogTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => setCategoryToDelete(category.id)}
-                              >
-                                <Trash2 className="h-4 w-4 text-red-500" />
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Confirmar Eliminación</DialogTitle>
-                                <DialogDescription>
-                                  ¿Estás seguro de que deseas eliminar la categoría "{category.name}"? Esta acción no se puede deshacer.
-                                </DialogDescription>
-                              </DialogHeader>
-                              <DialogFooter>
-                                <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)}>Cancelar</Button>
-                                <Button onClick={handleDeleteCategory} className="bg-red-500 hover:bg-red-600">Eliminar</Button>
-                              </DialogFooter>
-                            </DialogContent>
-                          </Dialog>
-                        )}
-                      </div>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={3} className="text-center text-muted-foreground py-8">
+                      Cargando categorías...
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ) : categories.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={3} className="text-center text-muted-foreground py-8">
+                      No hay categorías registradas.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  categories.map((category) => (
+                    <TableRow key={category.id}>
+                      <TableCell className="font-medium whitespace-nowrap">{category.id}</TableCell>
+                      <TableCell className="truncate max-w-[200px]" title={category.name}>{category.name}</TableCell>
+                      <TableCell className="text-center">
+                        <div className="flex justify-center gap-2">
+                          {canUpdate && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                setEditingCategory(category)
+                                setIsCategoryModalOpen(true)
+                              }}
+                            >
+                              <Edit className="h-4 w-4 text-blue-500" />
+                            </Button>
+                          )}
+                          {canDelete && (
+                            <Dialog open={isDeleteModalOpen && categoryToDelete === category.id} onOpenChange={setIsDeleteModalOpen}>
+                              <DialogTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => setCategoryToDelete(category.id)}
+                                >
+                                  <Trash2 className="h-4 w-4 text-red-500" />
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent>
+                                <DialogHeader>
+                                  <DialogTitle>Confirmar Eliminación</DialogTitle>
+                                  <DialogDescription>
+                                    ¿Estás seguro de que deseas eliminar la categoría "{category.name}"? Esta acción no se puede deshacer.
+                                  </DialogDescription>
+                                </DialogHeader>
+                                <DialogFooter>
+                                  <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)}>Cancelar</Button>
+                                  <Button onClick={handleDeleteCategory} className="bg-red-500 hover:bg-red-600">Eliminar</Button>
+                                </DialogFooter>
+                              </DialogContent>
+                            </Dialog>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         ) : (
           <div className="text-center text-muted-foreground py-8">
             No tienes permiso para ver las categorías.

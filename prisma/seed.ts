@@ -93,8 +93,7 @@ async function main() {
   // Manager gets most permissions except critical system administration
   const managerPermissions = permissions
     .filter(p =>
-      !p.name.includes('system:') ||
-      p.name === 'system:logs' // Managers can view logs but not manage system
+      !p.name.includes('system:')
     )
     .filter(p =>
       !p.name.includes('users:delete') &&
@@ -109,23 +108,15 @@ async function main() {
   const cashierPermissions = permissions
     .filter(p =>
       // Sales operations
-      p.resource === 'sales' && ['create', 'read'].includes(p.action) ||
+      (p.resource === 'sales' && ['create', 'read'].includes(p.action)) ||
       // Product viewing only
-      p.resource === 'products' && p.action === 'read' ||
+      (p.resource === 'products' && p.action === 'read') ||
       // Category viewing only
-      p.resource === 'categories' && p.action === 'read' ||
-      // Basic inventory reading
-      p.resource === 'inventory' && p.action === 'read' ||
-      // Customer basic operations
-      p.resource === 'customers' && ['create', 'read', 'update'].includes(p.action) ||
-      // Payment processing
-      p.resource === 'payments' && ['process', 'read'].includes(p.action) ||
+      (p.resource === 'categories' && p.action === 'read') ||
       // Cash register operations
-      p.resource === 'cash' && ['register_open', 'register_close', 'drawer_open', 'count'].includes(p.action) ||
-      // Barcode scanning
-      p.resource === 'barcode' && p.action === 'scan' ||
-      // Basic promotions
-      p.resource === 'promotions' && ['read', 'apply'].includes(p.action)
+      (p.resource === 'cashRegister' && ['create', 'read'].includes(p.action)) ||
+      // Checkout operations
+      (p.resource === 'checkout' && ['create', 'read'].includes(p.action))
     )
     .map(p => p.name)
 
@@ -374,6 +365,245 @@ async function main() {
   }
 
   console.log('✅ Created 5 checkout points (Caja 1-5)')
+
+  // Step 7: Create product categories
+  console.log('📁 Creating product categories...')
+
+  const categories = [
+    {
+      name: 'Bebidas',
+      deletedAt: null,
+    },
+    {
+      name: 'Lácteos',
+      deletedAt: null,
+    },
+    {
+      name: 'Panadería',
+      deletedAt: null,
+    },
+    {
+      name: 'Carnes',
+      deletedAt: null,
+    },
+    {
+      name: 'Frutas y Verduras',
+      deletedAt: null,
+    },
+    {
+      name: 'Limpieza',
+      deletedAt: null,
+    },
+    {
+      name: 'Electrónica',
+      deletedAt: null,
+    },
+  ]
+
+  const createdCategories = new Map()
+
+  for (const category of categories) {
+    const createdCategory = await prisma.category.upsert({
+      where: { name: category.name },
+      update: {},
+      create: category,
+    })
+    createdCategories.set(category.name, createdCategory.id)
+  }
+
+  console.log(`✅ Created ${categories.length} product categories`)
+
+  // Step 8: Create products
+  console.log('🛒 Creating products...')
+
+  const products = [
+    {
+      name: 'Agua Mineral 500ml',
+      description: 'Agua mineral sin gas en botella de 500ml',
+      barcode: '7790001001',
+      price: 1.50,
+      cost: 0.75,
+      iva: 10, // IVA en Paraguay (10%)
+      unity: 'UN' as const,
+      categoryName: 'Bebidas',
+      stock: 100,
+      deletedAt: null,
+    },
+    {
+      name: 'Refresco Cola 2L',
+      description: 'Bebida gaseosa sabor cola',
+      barcode: '7790001002',
+      price: 3.25,
+      cost: 1.80,
+      iva: 10,
+      unity: 'UN' as const,
+      categoryName: 'Bebidas',
+      stock: 80,
+      deletedAt: null,
+    },
+    {
+      name: 'Leche Entera 1L',
+      description: 'Leche entera pasteurizada',
+      barcode: '7790002001',
+      price: 2.30,
+      cost: 1.60,
+      iva: 5, // IVA reducido para alimentos básicos
+      unity: 'L' as const,
+      categoryName: 'Lácteos',
+      stock: 50,
+      deletedAt: null,
+    },
+    {
+      name: 'Queso Fresco 500g',
+      description: 'Queso fresco tradicional',
+      barcode: '7790002002',
+      price: 4.75,
+      cost: 3.25,
+      iva: 5,
+      unity: 'G' as const,
+      categoryName: 'Lácteos',
+      stock: 30,
+      deletedAt: null,
+    },
+    {
+      name: 'Pan Blanco',
+      description: 'Pan blanco de molde',
+      barcode: '7790003001',
+      price: 2.10,
+      cost: 1.20,
+      iva: 5,
+      unity: 'UN' as const,
+      categoryName: 'Panadería',
+      stock: 40,
+      deletedAt: null,
+    },
+    {
+      name: 'Croissant',
+      description: 'Croissant de mantequilla',
+      barcode: '7790003002',
+      price: 1.25,
+      cost: 0.60,
+      iva: 5,
+      unity: 'UN' as const,
+      categoryName: 'Panadería',
+      stock: 25,
+      deletedAt: null,
+    },
+    {
+      name: 'Carne Molida 500g',
+      description: 'Carne molida de res',
+      barcode: '7790004001',
+      price: 5.99,
+      cost: 4.20,
+      iva: 5,
+      unity: 'G' as const,
+      categoryName: 'Carnes',
+      stock: 20,
+      deletedAt: null,
+    },
+    {
+      name: 'Pollo Entero',
+      description: 'Pollo entero fresco',
+      barcode: '7790004002',
+      price: 8.50,
+      cost: 6.25,
+      iva: 5,
+      unity: 'KG' as const,
+      categoryName: 'Carnes',
+      stock: 15,
+      deletedAt: null,
+    },
+    {
+      name: 'Manzanas Rojas 1kg',
+      description: 'Manzanas rojas frescas',
+      barcode: '7790005001',
+      price: 2.99,
+      cost: 1.80,
+      iva: 5,
+      unity: 'KG' as const,
+      categoryName: 'Frutas y Verduras',
+      stock: 45,
+      deletedAt: null,
+    },
+    {
+      name: 'Tomates 1kg',
+      description: 'Tomates frescos',
+      barcode: '7790005002',
+      price: 2.50,
+      cost: 1.40,
+      iva: 5,
+      unity: 'KG' as const,
+      categoryName: 'Frutas y Verduras',
+      stock: 35,
+      deletedAt: null,
+    },
+    {
+      name: 'Detergente Líquido 1L',
+      description: 'Detergente líquido para ropa',
+      barcode: '7790006001',
+      price: 4.20,
+      cost: 2.80,
+      iva: 10,
+      unity: 'L' as const,
+      categoryName: 'Limpieza',
+      stock: 40,
+      deletedAt: null,
+    },
+    {
+      name: 'Papel Higiénico 4 rollos',
+      description: 'Paquete de papel higiénico',
+      barcode: '7790006002',
+      price: 3.75,
+      cost: 2.25,
+      iva: 10,
+      unity: 'PACK' as const,
+      categoryName: 'Limpieza',
+      stock: 60,
+      deletedAt: null,
+    },
+    {
+      name: 'Audífonos Bluetooth',
+      description: 'Audífonos inalámbricos con bluetooth',
+      barcode: '7790007001',
+      price: 25.99,
+      cost: 15.50,
+      iva: 10,
+      unity: 'UN' as const,
+      categoryName: 'Electrónica',
+      stock: 10,
+      deletedAt: null,
+    },
+    {
+      name: 'Cargador USB-C',
+      description: 'Cargador rápido con cable USB-C',
+      barcode: '7790007002',
+      price: 12.50,
+      cost: 7.20,
+      iva: 10,
+      unity: 'UN' as const,
+      categoryName: 'Electrónica',
+      stock: 15,
+      deletedAt: null,
+    },
+  ]
+
+  for (const product of products) {
+    const categoryId = createdCategories.get(product.categoryName)
+    if (!categoryId) continue
+
+    const { categoryName, ...productData } = product
+
+    await prisma.product.upsert({
+      where: { barcode: product.barcode },
+      update: {},
+      create: {
+        ...productData,
+        categoryId
+      },
+    })
+  }
+
+  console.log(`✅ Created ${products.length} products`)
 
   console.log('✅ Database seeded successfully!')
   console.log('📝 Default users created:')

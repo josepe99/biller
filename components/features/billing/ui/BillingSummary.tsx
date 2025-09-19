@@ -42,6 +42,7 @@ export function BillingSummary({
   currentInvoiceNumber,
   formatParaguayanCurrency,
 }: BillingSummaryProps) {
+  const hasOpenCashRegister = displayData.hasOpenCashRegister ?? true;
   return (
     <div className="flex-grow flex flex-col justify-between">
       <div className="space-y-2 text-lg">
@@ -100,6 +101,7 @@ export function BillingSummary({
             cartIsEmpty={cart.length === 0}
             customer={customerInfo}
             checkoutClosed={typeof displayData.checkoutClosed !== 'undefined' ? displayData.checkoutClosed : false}
+            cashRegisterOpen={hasOpenCashRegister}
           />
         </div>
       )}

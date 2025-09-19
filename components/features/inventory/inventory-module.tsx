@@ -167,11 +167,11 @@ export default function InventoryModule({ initialProducts }: { initialProducts: 
   }
 
   return (
-    <Card className="h-full flex flex-col">
+    <Card className="h-full flex flex-col overflow-hidden">
       <CardHeader>
         <CardTitle className="text-orange-500">Stock / Inventario</CardTitle>
       </CardHeader>
-      <CardContent className="flex-grow flex flex-col">
+      <CardContent className="flex-grow flex flex-col p-4">
         <ProductFilters
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
@@ -185,22 +185,18 @@ export default function InventoryModule({ initialProducts }: { initialProducts: 
         />
 
         {canRead ? (
-          <ProductTable
-            products={filteredProducts}
-            onEditProduct={canUpdate ? handleEditProduct : undefined}
-            onDeleteProduct={canDelete ? handleDeleteClick : undefined}
-            canUpdate={canUpdate}
-            canDelete={canDelete}
-          />
+          <div className="flex-grow mt-4 h-full">
+            <ProductTable
+              products={filteredProducts}
+              onEditProduct={canUpdate ? handleEditProduct : undefined}
+              onDeleteProduct={canDelete ? handleDeleteClick : undefined}
+              canUpdate={canUpdate}
+              canDelete={canDelete}
+            />
+          </div>
         ) : (
           <div className="text-center text-muted-foreground py-8">No tienes permiso para ver productos.</div>
         )}
-
-        <div className="mt-4 flex justify-end">
-          <Button variant="outline" disabled>
-            <Save className="mr-2 h-4 w-4" /> Exportar Excel
-          </Button>
-        </div>
       </CardContent>
 
       <ProductForm

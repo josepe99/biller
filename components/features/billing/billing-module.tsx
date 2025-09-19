@@ -24,7 +24,7 @@ import { useState } from 'react'
 
 export default function BillingModule() {
   const { user } = useAuth()
-  const { checkout } = useCashRegister()
+  const { checkout, cashRegister } = useCashRegister()
   const [searchTerm, setSearchTerm] = useState('')
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false)
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false)
@@ -111,7 +111,8 @@ export default function BillingModule() {
       items: cart,
       total: total,
       isCurrentSale: true,
-      checkoutClosed: checkout?.closed ?? false
+      checkoutClosed: checkout?.closed ?? false,
+      hasOpenCashRegister: !!cashRegister
     }
   }
 

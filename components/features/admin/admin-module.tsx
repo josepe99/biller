@@ -14,7 +14,7 @@ import { useState } from 'react'
 
 export default function AdminModule() {
   const { permissions = [] } = useAuth();
-  const [adminSubModule, setAdminSubModule] = useState<'overview' | 'users' | 'categories' | 'settings' | 'reports' | 'roles'>('overview')
+  const [adminSubModule, setAdminSubModule] = useState<'overview' | 'users' | 'settings' | 'reports' | 'roles'>('overview')
   const [users, setUsers] = useState<User[]>(sampleUsers)
   const [categories, setCategories] = useState<Category[]>(sampleCategories)
 
@@ -23,11 +23,9 @@ export default function AdminModule() {
   const renderAdminSubModule = () => {
     switch (adminSubModule) {
       case 'overview':
-        return <OverviewModule onSelect={setAdminSubModule as (m: 'users'|'categories'|'settings'|'reports'|'roles'|'checkouts') => void} />
+        return <OverviewModule onSelect={setAdminSubModule as (m: 'users'|'settings'|'reports'|'roles'|'checkouts') => void} />
       case 'users':
         return <UserManagement onBack={() => setAdminSubModule('overview')} />
-      case 'categories':
-        return <CategoryManagement onBack={() => setAdminSubModule('overview')} />
       case 'roles':
         return <RoleManagement onBack={() => setAdminSubModule('overview')} />
       case 'settings':

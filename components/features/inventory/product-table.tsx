@@ -1,7 +1,8 @@
 'use client'
 
-import { Product } from '@/lib/types'
-import { Badge } from '@/components/ui/badge'
+import { ProductActions } from './product-actions';
+import { Badge } from '@/components/ui/badge';
+import { Product } from '@/lib/types';
 import {
   Table,
   TableBody,
@@ -9,8 +10,7 @@ import {
   TableHead,
   TableHeader,
   TableRow
-} from '@/components/ui/table'
-import { ProductActions } from './product-actions'
+} from '@/components/ui/table';
 
 interface ProductTableProps {
   products: Product[]
@@ -20,25 +20,25 @@ interface ProductTableProps {
   canDelete?: boolean
 }
 
-export function ProductTable({ 
-  products, 
-  onEditProduct, 
-  onDeleteProduct, 
-  canUpdate, 
-  canDelete 
+export function ProductTable({
+  products,
+  onEditProduct,
+  onDeleteProduct,
+  canUpdate,
+  canDelete
 }: ProductTableProps) {
   return (
-    <div className="flex-grow overflow-auto border rounded-lg">
-      <Table>
+    <div className="flex-grow overflow-auto border rounded-lg h-[calc(100vh-280px)]">
+      <Table className="min-w-full table-auto">
         <TableHeader>
           <TableRow>
-            <TableHead>Código de barras</TableHead>
-            <TableHead>Nombre</TableHead>
-            <TableHead className="text-right">Precio (con IVA)</TableHead>
-            <TableHead className="text-center">Stock / Unidad</TableHead>
-            <TableHead>Categoría</TableHead>
-            <TableHead>IVA</TableHead>
-            <TableHead className="text-center">Acciones</TableHead>
+            <TableHead className="whitespace-nowrap">Código de barras</TableHead>
+            <TableHead className="max-w-[200px]">Nombre</TableHead>
+            <TableHead className="text-right whitespace-nowrap">Precio (con IVA)</TableHead>
+            <TableHead className="text-center whitespace-nowrap">Stock / Unidad</TableHead>
+            <TableHead className="whitespace-nowrap">Categoría</TableHead>
+            <TableHead className="whitespace-nowrap">IVA</TableHead>
+            <TableHead className="text-center whitespace-nowrap">Acciones</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -51,13 +51,13 @@ export function ProductTable({
           ) : (
             products.map((product, index) => (
               <TableRow key={`product-${product.id}-${product.barcode}-${index}`}>
-                <TableCell className="font-medium">{product.barcode}</TableCell>
+                <TableCell className="font-medium whitespace-nowrap">{product.barcode}</TableCell>
                 <TableCell>
-                  <div className="flex items-center gap-2">
-                    <span>{product.name}</span>
-                    { (typeof product.discount === 'number' && product.discount > 0) && (
+                  <div className="flex items-center gap-2 truncate">
+                    <span className="truncate max-w-[150px]" title={product.name}>{product.name}</span>
+                    {(typeof product.discount === 'number' && product.discount > 0) && (
                       <Badge
-                        className="bg-red-500 hover:bg-red-600 text-white font-bold px-2 py-1 text-xs animate-pulse"
+                        className="bg-red-500 hover:bg-red-600 text-white font-bold px-2 py-1 text-xs animate-pulse flex-shrink-0"
                       >
                         {product.discount}%
                       </Badge>
