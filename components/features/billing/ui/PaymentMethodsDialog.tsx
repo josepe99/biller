@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { X, DollarSign } from 'lucide-react';
+import { X, DollarSign, Printer } from 'lucide-react';
 
 const PAYMENT_METHODS = [
   { value: 'CASH', label: 'Efectivo' },
@@ -28,7 +28,7 @@ interface PaymentMethodsDialogProps {
   total: number;
   currentInvoiceNumber: string;
   formatParaguayanCurrency: (n: number) => string;
-  onConfirm: (payments: Payment[]) => void;
+  onConfirm: (payments: Payment[], shouldPrint?: boolean) => void;
   cartIsEmpty?: boolean;
   checkoutClosed?: boolean;
   cashRegisterOpen?: boolean;
@@ -76,6 +76,12 @@ export function PaymentMethodsDialog({
   const change = hasCash && totalPaid > total ? totalPaid - total : 0;
   const isCashRegisterOpen = cashRegisterOpen ?? true;
   const canConfirm = totalPaid >= total && payments.every(p => p.amount && p.amount > 0);
+
+  const handleConfirm = (shouldPrint: boolean = false) => {
+    onConfirm(payments, shouldPrint);
+    setPayments([{ method: 'CASH', amount: total }]); // Reset form
+    setOpen(false);
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -147,15 +153,19 @@ export function PaymentMethodsDialog({
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
           <Button
-            onClick={() => {
-              onConfirm(payments);
-              setPayments([{ method: 'CASH', amount: total }]); // Reset form
-              setOpen(false);
-            }}
+            onClick={() => handleConfirm(false)}
             className="bg-orange-500 hover:bg-orange-600"
             disabled={!canConfirm}
           >
-            Confirmar
+            Confirmar Pago
+          </Button>
+          <Button
+            onClick={() => handleConfirm(true)}
+            className="bg-blue-500 hover:bg-blue-600"
+            disabled={!canConfirm}
+          >
+            <Printer className="mr-2 h-4 w-4" />
+            Confirmar e Imprimir
           </Button>
         </DialogFooter>
       </DialogContent>
