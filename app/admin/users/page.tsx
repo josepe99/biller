@@ -1,321 +1,259 @@
-'use client'
+"use client";
 
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { UserRole } from "@prisma/client";
+
+import { Card } from "@/components/ui/card";
+import { useAuth } from "@/components/auth/auth-provider";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger
-} from '@/components/ui/dialog'
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle
-} from '@/components/ui/card'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from '@/components/ui/table'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select'
-import {
-  Plus,
-  Edit,
-  Trash2,
-  ChevronLeft
-} from 'lucide-react'
-import {
+  createUserAction,
   getAllUsersAction,
+  softDeleteUserAction,
   updateUserAction,
-  createUserAction
-} from '@/lib/actions/userActions'
-import { getAllRolesAction } from '@/lib/actions/roleActions'
-import { useAuth } from '@/components/auth/auth-provider'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
-import { useState, useEffect } from 'react'
-import { UserRole } from '@prisma/client'
-import { User } from '@prisma/client'
-import { useRouter } from 'next/navigation'
+} from "@/lib/actions/userActions";
+import { getAllRolesAction } from "@/lib/actions/roleActions";
+import { UsersHeader } from "@/components/features/admin/users/users-header";
+import { UsersTableSection } from "@/components/features/admin/users/users-table-section";
+import {
+  UserFormDialog,
+  UserFormValues,
+} from "@/components/features/admin/users/user-form-dialog";
+import { UserDeleteDialog } from "@/components/features/admin/users/user-delete-dialog";
+import {
+  RoleOption,
+  UserListItem,
+} from "@/components/features/admin/users/types";
 
-// Tipo local para la lista de usuarios en la UI
-type UserListItem = Pick<User, 'id' | 'name' | 'email' | 'role'> & {
-  loginAttempts?: number;
-  lockedUntil?: Date;
-  lastLoginAt?: Date;
-  createdAt?: Date;
-  updatedAt?: Date;
-  deletedAt?: Date;
-};
+const PERMISSION_CREATE = "users:create";
+const PERMISSION_UPDATE = "users:update";
+const PERMISSION_DELETE = "users:delete";
+const PERMISSION_READ = "users:read";
+const PERMISSION_MANAGE = "users:manage";
 
-// Permisos para acciones sobre usuarios
-const PERMISSION_CREATE = 'users:create';
-const PERMISSION_UPDATE = 'users:update';
-const PERMISSION_DELETE = 'users:delete';
+function mapUsersResponse(response: unknown): UserListItem[] {
+  if (!Array.isArray(response)) {
+    return [];
+  }
+
+  return response.map((user: any) => ({
+    id: String(user.id ?? ""),
+    name: String(user.name ?? ""),
+    email: String(user.email ?? ""),
+    role: user.role ?? "",
+    loginAttempts: user.loginAttempts ?? undefined,
+    lockedUntil:
+      user.lockedUntil === null || user.lockedUntil === undefined
+        ? undefined
+        : new Date(user.lockedUntil),
+    lastLoginAt:
+      user.lastLoginAt === null || user.lastLoginAt === undefined
+        ? undefined
+        : new Date(user.lastLoginAt),
+    createdAt:
+      user.createdAt === null || user.createdAt === undefined
+        ? undefined
+        : new Date(user.createdAt),
+    updatedAt:
+      user.updatedAt === null || user.updatedAt === undefined
+        ? undefined
+        : new Date(user.updatedAt),
+    deletedAt:
+      user.deletedAt === null || user.deletedAt === undefined
+        ? undefined
+        : new Date(user.deletedAt),
+  }));
+}
+
+function mapRolesResponse(response: unknown): RoleOption[] {
+  if (!Array.isArray(response)) {
+    return [];
+  }
+
+  return response
+    .filter((role: any) => role?.id && role?.name)
+    .map((role: any) => ({
+      id: String(role.id),
+      name: String(role.name),
+    }));
+}
 
 export default function UsersPage() {
-  const router = useRouter()
-  
-  // Obtener permisos del usuario actual
-  const { permissions } = useAuth()
-  // Validadores de permisos
-  const canCreate = permissions.includes(PERMISSION_CREATE) || permissions.includes('users:create');
-  const canUpdate = permissions.includes(PERMISSION_UPDATE) || permissions.includes('users:update');
-  const canDelete = permissions.includes(PERMISSION_DELETE) || permissions.includes('users:delete');
-  
-  const [users, setUsers] = useState<UserListItem[]>([])
-  const [isUserModalOpen, setIsUserModalOpen] = useState(false)
-  const [editingUser, setEditingUser] = useState<UserListItem | null>(null)
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
-  const [userToDelete, setUserToDelete] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [roles, setRoles] = useState<any[]>([])
-  const [formLoading, setFormLoading] = useState(false)
+  const router = useRouter();
+  const { permissions } = useAuth();
+
+  const canManage = permissions.includes(PERMISSION_MANAGE);
+  const canCreate =
+    canManage || permissions.includes(PERMISSION_CREATE);
+  const canUpdate =
+    canManage || permissions.includes(PERMISSION_UPDATE);
+  const canDelete =
+    canManage || permissions.includes(PERMISSION_DELETE);
+  const canRead = canManage || permissions.includes(PERMISSION_READ);
+
+  const [users, setUsers] = useState<UserListItem[]>([]);
+  const [roles, setRoles] = useState<RoleOption[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<UserListItem | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const handleDeleteDialogChange = (open: boolean) => {
+    setIsDeleteDialogOpen(open);
+    if (!open) {
+      setUserToDelete(null);
+    }
+  };
+  const [userToDelete, setUserToDelete] = useState<UserListItem | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
-    async function fetchData() {
-      setLoading(true);
-      const [usersArr, rolesArr] = await Promise.all([
-        getAllUsersAction(),
-        getAllRolesAction(false)
-      ]);
-      const mapped: UserListItem[] = Array.isArray(usersArr)
-        ? usersArr.map((u: any) => ({
-            id: u.id,
-            name: u.name,
-            email: u.email,
-            role: u.role || '',
-            loginAttempts: u.loginAttempts,
-            lockedUntil: u.lockedUntil === null ? undefined : u.lockedUntil,
-            lastLoginAt: u.lastLoginAt === null ? undefined : u.lastLoginAt,
-            createdAt: u.createdAt,
-            updatedAt: u.updatedAt,
-            deletedAt: u.deletedAt === undefined ? undefined : u.deletedAt,
-          }))
-        : [];
-      setUsers(mapped);
-      setRoles(Array.isArray(rolesArr) ? rolesArr : []);
-      setLoading(false);
-    }
-    fetchData();
+    setLoading(true);
+    Promise.all([getAllUsersAction(), getAllRolesAction(false)])
+      .then(([usersResponse, rolesResponse]) => {
+        setUsers(mapUsersResponse(usersResponse));
+        setRoles(mapRolesResponse(rolesResponse));
+        setError(null);
+      })
+      .catch(() => setError("Error al cargar usuarios o roles."))
+      .finally(() => setLoading(false));
   }, []);
 
-  const handleAddEditUser = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setFormLoading(true);
-    const form = e.target as HTMLFormElement;
-    const formData = new FormData(form);
-    const name = formData.get('name') as string;
-    const role = formData.get('role') as string;
-    const userRole = (role as UserRole);
+  const refreshUsers = async () => {
+    setLoading(true);
     try {
-      if (editingUser && canUpdate) {
-        await updateUserAction(editingUser.id, { name, role: userRole });
-      } else if (canCreate) {
-        const email = formData.get('email') as string;
-        const password = formData.get('password') as string;
-        await createUserAction({ name, email, password, role: userRole });
-      }
-      // Refrescar lista de usuarios y mapear como en useEffect
-      setLoading(true);
-      const usersArr = await getAllUsersAction();
-      const mapped: UserListItem[] = Array.isArray(usersArr)
-        ? usersArr.map((u: any) => ({
-            id: u.id,
-            name: u.name,
-            email: u.email,
-            role: u.role || '',
-            loginAttempts: u.loginAttempts,
-            lockedUntil: u.lockedUntil === null ? undefined : u.lockedUntil,
-            lastLoginAt: u.lastLoginAt === null ? undefined : u.lastLoginAt,
-            createdAt: u.createdAt,
-            updatedAt: u.updatedAt,
-            deletedAt: u.deletedAt === undefined ? undefined : u.deletedAt,
-          }))
-        : [];
-      setUsers(mapped);
-      setIsUserModalOpen(false);
-      setEditingUser(null);
-    } catch (err) {
-      // Puedes agregar un toast aquí si quieres mostrar error
+      const usersResponse = await getAllUsersAction();
+      setUsers(mapUsersResponse(usersResponse));
+    } catch {
+      setError("Error al cargar usuarios.");
     } finally {
-      setFormLoading(false);
       setLoading(false);
     }
-  }
-
-  const handleDeleteUser = () => {
-    // ...implementación real pendiente...
-    setIsDeleteModalOpen(false)
-    setUserToDelete(null)
-  }
+  };
 
   const handleBack = () => {
-    router.push('/admin')
-  }
+    router.push("/admin");
+  };
+
+  const handleModalChange = (open: boolean) => {
+    setIsUserModalOpen(open);
+    if (!open) {
+      setEditingUser(null);
+    }
+  };
+
+  const handleCreateClick = () => {
+    setEditingUser(null);
+    setIsUserModalOpen(true);
+  };
+
+  const handleEditUser = (user: UserListItem) => {
+    setEditingUser(user);
+    setIsUserModalOpen(true);
+  };
+
+  const handleSubmitUser = async ({
+    name,
+    role,
+    email,
+    password,
+  }: UserFormValues) => {
+    setError(null);
+    try {
+      if (editingUser) {
+        if (!canUpdate) {
+          setError("No tienes permisos para actualizar usuarios.");
+          return;
+        }
+
+        await updateUserAction(editingUser.id, {
+          name,
+          role: role as UserRole,
+        });
+      } else {
+        if (!canCreate) {
+          setError("No tienes permisos para crear usuarios.");
+          return;
+        }
+
+        if (!email || !password) {
+          setError("Email y contraseña son obligatorios para crear usuarios.");
+          return;
+        }
+
+        await createUserAction({
+          name,
+          email,
+          password,
+          role: role as UserRole,
+        });
+      }
+
+      await refreshUsers();
+      handleModalChange(false);
+    } catch {
+      setError("Error al guardar el usuario.");
+    }
+  };
+
+  const handleDeleteRequest = (user: UserListItem) => {
+    setUserToDelete(user);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!userToDelete) {
+      return;
+    }
+
+    if (!canDelete) {
+      setError("No tienes permisos para eliminar usuarios.");
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      await softDeleteUserAction(userToDelete.id);
+      await refreshUsers();
+      handleDeleteDialogChange(false);
+    } catch {
+      setError("Error al eliminar el usuario.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <Card className="h-full flex flex-col">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div className="flex items-center">
-          <Button variant="ghost" onClick={handleBack} className="mr-2">
-            <ChevronLeft className="h-5 w-5 mr-1" />
-            Volver al panel
-          </Button>
-          <CardTitle className="text-orange-500">Gestión de Usuarios</CardTitle>
-        </div>
-        {/* Mostrar botón de crear solo si tiene permiso */}
-        {canCreate && (
-          <Dialog open={isUserModalOpen} onOpenChange={setIsUserModalOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-orange-500 hover:bg-orange-600" onClick={() => setEditingUser(null)}>
-                <Plus className="mr-2 h-4 w-4" /> Agregar Usuario
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>{editingUser ? 'Editar Usuario' : 'Agregar Nuevo Usuario'}</DialogTitle>
-                <DialogDescription>
-                  {editingUser ? 'Modifica los detalles del usuario.' : 'Ingresa los detalles del nuevo usuario.'}
-                </DialogDescription>
-              </DialogHeader>
-              <form onSubmit={handleAddEditUser} className="grid gap-4 py-4">
-                <Input name="name" placeholder="Nombre del Usuario" defaultValue={editingUser?.name || ''} required disabled={formLoading} />
-                {!editingUser && (
-                  <Input name="email" placeholder="Email" type="email" required disabled={formLoading} />
-                )}
-                {!editingUser && (
-                  <Input name="password" placeholder="Contraseña" type="password" required disabled={formLoading} />
-                )}
-                <Select
-                  name="role"
-                  defaultValue={
-                    editingUser
-                      ? roles.find(r => r.name.toLowerCase() === String(editingUser.role).toLowerCase())?.name || ''
-                      : (roles[0]?.name || '')
-                  }
-                  required
-                  disabled={formLoading}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar Rol" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {roles.map((role) => (
-                      <SelectItem key={role.id} value={role.name}>
-                        {role.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsUserModalOpen(false)} disabled={formLoading}>Cancelar</Button>
-                  <Button type="submit" className="bg-orange-500 hover:bg-orange-600" disabled={formLoading}>
-                    {formLoading ? 'Cargando...' : (editingUser ? 'Guardar Cambios' : 'Agregar')}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
-        )}
-      </CardHeader>
-      <CardContent className="flex-grow overflow-auto border rounded-lg">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>ID</TableHead>
-              <TableHead>Nombre</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Rol</TableHead>
-              <TableHead className="text-center">Acciones</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                  Cargando usuarios...
-                </TableCell>
-              </TableRow>
-            ) : users.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                  No hay usuarios registrados.
-                </TableCell>
-              </TableRow>
-            ) : (
-              users.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell className="font-medium">{user.id}</TableCell>
-                  <TableCell>{user.name}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>
-                    <Badge variant="secondary">
-                      {user.role}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <div className="flex justify-center gap-2">
-                      {/* Botón editar solo si tiene permiso */}
-                      {canUpdate && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setEditingUser(user)
-                            setIsUserModalOpen(true)
-                          }}
-                        >
-                          <Edit className="h-4 w-4 text-blue-500" />
-                        </Button>
-                      )}
-                      {/* Botón eliminar solo si tiene permiso */}
-                      {canDelete && (
-                        <Dialog open={isDeleteModalOpen && userToDelete === user.id} onOpenChange={setIsDeleteModalOpen}>
-                          <DialogTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setUserToDelete(user.id)}
-                            >
-                              <Trash2 className="h-4 w-4 text-red-500" />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Confirmar Eliminación</DialogTitle>
-                              <DialogDescription>
-                                ¿Estás seguro de que deseas eliminar al usuario "{user.name}"? Esta acción no se puede deshacer.
-                              </DialogDescription>
-                            </DialogHeader>
-                            <DialogFooter>
-                              <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)}>Cancelar</Button>
-                              <Button onClick={handleDeleteUser} className="bg-red-500 hover:bg-red-600">Eliminar</Button>
-                            </DialogFooter>
-                          </DialogContent>
-                        </Dialog>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </CardContent>
+      <UsersHeader
+        canCreate={canCreate}
+        onBack={handleBack}
+        onCreateClick={handleCreateClick}
+      />
+      <UsersTableSection
+        loading={loading}
+        error={error}
+        users={users}
+        canRead={canRead}
+        canUpdate={canUpdate}
+        canDelete={canDelete}
+        onEdit={handleEditUser}
+        onDeleteRequest={handleDeleteRequest}
+      />
+      <UserFormDialog
+        open={isUserModalOpen}
+        onOpenChange={handleModalChange}
+        roles={roles}
+        editingUser={editingUser}
+        onSubmit={handleSubmitUser}
+      />
+      <UserDeleteDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={handleDeleteDialogChange}
+        user={userToDelete}
+        onConfirm={handleConfirmDelete}
+        isDeleting={isDeleting}
+      />
     </Card>
-  )
+  );
 }
