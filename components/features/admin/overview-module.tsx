@@ -1,6 +1,6 @@
 "use client"
 
-import { Settings, Users, Tag, BarChart, DollarSign, Receipt } from 'lucide-react'
+import { Settings, Users, Tag, BarChart, DollarSign, Receipt, FileText } from 'lucide-react'
 import { useAuth } from '@/components/auth/auth-provider'
 import { Card, CardContent } from '@/components/ui/card'
 import Link from 'next/link'
@@ -72,6 +72,19 @@ export default function OverviewModule({ onSelect }: OverviewModuleProps) {
         </Card>
       )}
 
+      {/* Facturas: requiere sales:read o sales:manage */}
+      {(permissions.includes('sales:manage') || permissions.includes('sales:read')) && (
+        <Link href="/admin/invoices">
+          <Card className="hover:shadow-xl transition-shadow duration-200 cursor-pointer h-56">
+            <CardContent className="flex flex-col items-center justify-center p-6 text-center">
+              <FileText className="h-12 w-12 text-orange-500 mb-3" />
+              <h3 className="text-lg font-semibold">Facturas</h3>
+              <p className="text-sm text-muted-foreground">Historial de ventas y comprobantes.</p>
+            </CardContent>
+          </Card>
+        </Link>
+      )}
+
       {/* Notas de crédito: requiere creditNotes:read o creditNotes:manage */}
       {(permissions.includes('creditNotes:manage') || permissions.includes('creditNotes:read')) && (
         <Link href="/admin/credit-notes">
@@ -84,7 +97,6 @@ export default function OverviewModule({ onSelect }: OverviewModuleProps) {
           </Card>
         </Link>
       )}
-
       {/* Cajas: requiere cashRegister:read o cashRegister:manage */}
       {(permissions.includes('cashRegister:manage') || permissions.includes('cashRegister:read')) && (
         <Link href="/admin/checkouts">

@@ -13,6 +13,7 @@ import { getInvoiceCashiersAction, getInvoicesAction } from '@/lib/actions/saleA
 import type { InvoiceCashierOption, InvoiceListItem, InvoiceStatus } from '@/lib/types/invoices'
 import { INVOICE_STATUS_OPTIONS } from '@/lib/types/invoices'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ChevronLeft, Filter, Loader2, RefreshCcw, Search } from 'lucide-react'
 
@@ -73,6 +74,7 @@ function formatDate(value: string) {
 
 export default function InvoiceManagement({ standalone }: InvoiceManagementProps) {
   const { permissions } = useAuth()
+  const router = useRouter()
   const canRead = permissions.includes('sales:manage') || permissions.includes('sales:read')
 
   const [filters, setFilters] = useState<FiltersState>(initialFilters)
@@ -237,7 +239,18 @@ export default function InvoiceManagement({ standalone }: InvoiceManagementProps
                   </TableRow>
                 ))
               : invoices.map((invoice) => (
-                  <TableRow key={invoice.id}>
+                  <TableRow key={invoice.id}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => router.push(`/${encodeURIComponent(invoice.saleNumber)}`)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        router.push(`/${encodeURIComponent(invoice.saleNumber)}`);
+                      }
+                    }}
+                    className="hover:bg-muted cursor-pointer"
+                  >
                     <TableCell className="font-medium">{invoice.saleNumber}</TableCell>
                     <TableCell>
                       {invoice.cashier.name}
