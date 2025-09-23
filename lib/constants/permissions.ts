@@ -110,6 +110,43 @@ export const permissions = [
     category: 'Gestión de Categorías'
   },
 
+  // Permisos de Gestión de Clientes
+  {
+    name: 'customers:create',
+    description: 'Agregar nuevos clientes al sistema',
+    resource: 'customers',
+    action: 'create',
+    category: 'Gestión de Clientes'
+  },
+  {
+    name: 'customers:read',
+    description: 'Ver clientes y sus detalles',
+    resource: 'customers',
+    action: 'read',
+    category: 'Gestión de Clientes'
+  },
+  {
+    name: 'customers:update',
+    description: 'Actualizar información de clientes',
+    resource: 'customers',
+    action: 'update',
+    category: 'Gestión de Clientes'
+  },
+  {
+    name: 'customers:delete',
+    description: 'Eliminar o desactivar clientes',
+    resource: 'customers',
+    action: 'delete',
+    category: 'Gestión de Clientes'
+  },
+  {
+    name: 'customers:manage',
+    description: 'Acceso total a la gestión de clientes',
+    resource: 'customers',
+    action: 'manage',
+    category: 'Gestión de Clientes'
+  },
+
   // Permisos de Gestión de Ventas
   {
     name: 'sales:create',

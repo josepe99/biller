@@ -1,12 +1,5 @@
 'use client'
 
-import { getCategoriesAction } from '@/lib/actions/categories'
-import { useAuth } from '@/components/auth/auth-provider'
-import { Button } from '@/components/ui/button'
-import { Product } from '@/lib/types'
-import { Category } from '@prisma/client'
-import { Save } from 'lucide-react'
-import { useState, useEffect } from 'react'
 import {
   addProductAction,
   editProductAction,
@@ -24,13 +17,26 @@ import {
   ProductTable,
   DeleteConfirmDialog
 } from './index'
+import { getCategoriesAction } from '@/lib/actions/categories'
+import { useState, useEffect } from 'react'
+import { Category } from '@prisma/client'
+import { Product } from '@/lib/types'
 
-export default function InventoryModule({ initialProducts }: { initialProducts: Product[] }) {
-  const { permissions = [] } = useAuth();
-  const canRead = permissions.includes('products:read');
-  const canCreate = permissions.includes('products:create');
-  const canUpdate = permissions.includes('products:update');
-  const canDelete = permissions.includes('products:delete');
+interface InventoryModuleProps {
+  initialProducts: Product[]
+  canCreate: boolean
+  canRead: boolean
+  canUpdate: boolean
+  canDelete: boolean
+}
+
+export default function InventoryModule({
+  initialProducts,
+  canCreate,
+  canRead,
+  canUpdate,
+  canDelete
+}: InventoryModuleProps) {
   const [products, setProducts] = useState<Product[]>(initialProducts)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterCategory, setFilterCategory] = useState('Todas')
@@ -41,7 +47,10 @@ export default function InventoryModule({ initialProducts }: { initialProducts: 
   const [productToDelete, setProductToDelete] = useState<Product | null>(null)
   const [categoriesData, setCategoriesData] = useState<Category[]>([])
 
-  // Load categories on component mount
+  useEffect(() => {
+    setProducts(initialProducts)
+  }, [initialProducts])
+
   useEffect(() => {
     const loadCategories = async () => {
       try {
@@ -54,13 +63,22 @@ export default function InventoryModule({ initialProducts }: { initialProducts: 
     loadCategories()
   }, [])
 
-  const categories = Array.from(new Set(initialProducts.map(p => typeof p.category === 'string' ? p.category : 'Sin categoría')))
+  const categories = Array.from(
+    new Set(
+      products.map(p =>
+        typeof p.category === 'string' ? p.category : 'Sin categoria'
+      )
+    )
+  )
 
   const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const matchesSearch =
+      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.barcode.toString().includes(searchTerm.toLowerCase())
-    const matchesCategory = filterCategory === 'Todas' || product.category === filterCategory
-    const matchesStock = filterStock === 'Todos' ||
+    const matchesCategory =
+      filterCategory === 'Todas' || product.category === filterCategory
+    const matchesStock =
+      filterStock === 'Todos' ||
       (filterStock === 'Bajo' && product.stock <= 5) ||
       (filterStock === 'Suficiente' && product.stock > 5)
     return matchesSearch && matchesCategory && matchesStock
@@ -75,7 +93,6 @@ export default function InventoryModule({ initialProducts }: { initialProducts: 
     const discountValue = formData.get('discount') as string
     const categoryName = formData.get('category') as string
 
-    // Find the categoryId based on the category name
     const selectedCategory = categoriesData.find(cat => cat.name === categoryName)
     const categoryId = selectedCategory?.id || null
 
@@ -84,37 +101,44 @@ export default function InventoryModule({ initialProducts }: { initialProducts: 
       name: formData.get('name') as string,
       price: parseFloat(formData.get('price') as string),
       stock: parseInt(formData.get('stock') as string),
-      categoryId: categoryId, // Use categoryId instead of category
+      categoryId: categoryId,
       iva: parseInt(ivaValue),
       discount: discountValue ? parseFloat(discountValue) : undefined,
-      unity: formData.get('unity') as string,
+      unity: formData.get('unity') as string
     }
 
     try {
       if (editingProduct) {
-        // Update existing product using editProductAction
+        if (!canUpdate) {
+          return
+        }
         const updatedProduct = await editProductAction(editingProduct.id, productData)
         if (updatedProduct) {
-          setProducts(prev => prev.map(p => (p.id === editingProduct.id ? updatedProduct : p)))
+          setProducts(prev =>
+            prev.map(p => (p.id === editingProduct.id ? updatedProduct : p))
+          )
         } else {
           alert('Error al actualizar producto')
           return
         }
       } else {
-        // Check for duplicate barcode before creating
-        if (products.some(p => p.barcode === productData.barcode)) {
-          alert('Error: Ya existe un producto con este código de barras.')
+        if (!canCreate) {
           return
         }
-        // Create new product using addProductAction
+        if (products.some(p => p.barcode === productData.barcode)) {
+          alert('Error: Ya existe un producto con este codigo de barras.')
+          return
+        }
         const newProduct = await addProductAction(productData)
         if (newProduct) {
-          // Asegurarse de que el producto tenga el campo discount
           setProducts(prev => [
             ...prev,
             {
               ...newProduct,
-              discount: (newProduct as any).discount !== undefined ? (newProduct as any).discount : 0
+              discount:
+                (newProduct as any).discount !== undefined
+                  ? (newProduct as any).discount
+                  : 0
             }
           ])
         } else {
@@ -131,29 +155,37 @@ export default function InventoryModule({ initialProducts }: { initialProducts: 
   }
 
   const handleDeleteProduct = async () => {
-    if (productToDelete) {
-      try {
-        const result = await removeProductAction(productToDelete.id)
-        if (result.success) {
-          setProducts(prev => prev.filter(p => p.id !== productToDelete.id))
-          setIsDeleteModalOpen(false)
-          setProductToDelete(null)
-        } else {
-          alert(`Error al eliminar producto: ${result.error || 'Error desconocido'}`)
-        }
-      } catch (error) {
-        console.error('Error deleting product:', error)
-        alert('Error al eliminar el producto. Por favor, intenta de nuevo.')
+    if (!productToDelete || !canDelete) {
+      return
+    }
+
+    try {
+      const result = await removeProductAction(productToDelete.id)
+      if (result.success) {
+        setProducts(prev => prev.filter(p => p.id !== productToDelete.id))
+        setIsDeleteModalOpen(false)
+        setProductToDelete(null)
+      } else {
+        alert(`Error al eliminar producto: ${result.error || 'Error desconocido'}`)
       }
+    } catch (error) {
+      console.error('Error deleting product:', error)
+      alert('Error al eliminar el producto. Por favor, intenta de nuevo.')
     }
   }
 
   const handleEditProduct = (product: Product) => {
+    if (!canUpdate) {
+      return
+    }
     setEditingProduct(product)
     setIsProductModalOpen(true)
   }
 
   const handleDeleteClick = (productId: string) => {
+    if (!canDelete) {
+      return
+    }
     const product = products.find(p => p.id === productId)
     if (product) {
       setProductToDelete(product)
@@ -162,6 +194,9 @@ export default function InventoryModule({ initialProducts }: { initialProducts: 
   }
 
   const handleAddProduct = () => {
+    if (!canCreate) {
+      return
+    }
     setEditingProduct(null)
     setIsProductModalOpen(true)
   }
@@ -195,7 +230,9 @@ export default function InventoryModule({ initialProducts }: { initialProducts: 
             />
           </div>
         ) : (
-          <div className="text-center text-muted-foreground py-8">No tienes permiso para ver productos.</div>
+          <div className="text-center text-muted-foreground py-8">
+            No tienes permiso para ver productos.
+          </div>
         )}
       </CardContent>
 
