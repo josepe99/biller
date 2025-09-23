@@ -76,11 +76,53 @@ export async function getInvoicesAction(query: InvoiceQuery = {}): Promise<Invoi
 
 export async function getInvoiceCashiersAction(): Promise<InvoiceCashierOption[]> {
   const saleController = new SaleController()
-  const users = await saleController.getInvoiceCashiers()
-
-  return (users ?? []).map((user: any) => ({
-    id: String(user?.id ?? ''),
-    name: String(user?.name ?? ''),
-    lastname: user?.lastname ?? null,
+  const cashiers = await saleController.getInvoiceCashiers()
+  
+  return (cashiers ?? []).map((cashier: any) => ({
+    id: String(cashier?.id ?? ''),
+    name: String(cashier?.name ?? 'Sin asignar'),
+    lastname: cashier?.lastname ?? null,
   }))
+}
+
+/**
+ * Updates the status of a sale
+ */
+export async function updateSaleStatusAction(saleId: string, status: string) {
+  try {
+    const saleController = new SaleController()
+    const result = await saleController.updateStatus(saleId, status)
+    return { success: true, sale: result }
+  } catch (error) {
+    console.error('Error updating sale status:', error)
+    throw new Error('Failed to update sale status')
+  }
+}
+
+/**
+ * Updates the notes of a sale
+ */
+export async function updateSaleNotesAction(saleId: string, notes: string) {
+  try {
+    const saleController = new SaleController()
+    const result = await saleController.updateNotes(saleId, notes)
+    return { success: true, sale: result }
+  } catch (error) {
+    console.error('Error updating sale notes:', error)
+    throw new Error('Failed to update sale notes')
+  }
+}
+
+/**
+ * Updates both status and notes of a sale
+ */
+export async function updateSaleAction(saleId: string, data: { status?: string; notes?: string }) {
+  try {
+    const saleController = new SaleController()
+    const result = await saleController.updateSale(saleId, data)
+    return { success: true, sale: result }
+  } catch (error) {
+    console.error('Error updating sale:', error)
+    throw new Error('Failed to update sale')
+  }
 }

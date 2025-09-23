@@ -48,4 +48,31 @@ export class SaleController extends BaseController<SaleDatasource> {
   async searchSales(query: string, limit = 20) {
     return this.datasource.searchSales(query, limit)
   }
+
+  /**
+   * Updates the status of a sale
+   * @param saleId - The ID of the sale to update
+   * @param status - The new status
+   */
+  async updateStatus(saleId: string, status: string) {
+    return this.datasource.update(saleId, { status })
+  }
+
+  /**
+   * Updates the notes of a sale
+   * @param saleId - The ID of the sale to update
+   * @param notes - The new notes
+   */
+  async updateNotes(saleId: string, notes: string) {
+    return this.datasource.update(saleId, { notes })
+  }
+
+  /**
+   * Updates both status and notes of a sale
+   * @param saleId - The ID of the sale to update
+   * @param data - Object containing status and/or notes
+   */
+  async updateSale(saleId: string, data: { status?: string; notes?: string }) {
+    return this.datasource.update(saleId, data)
+  }
 }

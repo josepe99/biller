@@ -26,7 +26,7 @@ const PAGE_SIZE = 20
 const STATUS_LABELS: Record<InvoiceStatus, string> = {
   PENDING: 'Pendiente',
   COMPLETED: 'Completada',
-  CANCELLED: 'Anulada',
+  CANCELLED: 'Cancelada',
   REFUNDED: 'Reembolsada',
 }
 

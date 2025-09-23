@@ -10,10 +10,10 @@ interface SaleSummaryProps {
 export function SaleSummary({ subtotal, tax, total, status }: SaleSummaryProps) {
   const formatCurrency = (amount: number | null | undefined) => {
     if (!amount) return '-';
-    return amount.toLocaleString('es-PY', { 
-      style: 'currency', 
-      currency: 'PYG', 
-      minimumFractionDigits: 0 
+    return amount.toLocaleString('es-PY', {
+      style: 'currency',
+      currency: 'PYG',
+      minimumFractionDigits: 0
     });
   };
 
@@ -21,8 +21,29 @@ export function SaleSummary({ subtotal, tax, total, status }: SaleSummaryProps) 
     switch (status) {
       case 'COMPLETED':
         return 'text-green-600 font-semibold';
+      case 'CANCELLED':
+        return 'text-red-600 font-semibold';
+      case 'REFUNDED':
+        return 'text-orange-600 font-semibold';
+      case 'PENDING':
+        return 'text-yellow-600 font-semibold';
       default:
         return 'text-gray-600 font-semibold';
+    }
+  };
+
+  const getStatusLabel = (status?: string) => {
+    switch (status) {
+      case 'COMPLETED':
+        return 'Completada';
+      case 'CANCELLED':
+        return 'Cancelada';
+      case 'REFUNDED':
+        return 'Reembolsada';
+      case 'PENDING':
+        return 'Pendiente';
+      default:
+        return status || '-';
     }
   };
 
@@ -43,7 +64,7 @@ export function SaleSummary({ subtotal, tax, total, status }: SaleSummaryProps) 
       </div>
       <div className="flex items-center gap-2">
         <span className="font-semibold">Estado:</span>
-        <span className={getStatusColor(status)}>{status}</span>
+        <span className={getStatusColor(status)}>{getStatusLabel(status)}</span>
       </div>
     </div>
   );
