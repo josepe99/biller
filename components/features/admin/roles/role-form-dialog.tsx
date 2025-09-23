@@ -40,12 +40,14 @@ export function RoleFormDialog({
 }: RoleFormDialogProps) {
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [permissionSearchTerm, setPermissionSearchTerm] = useState("");
 
   useEffect(() => {
     if (open) {
       setSelectedPermissions(
         editingRole?.permissions?.map((permission) => permission.id) ?? []
       );
+      setPermissionSearchTerm(""); // Resetear búsqueda al abrir modal
     }
   }, [open, editingRole]);
 
@@ -56,6 +58,63 @@ export function RoleFormDialog({
         : [...prev, permissionId]
     );
   };
+
+  // Función para generar descripción legible desde el nombre técnico
+  const getPermissionDisplayText = (permission: PermissionOption) => {
+    if (permission.description && permission.description.trim()) {
+      return permission.description;
+    }
+
+    // Generar descripción legible desde el nombre técnico
+    const [resource, action] = permission.name.split(':');
+    const resourceMap: Record<string, string> = {
+      'users': 'usuarios',
+      'products': 'productos',
+      'sales': 'ventas',
+      'inventory': 'inventario',
+      'roles': 'roles',
+      'cashRegister': 'caja registradora',
+      'categories': 'categorías',
+      'checkout': 'checkout',
+      'creditNotes': 'notas de crédito'
+    };
+
+    const actionMap: Record<string, string> = {
+      'create': 'Crear',
+      'read': 'Ver',
+      'update': 'Actualizar',
+      'delete': 'Eliminar',
+      'manage': 'Gestionar',
+      'open': 'Abrir',
+      'close': 'Cerrar',
+      'start': 'Iniciar',
+      'finalize': 'Finalizar',
+      'cancel': 'Cancelar',
+      'get': 'Obtener',
+      'discount': 'Aplicar descuentos',
+      'refund': 'Procesar reembolsos',
+      'add_items': 'Agregar artículos',
+      'remove_items': 'Remover artículos',
+      'apply_discount': 'Aplicar descuentos',
+      'apply_promotion': 'Aplicar promociones',
+      'select_payment': 'Seleccionar método de pago'
+    };
+
+    const resourceText = resourceMap[resource] || resource;
+    const actionText = actionMap[action] || action;
+
+    return `${actionText} ${resourceText}`;
+  };
+
+  // Filtrar permisos basado en el término de búsqueda
+  const filteredPermissions = allPermissions.filter((permission) => {
+    const searchLower = permissionSearchTerm.toLowerCase();
+    const displayText = getPermissionDisplayText(permission);
+    return (
+      permission.name.toLowerCase().includes(searchLower) ||
+      displayText.toLowerCase().includes(searchLower)
+    );
+  });
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -75,7 +134,7 @@ export function RoleFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>{editingRole ? "Editar Rol" : "Nuevo Rol"}</DialogTitle>
           <DialogDescription>
@@ -102,18 +161,39 @@ export function RoleFormDialog({
           />
           <div>
             <div className="font-semibold mb-2">Permisos</div>
-            <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto border rounded p-2">
-              {allPermissions.map((permission) => (
-                <label key={permission.id} className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={selectedPermissions.includes(permission.id)}
-                    onChange={() => handlePermissionToggle(permission.id)}
-                    disabled={isSubmitting}
-                  />
-                  {permission.name}
-                </label>
-              ))}
+            <Input
+              placeholder="Buscar permisos..."
+              value={permissionSearchTerm}
+              onChange={(e) => setPermissionSearchTerm(e.target.value)}
+              className="mb-2"
+              disabled={isSubmitting}
+            />
+            <div className="grid grid-cols-1 gap-2 max-h-80 overflow-y-auto border rounded p-2">
+              {filteredPermissions.length === 0 ? (
+                <div className="text-sm text-muted-foreground text-center py-4">
+                  {permissionSearchTerm ? 'No se encontraron permisos' : 'No hay permisos disponibles'}
+                </div>
+              ) : (
+                filteredPermissions.map((permission) => (
+                  <label key={permission.id} className="flex items-start gap-2 p-2 hover:bg-gray-50 rounded">
+                    <input
+                      type="checkbox"
+                      checked={selectedPermissions.includes(permission.id)}
+                      onChange={() => handlePermissionToggle(permission.id)}
+                      disabled={isSubmitting}
+                      className="mt-1"
+                    />
+                    <div className="flex-1">
+                      <div className="font-medium text-sm">
+                        {getPermissionDisplayText(permission)}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {permission.name}
+                      </div>
+                    </div>
+                  </label>
+                ))
+              )}
             </div>
           </div>
           <DialogFooter>

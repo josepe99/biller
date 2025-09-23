@@ -116,7 +116,7 @@ export class CreditNoteDatasource extends BaseDatasource<'creditNote'> {
       where: { saleId },
     });
 
-    return ${sale.saleNumber}-NC;
+    return `${sale.saleNumber}-NC${String(existingCount + 1).padStart(2, '0')}`;
   }
 
   async updateStatus(id: string, data: { status: CreditNoteStatus; reason?: string }) {
@@ -221,3 +221,4 @@ export class CreditNoteDatasource extends BaseDatasource<'creditNote'> {
 }
 
 export const creditNoteDatasource = new CreditNoteDatasource();
+

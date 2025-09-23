@@ -15,9 +15,9 @@ export class PermissionController {
   }
 
   /**
-   * Obtiene todos los permisos disponibles (id y name)
+   * Obtiene todos los permisos disponibles (id, name y description)
    */
-  async getAllPermissions(): Promise<{ id: string; name: string }[]> {
+  async getAllPermissions(): Promise<{ id: string; name: string; description: string | null }[]> {
     return await this.permissionDatasource.getAllPermissions();
   }
 }

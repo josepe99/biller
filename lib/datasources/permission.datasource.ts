@@ -37,12 +37,12 @@ export class PermissionDatasource {
   }
 
   /**
-   * Obtiene todos los permisos disponibles (id y name)
+   * Obtiene todos los permisos disponibles (id, name y description)
    */
-  async getAllPermissions(): Promise<{ id: string; name: string }[]> {
+  async getAllPermissions(): Promise<{ id: string; name: string; description: string | null }[]> {
     const permissions = await prisma.permission.findMany({
       where: { deletedAt: null },
-      select: { id: true, name: true },
+      select: { id: true, name: true, description: true },
       orderBy: { name: 'asc' }
     });
     return permissions;
