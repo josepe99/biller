@@ -161,7 +161,44 @@ export const permissions = [
     category: 'Gestión de Ventas'
   },
 
-   // Gestión de Cajas (cashRegister) - extendida
+  // Permisos de Notas de Credito
+  {
+    name: 'creditNotes:create',
+    description: 'Crear notas de credito para devoluciones',
+    resource: 'creditNotes',
+    action: 'create',
+    category: 'Gestion de Notas de Credito'
+  },
+  {
+    name: 'creditNotes:read',
+    description: 'Ver notas de credito y sus detalles',
+    resource: 'creditNotes',
+    action: 'read',
+    category: 'Gestion de Notas de Credito'
+  },
+  {
+    name: 'creditNotes:update',
+    description: 'Actualizar informacion y estado de notas de credito',
+    resource: 'creditNotes',
+    action: 'update',
+    category: 'Gestion de Notas de Credito'
+  },
+  {
+    name: 'creditNotes:delete',
+    description: 'Eliminar o anular notas de credito',
+    resource: 'creditNotes',
+    action: 'delete',
+    category: 'Gestion de Notas de Credito'
+  },
+  {
+    name: 'creditNotes:manage',
+    description: 'Acceso total a la gestion de notas de credito',
+    resource: 'creditNotes',
+    action: 'manage',
+    category: 'Gestion de Notas de Credito'
+  },
+
+  // Gestión de Cajas (cashRegister) - extendida
   {
     name: 'cashRegister:create',
     description: 'Crear una nueva caja',

@@ -116,7 +116,9 @@ async function main() {
       // Cash register operations
       (p.resource === 'cashRegister' && ['create', 'read'].includes(p.action)) ||
       // Checkout operations
-      (p.resource === 'checkout' && ['create', 'read'].includes(p.action))
+      (p.resource === 'checkout' && ['create', 'read'].includes(p.action)) ||
+      // Credit notes creation and adjustments
+      (p.resource === 'creditNotes' && ['create', 'read', 'update'].includes(p.action))
     )
     .map(p => p.name)
 

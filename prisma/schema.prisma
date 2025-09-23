@@ -29,6 +29,7 @@ model User {
   openedCashRegisters CashRegister[]       @relation("CashRegisterOpenedBy")
   closedCashRegisters CashRegister[]       @relation("CashRegisterClosedBy")
   transactions        Transaction[]        @relation("TransactionUser")
+  creditNotes         CreditNote[]
 }
 
 // Role model for defining user roles
@@ -141,8 +142,9 @@ model Product {
   iva         Int
 
   // Relations
-  category  Category?  @relation(fields: [categoryId], references: [id])
-  saleItems SaleItem[]
+  category        Category?        @relation(fields: [categoryId], references: [id])
+  saleItems       SaleItem[]
+  creditNoteItems CreditNoteItem[]
 }
 
 // Category model for product organization
@@ -183,6 +185,7 @@ model Sale {
   cashRegister CashRegister? @relation(fields: [cashRegisterId], references: [id])
   saleItems    SaleItem[]
   transactions Transaction[]
+  creditNotes  CreditNote[]
 }
 
 // Sale item model for individual items in a sale
@@ -198,8 +201,55 @@ model SaleItem {
   deletedAt DateTime?
 
   // Relations
-  product Product @relation(fields: [productId], references: [id])
-  sale    Sale    @relation(fields: [saleId], references: [id])
+  product         Product          @relation(fields: [productId], references: [id])
+  sale            Sale             @relation(fields: [saleId], references: [id])
+  creditNoteItems CreditNoteItem[]
+}
+
+// Credit Note model for managing returns and store credits
+model CreditNote {
+  id               String           @id @default(auto()) @map("_id") @db.ObjectId
+  creditNoteNumber String           @unique
+  saleId           String           @db.ObjectId
+  issuedById       String           @db.ObjectId
+  total            Float            @default(0)
+  reason           String?
+  status           CreditNoteStatus @default(ISSUED)
+  issuedAt         DateTime         @default(now())
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  deletedAt        DateTime?
+
+  // Relations
+  sale     Sale             @relation(fields: [saleId], references: [id])
+  issuedBy User             @relation(fields: [issuedById], references: [id])
+  items    CreditNoteItem[]
+
+  @@index([saleId])
+  @@index([issuedById])
+}
+
+model CreditNoteItem {
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  creditNoteId String    @db.ObjectId
+  saleItemId   String?   @db.ObjectId
+  productId    String    @db.ObjectId
+  quantity     Int
+  unitPrice    Float
+  total        Float
+  reason       String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  // Relations
+  creditNote CreditNote @relation(fields: [creditNoteId], references: [id])
+  saleItem   SaleItem?  @relation(fields: [saleItemId], references: [id])
+  product    Product    @relation(fields: [productId], references: [id])
+
+  @@index([creditNoteId])
+  @@index([saleItemId])
+  @@index([productId])
 }
 
 // Customer model for customer management (optional)
@@ -229,8 +279,7 @@ model Checkout {
   invoicePrefix   String    @default("001") // First 3 digits (xxx)
   invoiceMiddle   String    @default("001") // Middle 3 digits (xxx)
   invoiceSequence Int // Last 7 digits (zzzzzzz) - sequential number
-  isPrincipal     Boolean  @default(false) // Whether this checkout is the principal/default checkout
-  
+  isPrincipal     Boolean   @default(false) // Whether this checkout is the principal/default checkout
 
   // Relations
   sales              Sale[]
@@ -293,6 +342,12 @@ enum SaleStatus {
   COMPLETED
   CANCELLED
   REFUNDED
+}
+
+enum CreditNoteStatus {
+  DRAFT
+  ISSUED
+  CANCELLED
 }
 
 enum CashRegisterStatus {

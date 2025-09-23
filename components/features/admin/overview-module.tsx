@@ -1,6 +1,6 @@
 "use client"
 
-import { Settings, Users, Tag, BarChart, DollarSign } from 'lucide-react'
+import { Settings, Users, Tag, BarChart, DollarSign, Receipt } from 'lucide-react'
 import { useAuth } from '@/components/auth/auth-provider'
 import { Card, CardContent } from '@/components/ui/card'
 import Link from 'next/link'
@@ -70,6 +70,19 @@ export default function OverviewModule({ onSelect }: OverviewModuleProps) {
             <p className="text-sm text-muted-foreground">Ventas diarias/mensuales.</p>
           </CardContent>
         </Card>
+      )}
+
+      {/* Notas de crédito: requiere creditNotes:read o creditNotes:manage */}
+      {(permissions.includes('creditNotes:manage') || permissions.includes('creditNotes:read')) && (
+        <Link href="/admin/credit-notes">
+          <Card className="hover:shadow-xl transition-shadow duration-200 cursor-pointer h-56">
+            <CardContent className="flex flex-col items-center justify-center p-6 text-center">
+              <Receipt className="h-12 w-12 text-orange-500 mb-3" />
+              <h3 className="text-lg font-semibold">Notas de crédito</h3>
+              <p className="text-sm text-muted-foreground">Gestionar devoluciones y ajustes.</p>
+            </CardContent>
+          </Card>
+        </Link>
       )}
 
       {/* Cajas: requiere cashRegister:read o cashRegister:manage */}
