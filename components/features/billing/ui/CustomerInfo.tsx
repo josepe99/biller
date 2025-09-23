@@ -18,7 +18,7 @@ interface CustomerInfoProps {
 
 export function CustomerInfo({ customerRuc, customerInfo, handleCustomerRucChange }: CustomerInfoProps) {
   return (
-    <div className="mb-4 p-3 border rounded-lg bg-gray-50">
+    <div className="mb-4 p-3">
       <h4 className="text-sm font-medium text-gray-700 mb-2">Información del Cliente</h4>
       <div className="space-y-2">
         <div>

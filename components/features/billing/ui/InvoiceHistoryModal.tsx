@@ -3,29 +3,46 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle
-} from '@/components/ui/dialog';
-import React, { useEffect, useState } from 'react';
-import Link from 'next/link';
-
-import { getSalesHistoryAction, searchSalesAction } from '@/lib/actions/saleActions';
-import { useAuth } from '@/hooks';
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  getSalesHistoryAction,
+  searchSalesAction,
+} from "@/lib/actions/saleActions";
+import React, { useEffect, useState } from "react";
+import { useAuth } from "@/hooks";
+import Link from "next/link";
 
 interface InvoiceHistoryModalProps {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
 }
 
+// Function to translate status to Spanish
+const getStatusLabel = (status?: string) => {
+  switch (status) {
+    case "COMPLETED":
+      return "Completada";
+    case "CANCELLED":
+      return "Cancelada";
+    case "REFUNDED":
+      return "Reembolsada";
+    case "PENDING":
+      return "Pendiente";
+    default:
+      return status || "-";
+  }
+};
+
 export function InvoiceHistoryModal({
   isOpen,
   setIsOpen,
 }: InvoiceHistoryModalProps) {
-
   const { user } = useAuth();
   const userId = user?.id;
   const [invoices, setInvoices] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     const fetchInvoices = async () => {
@@ -54,7 +71,9 @@ export function InvoiceHistoryModal({
       <DialogContent className="max-w-5xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Historial de Facturas</DialogTitle>
-          <DialogDescription>Buscar y revisar facturas procesadas</DialogDescription>
+          <DialogDescription>
+            Buscar y revisar facturas procesadas
+          </DialogDescription>
         </DialogHeader>
         <div className="mt-4">
           <input
@@ -62,13 +81,15 @@ export function InvoiceHistoryModal({
             className="w-full mb-4 px-3 py-2 border rounded focus:outline-none focus:ring"
             placeholder="Buscar por número de factura, cliente, RUC, etc."
             value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
+            onChange={(e) => setSearchTerm(e.target.value)}
             autoFocus
           />
           {loading ? (
             <div className="text-center py-8">Cargando...</div>
           ) : invoices.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">No se encontraron facturas.</div>
+            <div className="text-center py-8 text-muted-foreground">
+              No se encontraron facturas.
+            </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full border text-sm">
@@ -88,43 +109,81 @@ export function InvoiceHistoryModal({
                   {invoices.map((inv) => (
                     <tr key={inv.id} className="hover:bg-accent cursor-pointer">
                       <td className="px-3 py-2 border font-mono">
-                        <Link href={`/${inv.saleNumber}`} className="block w-full h-full">
+                        <Link
+                          href={`/${inv.saleNumber}`}
+                          className="block w-full h-full"
+                        >
                           {inv.saleNumber}
                         </Link>
                       </td>
                       <td className="px-3 py-2 border">
-                        <Link href={`/${inv.saleNumber}`} className="block w-full h-full">
-                          {inv.createdAt ? new Date(inv.createdAt).toLocaleString() : '-'}
+                        <Link
+                          href={`/${inv.saleNumber}`}
+                          className="block w-full h-full"
+                        >
+                          {inv.createdAt
+                            ? new Date(inv.createdAt).toLocaleString()
+                            : "-"}
                         </Link>
                       </td>
                       <td className="px-3 py-2 border">
-                        <Link href={`/${inv.saleNumber}`} className="block w-full h-full">
-                          {inv.customer?.name || '-'}
+                        <Link
+                          href={`/${inv.saleNumber}`}
+                          className="block w-full h-full"
+                        >
+                          {inv.customer?.name || "-"}
                         </Link>
                       </td>
                       <td className="px-3 py-2 border">
-                        <Link href={`/${inv.saleNumber}`} className="block w-full h-full">
-                          {inv.customer?.ruc || '-'}
+                        <Link
+                          href={`/${inv.saleNumber}`}
+                          className="block w-full h-full"
+                        >
+                          {inv.customer?.ruc || "-"}
                         </Link>
                       </td>
                       <td className="px-3 py-2 border text-right">
-                        <Link href={`/${inv.saleNumber}`} className="block w-full h-full">
-                          {inv.subtotal?.toLocaleString('es-PY', { style: 'currency', currency: 'PYG', minimumFractionDigits: 0 })}
+                        <Link
+                          href={`/${inv.saleNumber}`}
+                          className="block w-full h-full"
+                        >
+                          {inv.subtotal?.toLocaleString("es-PY", {
+                            style: "currency",
+                            currency: "PYG",
+                            minimumFractionDigits: 0,
+                          })}
                         </Link>
                       </td>
                       <td className="px-3 py-2 border text-right">
-                        <Link href={`/${inv.saleNumber}`} className="block w-full h-full">
-                          {inv.tax?.toLocaleString('es-PY', { style: 'currency', currency: 'PYG', minimumFractionDigits: 0 })}
+                        <Link
+                          href={`/${inv.saleNumber}`}
+                          className="block w-full h-full"
+                        >
+                          {inv.tax?.toLocaleString("es-PY", {
+                            style: "currency",
+                            currency: "PYG",
+                            minimumFractionDigits: 0,
+                          })}
                         </Link>
                       </td>
                       <td className="px-3 py-2 border text-right">
-                        <Link href={`/${inv.saleNumber}`} className="block w-full h-full">
-                          {inv.total?.toLocaleString('es-PY', { style: 'currency', currency: 'PYG', minimumFractionDigits: 0 })}
+                        <Link
+                          href={`/${inv.saleNumber}`}
+                          className="block w-full h-full"
+                        >
+                          {inv.total?.toLocaleString("es-PY", {
+                            style: "currency",
+                            currency: "PYG",
+                            minimumFractionDigits: 0,
+                          })}
                         </Link>
                       </td>
                       <td className="px-3 py-2 border">
-                        <Link href={`/${inv.saleNumber}`} className="block w-full h-full">
-                          {inv.status}
+                        <Link
+                          href={`/${inv.saleNumber}`}
+                          className="block w-full h-full"
+                        >
+                          {getStatusLabel(inv.status)}
                         </Link>
                       </td>
                     </tr>
