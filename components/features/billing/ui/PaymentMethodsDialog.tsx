@@ -147,7 +147,11 @@ export function PaymentMethodsDialog({
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
           <Button
-            onClick={() => { onConfirm(payments); setOpen(false); }}
+            onClick={() => {
+              onConfirm(payments);
+              setPayments([{ method: 'CASH', amount: total }]); // Reset form
+              setOpen(false);
+            }}
             className="bg-orange-500 hover:bg-orange-600"
             disabled={!canConfirm}
           >
