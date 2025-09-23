@@ -34,17 +34,17 @@ export default function CashRegisterForm({ cashRegister, editableFields }: CashR
   const initialForm = {
     id: cashRegister.id,
     status: cashRegister.status,
-  openedBy: cashRegister.openedBy?.name || cashRegister.openedById || "",
+    openedBy: cashRegister.openedBy?.name || cashRegister.openedById || "",
     openedAt: cashRegister.openedAt ? new Date(cashRegister.openedAt).toLocaleString() : "",
     initialCash: cashRegister.initialCash,
-  // expose the 'cash' entry from the new objects as simple numeric inputs in the UI
-  expectedMoneyCash: (cashRegister.expectedMoney && (cashRegister.expectedMoney as any).cash) ?? "",
-  missingMoneyCash: (cashRegister.missingMoney && (cashRegister.missingMoney as any).cash) ?? "",
+    // expose the 'cash' entry from the new objects as simple numeric inputs in the UI
+    expectedMoneyCash: (cashRegister.expectedMoney && (cashRegister.expectedMoney as any).cash) ?? "",
+    missingMoneyCash: (cashRegister.missingMoney && (cashRegister.missingMoney as any).cash) ?? "",
     openingNotes: cashRegister.openingNotes ?? "",
     closingNotes: cashRegister.closingNotes ?? "",
-  checkoutName: (cashRegister as any).checkout?.name ?? (cashRegister as any).checkoutName ?? '',
-  closedByName: (cashRegister as any).closedBy?.name ?? (typeof cashRegister.closedBy === 'string' ? cashRegister.closedBy : ''),
-  closedAt: (cashRegister as any).closedAt ? new Date((cashRegister as any).closedAt).toLocaleString() : '',
+    checkoutName: (cashRegister as any).checkout?.name ?? (cashRegister as any).checkoutName ?? '',
+    closedByName: (cashRegister as any).closedBy?.name ?? (typeof cashRegister.closedBy === 'string' ? cashRegister.closedBy : ''),
+    closedAt: (cashRegister as any).closedAt ? new Date((cashRegister as any).closedAt).toLocaleString() : '',
   };
 
   const [form, setForm] = useState(initialForm);
@@ -68,13 +68,13 @@ export default function CashRegisterForm({ cashRegister, editableFields }: CashR
     <div className="bg-white shadow-lg rounded-xl p-8">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <Link href="/">
+          <Link href="/cash-registers">
             <Button variant="outline" size="icon" className="border-orange-200 text-orange-600 hover:bg-orange-50">
               <ArrowLeft className="h-5 w-5" />
             </Button>
           </Link>
           <span className="font-semibold text-lg text-orange-500">
-            Caja {form.id.slice(-5)}
+            {cashRegister.checkout?.name}
           </span>
         </div>
       </div>
@@ -196,20 +196,40 @@ export default function CashRegisterForm({ cashRegister, editableFields }: CashR
             aria-readonly={!editableFields.expectedMoney}
           />
         </div>
-        {/* Missing Money (cash slot) */}
+        {/* Actual Money at Close (Expected - Missing) */}
         <div>
-          <label htmlFor="missingMoneyCash" className="block text-sm font-semibold text-gray-600 mb-1">Diferencia de efectivo</label>
+          <label htmlFor="actualMoneyCash" className="block text-sm font-semibold text-gray-600 mb-1">Efectivo real al cierre</label>
           <input
-            id="missingMoneyCash"
+            id="actualMoneyCash"
             type="number"
-            className="w-full border rounded-lg px-3 py-2 bg-gray-100"
-            name="missingMoneyCash"
-            value={form.missingMoneyCash}
-            disabled={!editableFields.missingMoney}
-            onChange={handleChange}
-            aria-readonly={!editableFields.missingMoney}
+            className="w-full border rounded-lg px-3 py-2 bg-green-50 border-green-200"
+            name="actualMoneyCash"
+            value={(() => {
+              const expected = Number(form.expectedMoneyCash) || 0;
+              const missing = Number(form.missingMoneyCash) || 0;
+              return expected - missing;
+            })()}
+            disabled={true}
+            readOnly
+            aria-readonly={true}
           />
         </div>
+        {/* Missing Money (cash slot) - only show if there's a missing amount > 0 */}
+        {(form.missingMoneyCash && Number(form.missingMoneyCash) > 0) && (
+          <div>
+            <label htmlFor="missingMoneyCash" className="block text-sm font-semibold text-gray-600 mb-1">Diferencia de efectivo</label>
+            <input
+              id="missingMoneyCash"
+              type="number"
+              className="w-full border rounded-lg px-3 py-2 bg-gray-100"
+              name="missingMoneyCash"
+              value={form.missingMoneyCash}
+              disabled={!editableFields.missingMoney}
+              onChange={handleChange}
+              aria-readonly={!editableFields.missingMoney}
+            />
+          </div>
+        )}
         {/* Opening Notes */}
         <div className="md:col-span-2">
           <label htmlFor="openingNotes" className="block text-sm font-semibold text-gray-600 mb-1">Notas de apertura</label>
@@ -248,19 +268,42 @@ export default function CashRegisterForm({ cashRegister, editableFields }: CashR
             ))}
           </div>
         </div>
-        {/* Missing money breakdown (read-only list) */}
+        {/* Missing money breakdown (read-only list) - only show if there are missing amounts > 0 */}
+        {(cashRegister.missingMoneyList || []).filter(item => (item.amount ?? 0) > 0).length > 0 && (
+          <div className="md:col-span-2">
+            <label className="block text-sm font-semibold text-gray-600 mb-2">Faltantes por método</label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              {(cashRegister.missingMoneyList || [])
+                .filter(item => (item.amount ?? 0) > 0)
+                .map((item) => (
+                  <div key={item.method} className="flex items-center gap-3">
+                    <div className="w-1/2 text-sm text-gray-700 capitalize">{item.method}</div>
+                    <div className="w-1/2 text-sm text-gray-900">{item.amount ?? 0}</div>
+                  </div>
+                ))}
+            </div>
+          </div>
+        )}
+        {/* Actual money at close breakdown (Expected - Missing) */}
         <div className="md:col-span-2">
-          <label className="block text-sm font-semibold text-gray-600 mb-2">Faltantes por método</label>
+          <label className="block text-sm font-semibold text-gray-600 mb-2">Dinero real al cierre por método</label>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            {(cashRegister.missingMoneyList || []).map((item) => (
-              <div key={item.method} className="flex items-center gap-3">
-                <div className="w-1/2 text-sm text-gray-700 capitalize">{item.method}</div>
-                <div className="w-1/2 text-sm text-gray-900">{item.amount ?? 0}</div>
-              </div>
-            ))}
+            {(cashRegister.expectedMoneyList || []).map((expectedItem) => {
+              const missingItem = (cashRegister.missingMoneyList || []).find(missing => missing.method === expectedItem.method);
+              const expectedAmount = Number(expectedItem.amount) || 0;
+              const missingAmount = Number(missingItem?.amount) || 0;
+              const actualAmount = expectedAmount - missingAmount;
+
+              return (
+                <div key={expectedItem.method} className="flex items-center gap-3 bg-green-50 px-2 py-1 rounded">
+                  <div className="w-1/2 text-sm text-gray-700 capitalize font-medium">{expectedItem.method}</div>
+                  <div className="w-1/2 text-sm text-green-800 font-semibold">{actualAmount}</div>
+                </div>
+              );
+            })}
           </div>
         </div>
-  {/* removed duplicate Closed By (moved earlier) */}
+        {/* removed duplicate Closed By (moved earlier) */}
         {/* Actions */}
         <div className="md:col-span-2 flex gap-4 justify-end mt-6">
           <button
