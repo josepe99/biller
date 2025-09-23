@@ -421,6 +421,43 @@ export const permissions = [
     action: 'manage',
     category: 'Gestión de Inventario'
   },
+
+  // Permisos de Configuración del Sistema
+  {
+    name: 'settings:create',
+    description: 'Crear nuevas configuraciones del sistema',
+    resource: 'settings',
+    action: 'create',
+    category: 'Configuración del Sistema'
+  },
+  {
+    name: 'settings:read',
+    description: 'Ver configuraciones del sistema',
+    resource: 'settings',
+    action: 'read',
+    category: 'Configuración del Sistema'
+  },
+  {
+    name: 'settings:update',
+    description: 'Actualizar configuraciones del sistema',
+    resource: 'settings',
+    action: 'update',
+    category: 'Configuración del Sistema'
+  },
+  {
+    name: 'settings:delete',
+    description: 'Eliminar configuraciones del sistema',
+    resource: 'settings',
+    action: 'delete',
+    category: 'Configuración del Sistema'
+  },
+  {
+    name: 'settings:manage',
+    description: 'Acceso total a la gestión de configuraciones',
+    resource: 'settings',
+    action: 'manage',
+    category: 'Configuración del Sistema'
+  },
 ] as const
 
 // Funciones helper (no cambian porque son lógicas internas)
