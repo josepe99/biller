@@ -3,8 +3,6 @@
 import { sampleUsers, sampleCategories } from '@/lib/data/sample-data'
 import { Card, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAuth } from '@/components/auth/auth-provider'
-import CategoryManagement from './category-management'
-import UserManagement from './user-management'
 import OverviewModule from './overview-module'
 import SettingsModule from './settings-module'
 import RoleManagement from './role-management'
@@ -13,19 +11,12 @@ import { User, Category } from '@prisma/client'
 import { useState } from 'react'
 
 export default function AdminModule() {
-  const { permissions = [] } = useAuth();
-  const [adminSubModule, setAdminSubModule] = useState<'overview' | 'users' | 'settings' | 'reports' | 'roles'>('overview')
-  const [users, setUsers] = useState<User[]>(sampleUsers)
-  const [categories, setCategories] = useState<Category[]>(sampleCategories)
-
-
+  const [adminSubModule, setAdminSubModule] = useState<'overview' | 'settings' | 'reports' | 'roles'>('overview')
 
   const renderAdminSubModule = () => {
     switch (adminSubModule) {
       case 'overview':
-        return <OverviewModule onSelect={setAdminSubModule as (m: 'users'|'settings'|'reports'|'roles'|'checkouts') => void} />
-      case 'users':
-        return <UserManagement onBack={() => setAdminSubModule('overview')} />
+        return <OverviewModule onSelect={setAdminSubModule} />
       case 'roles':
         return <RoleManagement onBack={() => setAdminSubModule('overview')} />
       case 'settings':

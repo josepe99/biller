@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import Link from 'next/link'
 
 interface OverviewModuleProps {
-  onSelect: (module: 'settings' | 'users' | 'reports' | 'roles') => void
+  onSelect: (module: 'settings' | 'reports' | 'roles') => void
 }
 
 export default function OverviewModule({ onSelect }: OverviewModuleProps) {
@@ -24,13 +24,15 @@ export default function OverviewModule({ onSelect }: OverviewModuleProps) {
 
       {/* Usuarios: requiere users:manage */}
       {permissions.includes('users:manage') && (
-  <Card className="hover:shadow-xl transition-shadow duration-200 cursor-pointer h-56" onClick={() => onSelect('users')}>
-          <CardContent className="flex flex-col items-center justify-center p-6 text-center">
-            <Users className="h-12 w-12 text-orange-500 mb-3" />
-            <h3 className="text-lg font-semibold">Usuarios</h3>
-            <p className="text-sm text-muted-foreground">Gestionar roles (admin, cajero).</p>
-          </CardContent>
-        </Card>
+        <Link href="/admin/users">
+          <Card className="hover:shadow-xl transition-shadow duration-200 cursor-pointer h-56">
+            <CardContent className="flex flex-col items-center justify-center p-6 text-center">
+              <Users className="h-12 w-12 text-orange-500 mb-3" />
+              <h3 className="text-lg font-semibold">Usuarios</h3>
+              <p className="text-sm text-muted-foreground">Gestionar roles (admin, cajero).</p>
+            </CardContent>
+          </Card>
+        </Link>
       )}
 
       {/* Categorías: requiere categories:manage */}

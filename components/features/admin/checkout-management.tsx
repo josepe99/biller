@@ -34,7 +34,12 @@ export default function CheckoutManagement() {
     <Card className="h-full flex flex-col">
       <CardHeader className="flex flex-row items-center justify-between">
         <div className="flex items-center gap-2">
-          <Link href="/admin"><ChevronLeft /></Link>
+          <Link href="/admin">
+            <Button variant="ghost">
+              <ChevronLeft className="h-5 w-5 mr-1" />
+              Volver al panel
+            </Button>
+          </Link>
           <CardTitle>Gestión de Cajas</CardTitle>
         </div>
       </CardHeader>

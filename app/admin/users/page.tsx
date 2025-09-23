@@ -49,6 +49,7 @@ import { Badge } from '@/components/ui/badge'
 import { useState, useEffect } from 'react'
 import { UserRole } from '@prisma/client'
 import { User } from '@prisma/client'
+import { useRouter } from 'next/navigation'
 
 // Tipo local para la lista de usuarios en la UI
 type UserListItem = Pick<User, 'id' | 'name' | 'email' | 'role'> & {
@@ -59,23 +60,22 @@ type UserListItem = Pick<User, 'id' | 'name' | 'email' | 'role'> & {
   updatedAt?: Date;
   deletedAt?: Date;
 };
+
 // Permisos para acciones sobre usuarios
 const PERMISSION_CREATE = 'users:create';
 const PERMISSION_UPDATE = 'users:update';
 const PERMISSION_DELETE = 'users:delete';
 
-
-interface UserManagementProps {
-  onBack: () => void
-}
-
-export default function UserManagement({ onBack }: UserManagementProps) {
+export default function UsersPage() {
+  const router = useRouter()
+  
   // Obtener permisos del usuario actual
   const { permissions } = useAuth()
   // Validadores de permisos
   const canCreate = permissions.includes(PERMISSION_CREATE) || permissions.includes('users:create');
   const canUpdate = permissions.includes(PERMISSION_UPDATE) || permissions.includes('users:update');
   const canDelete = permissions.includes(PERMISSION_DELETE) || permissions.includes('users:delete');
+  
   const [users, setUsers] = useState<UserListItem[]>([])
   const [isUserModalOpen, setIsUserModalOpen] = useState(false)
   const [editingUser, setEditingUser] = useState<UserListItem | null>(null)
@@ -163,12 +163,17 @@ export default function UserManagement({ onBack }: UserManagementProps) {
     setUserToDelete(null)
   }
 
+  const handleBack = () => {
+    router.push('/admin')
+  }
+
   return (
     <Card className="h-full flex flex-col">
       <CardHeader className="flex flex-row items-center justify-between">
         <div className="flex items-center">
-          <Button variant="ghost" size="icon" onClick={onBack} className="mr-2">
-            <ChevronLeft className="h-5 w-5" />
+          <Button variant="ghost" onClick={handleBack} className="mr-2">
+            <ChevronLeft className="h-5 w-5 mr-1" />
+            Volver al panel
           </Button>
           <CardTitle className="text-orange-500">Gestión de Usuarios</CardTitle>
         </div>
