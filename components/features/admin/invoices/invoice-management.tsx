@@ -1,41 +1,76 @@
-"use client"
+"use client";
 
-import { useAuth } from '@/components/auth/auth-provider'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { getInvoiceCashiersAction, getInvoicesAction } from '@/lib/actions/saleActions'
-import type { InvoiceCashierOption, InvoiceListItem, InvoiceStatus } from '@/lib/types/invoices'
-import { INVOICE_STATUS_OPTIONS } from '@/lib/types/invoices'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { ChevronLeft, Filter, Loader2, RefreshCcw, Search } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import type {
+  InvoiceCashierOption,
+  InvoiceListItem,
+  InvoiceStatus,
+} from "@/lib/types/invoices";
+import {
+  getInvoiceCashiersAction,
+  getInvoicesAction,
+} from "@/lib/actions/saleActions";
+import {
+  ChevronLeft,
+  Filter,
+  Loader2,
+  RefreshCcw,
+  Search,
+  Lock,
+} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { INVOICE_STATUS_OPTIONS } from "@/lib/types/invoices";
+import { useAuth } from "@/components/auth/auth-provider";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 interface InvoiceManagementProps {
-  standalone?: boolean
+  standalone?: boolean;
 }
 
-const PAGE_SIZE = 20
+const PAGE_SIZE = 20;
 
 const STATUS_LABELS: Record<InvoiceStatus, string> = {
-  PENDING: 'Pendiente',
-  COMPLETED: 'Completada',
-  CANCELLED: 'Cancelada',
-  REFUNDED: 'Reembolsada',
-}
+  PENDING: "Pendiente",
+  COMPLETED: "Completada",
+  CANCELLED: "Cancelada",
+  REFUNDED: "Reembolsada",
+};
 
-const STATUS_BADGE_VARIANT: Record<InvoiceStatus, 'default' | 'secondary' | 'destructive' | 'outline'> = {
-  COMPLETED: 'default',
-  PENDING: 'secondary',
-  CANCELLED: 'destructive',
-  REFUNDED: 'outline',
-}
+const STATUS_BADGE_VARIANT: Record<
+  InvoiceStatus,
+  "default" | "secondary" | "destructive" | "outline"
+> = {
+  COMPLETED: "default",
+  PENDING: "secondary",
+  CANCELLED: "destructive",
+  REFUNDED: "outline",
+};
 
 const initialFilters = {
   cashierId: null as string | null,
@@ -44,120 +79,132 @@ const initialFilters = {
   dateTo: null as string | null,
   minTotal: null as number | null,
   maxTotal: null as number | null,
-  search: '',
-}
+  search: "",
+};
 
-type FiltersState = typeof initialFilters
+type FiltersState = typeof initialFilters;
 
 function formatCurrency(value: number) {
-  return value.toLocaleString('es-PY', {
-    style: 'currency',
-    currency: 'PYG',
+  return value.toLocaleString("es-PY", {
+    style: "currency",
+    currency: "PYG",
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  })
+  });
 }
 
 function formatDate(value: string) {
-  const date = new Date(value)
+  const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
-    return '-'
+    return "-";
   }
-  return date.toLocaleString('es-PY', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+  return date.toLocaleString("es-PY", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
-export default function InvoiceManagement({ standalone }: InvoiceManagementProps) {
-  const { permissions } = useAuth()
-  const router = useRouter()
-  const canRead = permissions.includes('sales:manage') || permissions.includes('sales:read')
+export default function InvoiceManagement({
+  standalone,
+}: InvoiceManagementProps) {
+  const { permissions, isAuthenticated, isLoading } = useAuth();
+  const router = useRouter();
+  const canRead = permissions.includes("sales:manage");
 
-  const [filters, setFilters] = useState<FiltersState>(initialFilters)
-  const [cashiers, setCashiers] = useState<InvoiceCashierOption[]>([])
-  const [invoices, setInvoices] = useState<InvoiceListItem[]>([])
-  const [totalCount, setTotalCount] = useState(0)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [page, setPage] = useState(1)
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push("/login");
+    }
+  }, [isLoading, isAuthenticated, router]);
+
+  const [filters, setFilters] = useState<FiltersState>(initialFilters);
+  const [cashiers, setCashiers] = useState<InvoiceCashierOption[]>([]);
+  const [invoices, setInvoices] = useState<InvoiceListItem[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
 
   const totalPages = useMemo(() => {
     if (totalCount === 0) {
-      return 1
+      return 1;
     }
-    return Math.max(Math.ceil(totalCount / PAGE_SIZE), 1)
-  }, [totalCount])
+    return Math.max(Math.ceil(totalCount / PAGE_SIZE), 1);
+  }, [totalCount]);
 
   const pageRange = useMemo(() => {
     if (totalCount === 0) {
-      return { from: 0, to: 0 }
+      return { from: 0, to: 0 };
     }
-    const from = (page - 1) * PAGE_SIZE + 1
-    const to = Math.min(page * PAGE_SIZE, totalCount)
-    return { from, to }
-  }, [page, totalCount])
+    const from = (page - 1) * PAGE_SIZE + 1;
+    const to = Math.min(page * PAGE_SIZE, totalCount);
+    return { from, to };
+  }, [page, totalCount]);
 
   const resetFilters = useCallback(() => {
-    setFilters(initialFilters)
-    setPage(1)
-  }, [])
+    setFilters(initialFilters);
+    setPage(1);
+  }, []);
 
   const toggleStatus = useCallback((status: InvoiceStatus) => {
     setFilters((prev) => {
-      const exists = prev.statuses.includes(status)
+      const exists = prev.statuses.includes(status);
       const nextStatuses = exists
         ? prev.statuses.filter((item) => item !== status)
-        : [...prev.statuses, status]
-      return { ...prev, statuses: nextStatuses }
-    })
-    setPage(1)
-  }, [])
+        : [...prev.statuses, status];
+      return { ...prev, statuses: nextStatuses };
+    });
+    setPage(1);
+  }, []);
 
-  const updateFilter = useCallback(<K extends keyof FiltersState>(key: K, value: FiltersState[K]) => {
-    setFilters((prev) => ({
-      ...prev,
-      [key]: value,
-    }))
-    setPage(1)
-  }, [])
+  const updateFilter = useCallback(
+    <K extends keyof FiltersState>(key: K, value: FiltersState[K]) => {
+      setFilters((prev) => ({
+        ...prev,
+        [key]: value,
+      }));
+      setPage(1);
+    },
+    []
+  );
 
   useEffect(() => {
     if (!canRead) {
-      return
+      return;
     }
 
-    let active = true
+    let active = true;
     getInvoiceCashiersAction()
       .then((data) => {
         if (active) {
-          setCashiers(data)
+          setCashiers(data);
         }
       })
       .catch(() => {
         if (active) {
-          setCashiers([])
+          setCashiers([]);
         }
-      })
+      });
 
     return () => {
-      active = false
-    }
-  }, [canRead])
+      active = false;
+    };
+  }, [canRead]);
 
   useEffect(() => {
     if (!canRead) {
-      setLoading(false)
-      setInvoices([])
-      return
+      setLoading(false);
+      setInvoices([]);
+      return;
     }
 
-    let active = true
-    setLoading(true)
-    setError(null)
+    let active = true;
+    setLoading(true);
+    setError(null);
 
     const query = {
       cashierId: filters.cashierId || undefined,
@@ -166,51 +213,54 @@ export default function InvoiceManagement({ standalone }: InvoiceManagementProps
       dateTo: filters.dateTo || undefined,
       minTotal: filters.minTotal ?? undefined,
       maxTotal: filters.maxTotal ?? undefined,
-      search: filters.search && filters.search.trim().length > 0 ? filters.search.trim() : undefined,
+      search:
+        filters.search && filters.search.trim().length > 0
+          ? filters.search.trim()
+          : undefined,
       limit: PAGE_SIZE,
       offset: (page - 1) * PAGE_SIZE,
-    }
+    };
 
     getInvoicesAction(query)
       .then((response) => {
         if (!active) {
-          return
+          return;
         }
-        setInvoices(response.invoices)
-        setTotalCount(response.totalCount)
+        setInvoices(response.invoices);
+        setTotalCount(response.totalCount);
       })
       .catch(() => {
         if (active) {
-          setError('Error al cargar las facturas. Intenta de nuevo.')
+          setError("Error al cargar las facturas. Intenta de nuevo.");
         }
       })
       .finally(() => {
         if (active) {
-          setLoading(false)
+          setLoading(false);
         }
-      })
+      });
 
     return () => {
-      active = false
-    }
-  }, [canRead, filters, page])
+      active = false;
+    };
+  }, [canRead, filters, page]);
 
   const handleRefresh = () => {
-    setPage(1)
-    setFilters((prev) => ({ ...prev }))
-  }
+    setPage(1);
+    setFilters((prev) => ({ ...prev }));
+  };
 
   const renderContent = () => {
-    if (!canRead) {
-      return <p className="text-sm text-muted-foreground">No tienes permiso para ver las facturas.</p>
-    }
-
     if (error) {
-      return <p className="text-sm text-red-500">{error}</p>
+      return <p className="text-sm text-red-500">{error}</p>;
     }
 
     if (!loading && invoices.length === 0) {
-      return <p className="text-sm text-muted-foreground">No hay facturas para los filtros seleccionados.</p>
+      return (
+        <p className="text-sm text-muted-foreground">
+          No hay facturas para los filtros seleccionados.
+        </p>
+      );
     }
 
     return (
@@ -233,33 +283,45 @@ export default function InvoiceManagement({ standalone }: InvoiceManagementProps
                   <TableRow key={`loading-${index}`}>
                     <TableCell colSpan={7} className="py-6">
                       <div className="flex items-center justify-center text-muted-foreground text-sm">
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Cargando facturas...
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />{" "}
+                        Cargando facturas...
                       </div>
                     </TableCell>
                   </TableRow>
                 ))
               : invoices.map((invoice) => (
-                  <TableRow key={invoice.id}
+                  <TableRow
+                    key={invoice.id}
                     role="button"
                     tabIndex={0}
-                    onClick={() => router.push(`/${encodeURIComponent(invoice.saleNumber)}`)}
+                    onClick={() =>
+                      router.push(`/${encodeURIComponent(invoice.saleNumber)}`)
+                    }
                     onKeyDown={(event) => {
-                      if (event.key === 'Enter' || event.key === ' ') {
+                      if (event.key === "Enter" || event.key === " ") {
                         event.preventDefault();
-                        router.push(`/${encodeURIComponent(invoice.saleNumber)}`);
+                        router.push(
+                          `/${encodeURIComponent(invoice.saleNumber)}`
+                        );
                       }
                     }}
                     className="hover:bg-muted cursor-pointer"
                   >
-                    <TableCell className="font-medium">{invoice.saleNumber}</TableCell>
-                    <TableCell>
-                      {invoice.cashier.name}
-                      {invoice.cashier.lastname ? ` ${invoice.cashier.lastname}` : ''}
+                    <TableCell className="font-medium">
+                      {invoice.saleNumber}
                     </TableCell>
                     <TableCell>
-                      {invoice.customer?.name || '-'}
+                      {invoice.cashier.name}
+                      {invoice.cashier.lastname
+                        ? ` ${invoice.cashier.lastname}`
+                        : ""}
+                    </TableCell>
+                    <TableCell>
+                      {invoice.customer?.name || "-"}
                       {invoice.customer?.ruc ? (
-                        <span className="block text-xs text-muted-foreground">RUC: {invoice.customer.ruc}</span>
+                        <span className="block text-xs text-muted-foreground">
+                          RUC: {invoice.customer.ruc}
+                        </span>
                       ) : null}
                     </TableCell>
                     <TableCell>
@@ -271,13 +333,59 @@ export default function InvoiceManagement({ standalone }: InvoiceManagementProps
                       {formatCurrency(invoice.total)}
                     </TableCell>
                     <TableCell>{formatDate(invoice.createdAt)}</TableCell>
-                    <TableCell>{invoice.checkout?.name || '-'}</TableCell>
+                    <TableCell>{invoice.checkout?.name || "-"}</TableCell>
                   </TableRow>
                 ))}
           </TableBody>
         </Table>
       </div>
-    )
+    );
+  };
+
+  // Show loading state while checking authentication
+  if (isLoading) {
+    return (
+      <Card className="h-full flex flex-col">
+        <CardContent className="flex items-center justify-center p-8">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Verificando permisos...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Show permission denied if user doesn't have read access
+  if (!isAuthenticated || !canRead) {
+    return (
+      <Card className="h-full flex flex-col">
+        <CardHeader className="flex flex-col gap-4">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center gap-2">
+              {standalone ? (
+                <Link href="/admin">
+                  <Button variant="ghost" size="sm">
+                    <ChevronLeft className="mr-1 h-4 w-4" /> Volver
+                  </Button>
+                </Link>
+              ) : null}
+              <CardTitle>Facturas</CardTitle>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center p-8">
+          <div className="text-center">
+            <Lock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Acceso denegado</h3>
+            <p className="text-muted-foreground">
+              No tienes permisos para ver las facturas. Necesitas el permiso
+              'sales:read' o 'sales:manage'.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
@@ -295,7 +403,12 @@ export default function InvoiceManagement({ standalone }: InvoiceManagementProps
             <CardTitle>Facturas</CardTitle>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={handleRefresh} disabled={loading}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRefresh}
+              disabled={loading}
+            >
               <RefreshCcw className="mr-2 h-4 w-4" />
               Actualizar
             </Button>
@@ -312,7 +425,7 @@ export default function InvoiceManagement({ standalone }: InvoiceManagementProps
               id="search"
               placeholder="Factura, cliente o RUC"
               value={filters.search}
-              onChange={(event) => updateFilter('search', event.target.value)}
+              onChange={(event) => updateFilter("search", event.target.value)}
             />
           </div>
           <div className="space-y-2">
@@ -323,8 +436,10 @@ export default function InvoiceManagement({ standalone }: InvoiceManagementProps
                   <span className="flex items-center gap-2">
                     <Filter className="h-4 w-4" />
                     {filters.statuses.length > 0
-                      ? `${filters.statuses.length} seleccionado${filters.statuses.length > 1 ? 's' : ''}`
-                      : 'Todos'}
+                      ? `${filters.statuses.length} seleccionado${
+                          filters.statuses.length > 1 ? "s" : ""
+                        }`
+                      : "Todos"}
                   </span>
                 </Button>
               </DropdownMenuTrigger>
@@ -344,8 +459,10 @@ export default function InvoiceManagement({ standalone }: InvoiceManagementProps
           <div className="space-y-2">
             <Label>Cajero</Label>
             <Select
-              value={filters.cashierId ?? 'all'}
-              onValueChange={(value) => updateFilter('cashierId', value === 'all' ? null : value)}
+              value={filters.cashierId ?? "all"}
+              onValueChange={(value) =>
+                updateFilter("cashierId", value === "all" ? null : value)
+              }
             >
               <SelectTrigger>
                 <SelectValue placeholder="Todos" />
@@ -355,7 +472,7 @@ export default function InvoiceManagement({ standalone }: InvoiceManagementProps
                 {cashiers.map((cashier) => (
                   <SelectItem key={cashier.id} value={cashier.id}>
                     {cashier.name}
-                    {cashier.lastname ? ` ${cashier.lastname}` : ''}
+                    {cashier.lastname ? ` ${cashier.lastname}` : ""}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -366,8 +483,10 @@ export default function InvoiceManagement({ standalone }: InvoiceManagementProps
             <Input
               id="date-from"
               type="date"
-              value={filters.dateFrom ?? ''}
-              onChange={(event) => updateFilter('dateFrom', event.target.value || null)}
+              value={filters.dateFrom ?? ""}
+              onChange={(event) =>
+                updateFilter("dateFrom", event.target.value || null)
+              }
             />
           </div>
           <div className="space-y-2">
@@ -375,8 +494,10 @@ export default function InvoiceManagement({ standalone }: InvoiceManagementProps
             <Input
               id="date-to"
               type="date"
-              value={filters.dateTo ?? ''}
-              onChange={(event) => updateFilter('dateTo', event.target.value || null)}
+              value={filters.dateTo ?? ""}
+              onChange={(event) =>
+                updateFilter("dateTo", event.target.value || null)
+              }
             />
           </div>
           <div className="space-y-2">
@@ -384,10 +505,10 @@ export default function InvoiceManagement({ standalone }: InvoiceManagementProps
             <Input
               type="number"
               min={0}
-              value={filters.minTotal ?? ''}
+              value={filters.minTotal ?? ""}
               onChange={(event) => {
-                const value = event.target.value
-                updateFilter('minTotal', value === '' ? null : Number(value))
+                const value = event.target.value;
+                updateFilter("minTotal", value === "" ? null : Number(value));
               }}
             />
           </div>
@@ -396,22 +517,28 @@ export default function InvoiceManagement({ standalone }: InvoiceManagementProps
             <Input
               type="number"
               min={0}
-              value={filters.maxTotal ?? ''}
+              value={filters.maxTotal ?? ""}
               onChange={(event) => {
-                const value = event.target.value
-                updateFilter('maxTotal', value === '' ? null : Number(value))
+                const value = event.target.value;
+                updateFilter("maxTotal", value === "" ? null : Number(value));
               }}
             />
           </div>
           <div className="flex items-end">
-            <Button variant="outline" onClick={resetFilters} disabled={loading} className="w-full">
+            <Button
+              variant="outline"
+              onClick={resetFilters}
+              disabled={loading}
+              className="w-full"
+            >
               Limpiar filtros
             </Button>
           </div>
         </div>
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <span>
-            Mostrando {pageRange.from}-{pageRange.to} de {totalCount} factura{totalCount === 1 ? '' : 's'}
+            Mostrando {pageRange.from}-{pageRange.to} de {totalCount} factura
+            {totalCount === 1 ? "" : "s"}
           </span>
           <div className="flex items-center gap-2">
             <Button
@@ -440,5 +567,5 @@ export default function InvoiceManagement({ standalone }: InvoiceManagementProps
         {renderContent()}
       </CardContent>
     </Card>
-  )
+  );
 }

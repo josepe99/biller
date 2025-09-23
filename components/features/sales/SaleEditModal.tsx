@@ -21,17 +21,6 @@ interface SaleEditModalProps {
   onUpdate?: () => void;
 }
 
-const STATUS_OPTIONS = [
-  { value: 'COMPLETED', label: 'Completada', description: 'Venta completada exitosamente' },
-  { value: 'CANCELLED', label: 'Cancelada', description: 'Venta cancelada' },
-] as const;
-
-const STATUS_COLORS = {
-  COMPLETED: 'text-green-600',
-  PENDING: 'text-yellow-600',
-  CANCELLED: 'text-red-600',
-  REFUNDED: 'text-orange-600',
-} as const;
 
 export function SaleEditModal({ saleId, saleNumber, currentStatus, currentNotes, onUpdate }: SaleEditModalProps) {
   const { canUpdate } = useSalePermissions();
@@ -79,7 +68,7 @@ export function SaleEditModal({ saleId, saleNumber, currentStatus, currentNotes,
   };
 
   const hasChanges = status !== currentStatus || notes !== (currentNotes || '');
-  const isStatusChangeValid = status === 'CANCELLED' || status === currentStatus;
+  const isStatusChangeValid = status === 'CANCELLED' || status === 'REFUNDED' || status === currentStatus;
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -106,7 +95,8 @@ export function SaleEditModal({ saleId, saleNumber, currentStatus, currentNotes,
             <CardContent>
               <Badge 
                 variant={currentStatus === 'COMPLETED' ? 'default' : 
-                       currentStatus === 'CANCELLED' ? 'destructive' : 'secondary'}
+                       currentStatus === 'CANCELLED' ? 'destructive' : 
+                       currentStatus === 'REFUNDED' ? 'outline' : 'secondary'}
                 className="text-sm"
               >
                 {currentStatus === 'COMPLETED' ? 'Completada' :
@@ -118,7 +108,7 @@ export function SaleEditModal({ saleId, saleNumber, currentStatus, currentNotes,
           </Card>
 
           {/* Status Change */}
-          {currentStatus !== 'CANCELLED' && (
+          {currentStatus !== 'CANCELLED' && currentStatus !== 'REFUNDED' && (
             <div className="space-y-2">
               <Label htmlFor="status">Cambiar Estado</Label>
               <Select value={status} onValueChange={setStatus}>
@@ -130,22 +120,40 @@ export function SaleEditModal({ saleId, saleNumber, currentStatus, currentNotes,
                     Mantener estado actual ({currentStatus === 'COMPLETED' ? 'Completada' : 'Pendiente'})
                   </SelectItem>
                   {currentStatus === 'COMPLETED' && (
-                    <SelectItem value="CANCELLED">
-                      <div className="flex items-center gap-2">
-                        <AlertTriangle className="h-4 w-4 text-red-500" />
-                        <div>
-                          <div className="font-medium">Cancelar</div>
-                          <div className="text-xs text-muted-foreground">Anular esta factura</div>
+                    <>
+                      <SelectItem value="CANCELLED">
+                        <div className="flex items-center gap-2">
+                          <AlertTriangle className="h-4 w-4 text-red-500" />
+                          <div>
+                            <div className="font-medium">Cancelar</div>
+                            <div className="text-xs text-muted-foreground">Anular esta factura</div>
+                          </div>
                         </div>
-                      </div>
-                    </SelectItem>
+                      </SelectItem>
+                      <SelectItem value="REFUNDED">
+                        <div className="flex items-center gap-2">
+                          <AlertTriangle className="h-4 w-4 text-orange-500" />
+                          <div>
+                            <div className="font-medium">Reembolsar</div>
+                            <div className="text-xs text-muted-foreground">Procesar reembolso de la factura</div>
+                          </div>
+                        </div>
+                      </SelectItem>
+                    </>
                   )}
                 </SelectContent>
               </Select>
-              {status === 'CANCELLED' && currentStatus !== 'CANCELLED' && (
-                <div className="text-sm text-red-600 bg-red-50 p-3 rounded-lg">
+              {(status === 'CANCELLED' || status === 'REFUNDED') && currentStatus !== status && (
+                <div className={`text-sm p-3 rounded-lg ${
+                  status === 'CANCELLED' 
+                    ? 'text-red-600 bg-red-50' 
+                    : 'text-orange-600 bg-orange-50'
+                }`}>
                   <div className="font-medium">⚠️ Atención</div>
-                  <div>Esta acción cancelará la factura. Una vez cancelada, no se puede deshacer.</div>
+                  <div>
+                    Esta acción {status === 'CANCELLED' ? 'cancelará' : 'reembolsará'} la factura. 
+                    Una vez {status === 'CANCELLED' ? 'cancelada' : 'reembolsada'}, no se puede deshacer.
+                  </div>
                 </div>
               )}
             </div>
