@@ -5,20 +5,17 @@ import { Card, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAuth } from '@/components/auth/auth-provider'
 import OverviewModule from './overview-module'
 import SettingsModule from './settings-module'
-import RoleManagement from './role-management'
 import ReportsModule from './reports-module'
 import { User, Category } from '@prisma/client'
 import { useState } from 'react'
 
 export default function AdminModule() {
-  const [adminSubModule, setAdminSubModule] = useState<'overview' | 'settings' | 'reports' | 'roles'>('overview')
+  const [adminSubModule, setAdminSubModule] = useState<'overview' | 'settings' | 'reports'>('overview')
 
   const renderAdminSubModule = () => {
     switch (adminSubModule) {
       case 'overview':
         return <OverviewModule onSelect={setAdminSubModule} />
-      case 'roles':
-        return <RoleManagement onBack={() => setAdminSubModule('overview')} />
       case 'settings':
         return <SettingsModule onBack={() => setAdminSubModule('overview')} />
       case 'reports':
