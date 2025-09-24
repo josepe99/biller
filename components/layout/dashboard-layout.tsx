@@ -1,42 +1,48 @@
 'use client'
 
-import { openCheckout, closeCheckout } from '@/lib/actions/cashRegisterActions'
-import { useCashRegister } from '@/components/checkout/CashRegisterContext'
-import { SessionValidator } from '@/components/auth/session-validator'
-import { getLowStockCountAction } from '@/lib/actions/productActions'
-import { LayoutDashboard, ShoppingCart, Package } from 'lucide-react'
-import { LogoutButton } from '@/components/auth/logout-button'
-import OpenCashRegisterModal from './OpenCashRegisterModal'
-import CloseCashRegisterModal from './CloseCashRegisterModal'
-import { useAuth } from '@/components/auth/auth-provider'
-import { Button } from '@/components/ui/button'
-import { Clock } from '@/components/ui/clock'
-import { usePathname } from 'next/navigation'
-import { Badge } from '@/components/ui/badge'
-import { useState, useEffect } from 'react'
-import { LOGO } from '@/settings'
-import Image from 'next/image'
-import Link from 'next/link'
+import { openCheckout, closeCheckout } from '@/lib/actions/cashRegisterActions';
+import { useCashRegister } from '@/components/checkout/CashRegisterContext';
+import { getSettingsByNameAction } from '@/lib/actions/settingActions';
+import { SessionValidator } from '@/components/auth/session-validator';
+import { getLowStockCountAction } from '@/lib/actions/productActions';
+import { LayoutDashboard, ShoppingCart, Package } from 'lucide-react';
+import { LogoutButton } from '@/components/auth/logout-button';
+import CloseCashRegisterModal from './CloseCashRegisterModal';
+import OpenCashRegisterModal from './OpenCashRegisterModal';
+import { useAuth } from '@/components/auth/auth-provider';
+import { Button } from '@/components/ui/button';
+import { Clock } from '@/components/ui/clock';
+import { usePathname } from 'next/navigation';
+import { Badge } from '@/components/ui/badge';
+import { useState, useEffect } from 'react';
+import { LOGO } from '@/settings';
+import Image from 'next/image';
+import Link from 'next/link';
 
 interface DashboardLayoutProps {
   children: React.ReactNode
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
-  const pathname = usePathname()
-  const { permissions } = useAuth()
+  const pathname = usePathname();
+  const { permissions } = useAuth();
 
-  const [lowStockCount, setLowStockCount] = useState(0)
+  const [lowStockCount, setLowStockCount] = useState(0);
   const { user } = useAuth();
   const [isOpenModal, setIsOpenModal] = useState(false);
   const [loadingOpen, setLoadingOpen] = useState(false);
   const { cashRegister, setCashRegister } = useCashRegister();
   const [isCloseModal, setIsCloseModal] = useState(false);
+  const [businessSetting, setBusinessSetting] = useState<any>(null);
 
   useEffect(() => {
     const fetchLowStockCount = async () => {
-      const lowStockCount = await getLowStockCountAction()
-      setLowStockCount(lowStockCount)
+      const [lowStockCount, businessSetting] = await Promise.all([
+        getLowStockCountAction(),
+        getSettingsByNameAction('business_setting')
+      ]);
+      setLowStockCount(lowStockCount);
+      setBusinessSetting(businessSetting)
     }
 
     fetchLowStockCount()
@@ -184,8 +190,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         {/* Top Bar */}
         <header className="h-16 bg-white border-b shadow-sm flex items-center justify-between px-6">
           <div className="flex items-center space-x-3">
-            <Image src={LOGO} alt="POS Icon" width={25} height={25} />
-            <h1 className="text-xl font-semibold text-orange-500">Biller</h1>
+            <Image src={businessSetting?.values?.logo ? businessSetting?.values?.logo : LOGO} alt="POS Icon" width={25} height={25} />
+            <h1 className="text-xl font-semibold text-orange-500">{businessSetting?.values?.name} - Biller</h1>
           </div>
           <div className="flex items-center space-x-4 text-gray-600">
             {!cashRegister ? (

@@ -55,11 +55,11 @@ export default function SettingsPage() {
     try {
       setLoading(true);
       const result = await getSettingsAction();
-      if (result.success && result.data) {
-        setSettings(Array.isArray(result.data) ? result.data : [result.data]);
+      if (result) {
+        setSettings(Array.isArray(result) ? result : [result]);
         setError(null);
       } else {
-        setError(result.error || "Error al cargar configuraciones");
+        setError("Error al cargar configuraciones");
       }
     } catch (error) {
       setError("Error al cargar configuraciones");
@@ -127,7 +127,7 @@ export default function SettingsPage() {
         ? await updateSettingsAction(editingSettings.id, data)
         : await createSettingsAction(data);
 
-      if (result.success) {
+      if (result) {
         toast({
           title: "Éxito",
           description: editingSettings ? "Configuración actualizada" : "Configuración creada",
@@ -137,7 +137,7 @@ export default function SettingsPage() {
       } else {
         toast({
           title: "Error",
-          description: result.error || "Error al guardar la configuración",
+          description: "Error al guardar la configuración",
           variant: "destructive"
         });
       }

@@ -5,6 +5,11 @@ import { Roboto } from 'next/font/google';
 import type { Metadata } from "next";
 import "./globals.css";
 
+export const metadata: Metadata = {
+  title: 'Biller - Sistema de Punto de Venta',
+  description: 'Gestiona tu negocio de manera eficiente con nuestro sistema integral de ventas, inventario y administración. Diseñado para ser fácil de usar y potente.',
+};
+
 // Configure Roboto font
 const roboto = Roboto({
   weight: ['300', '400', '500', '700'], // Specify the weights you need

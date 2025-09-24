@@ -12,14 +12,10 @@ import { settingsController } from '@/lib/controllers/settings.controller';
 export async function getSettingsAction() {
   try {
     const result = await settingsController.getAll();
-    return result;
+    return Array.isArray(result) ? result : [];
   } catch (error) {
     console.error('Error in getSettingsAction:', error);
-    return {
-      success: false,
-      error: 'Failed to fetch settings',
-      data: []
-    };
+    return [];
   }
 }
 
@@ -32,11 +28,7 @@ export async function getSettingsByIdAction(id: string) {
     return result;
   } catch (error) {
     console.error('Error in getSettingsByIdAction:', error);
-    return {
-      success: false,
-      error: 'Failed to fetch settings',
-      data: null
-    };
+    return null;
   }
 }
 
@@ -50,11 +42,7 @@ export async function getSettingsByNameAction(name: string) {
     const result = await settingsController.getByName(name);
     return result;
   } catch (error) {
-    return {
-      success: false,
-      error: 'Failed to fetch settings',
-      data: null
-    };
+    return null;
   }
 }
 
@@ -67,10 +55,7 @@ export async function createSettingsAction(data: CreateSettingsData) {
     return result;
   } catch (error) {
     console.error('Error in createSettingsAction:', error);
-    return {
-      success: false,
-      error: 'Failed to create settings'
-    };
+    return null;
   }
 }
 
@@ -83,10 +68,7 @@ export async function updateSettingsAction(id: string, data: UpdateSettingsData)
     return result;
   } catch (error) {
     console.error('Error in updateSettingsAction:', error);
-    return {
-      success: false,
-      error: 'Failed to update settings'
-    };
+    return null;
   }
 }
 
@@ -98,23 +80,17 @@ export async function updateSettingsByNameAction(name: string, values: any) {
     // First, get the settings by name to get the ID
     const existingSettings = await settingsController.getByName(name);
 
-    if (!existingSettings.success || !existingSettings.data) {
-      return {
-        success: false,
-        error: 'Settings not found'
-      };
+    if (!existingSettings) {
+      return null;
     }
 
     // Check if data is an array or single object
-    const settings = Array.isArray(existingSettings.data)
-      ? existingSettings.data[0]
-      : existingSettings.data;
+    const settings = Array.isArray(existingSettings)
+      ? existingSettings[0]
+      : existingSettings;
 
     if (!settings) {
-      return {
-        success: false,
-        error: 'Settings not found'
-      };
+      return null;
     }
 
     // Update using the ID
@@ -122,9 +98,6 @@ export async function updateSettingsByNameAction(name: string, values: any) {
     return result;
   } catch (error) {
     console.error('Error in updateSettingsByNameAction:', error);
-    return {
-      success: false,
-      error: 'Failed to update settings'
-    };
+    return null;
   }
 }
