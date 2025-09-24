@@ -44,11 +44,12 @@ export async function getSettingsByIdAction(id: string) {
  * Get settings by name
  */
 export async function getSettingsByNameAction(name: string) {
+  console.log('🔍 getSettingsByNameAction: Looking for setting with name:', name);
+  
   try {
     const result = await settingsController.getByName(name);
     return result;
   } catch (error) {
-    console.error('Error in getSettingsByNameAction:', error);
     return {
       success: false,
       error: 'Failed to fetch settings',

@@ -47,9 +47,10 @@ export class SettingsDatasource extends BaseDatasource<'settings'> {
   }
 
   async getByName(name: string): Promise<Settings | null> {
-    return await this.model.findUnique({
+    const result = await this.model.findUnique({
       where: { name },
     });
+    return result;
   }
 
   async getAll(): Promise<Settings[]> {

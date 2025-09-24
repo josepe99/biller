@@ -111,7 +111,6 @@ export class SettingsController extends BaseController<SettingsDatasource> {
         data: settings 
       };
     } catch (error) {
-      console.error('Error fetching settings by name:', error);
       return { 
         success: false, 
         error: 'Failed to fetch settings' 
