@@ -95,6 +95,11 @@ export function SettingsTableSection({
                       {Array.isArray(setting.values) ? 'array' : typeof setting.values}
                     </Badge>
                   </div>
+                  {setting.description && (
+                    <p className="text-sm text-muted-foreground mb-2">
+                      {setting.description}
+                    </p>
+                  )}
                   <p className="text-sm text-muted-foreground">
                     Creado: {new Date(setting.createdAt).toLocaleDateString('es-PY')}
                   </p>

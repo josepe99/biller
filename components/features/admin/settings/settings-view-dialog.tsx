@@ -30,6 +30,10 @@ export function SettingsViewDialog({
             <Input value={settings.name} disabled />
           </div>
           <div>
+            <Label>Descripción</Label>
+            <Input value={settings.description || 'Sin descripción'} disabled />
+          </div>
+          <div>
             <Label>Valores (JSON)</Label>
             <Textarea
               value={JSON.stringify(settings.values, null, 2)}

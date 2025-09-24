@@ -31,6 +31,7 @@ export class SettingsController extends BaseController<SettingsDatasource> {
 
       const settings = await this.datasource.create({
         name: data.name.trim(),
+        description: data.description,
         values: data.values,
       });
 

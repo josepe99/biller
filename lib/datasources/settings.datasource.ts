@@ -3,11 +3,13 @@ import { BaseDatasource } from './base.datasource';
 
 export interface CreateSettingsData {
   name: string;
+  description?: string;
   values: any; // JSON data
 }
 
 export interface UpdateSettingsData {
   name?: string;
+  description?: string;
   values?: any; // JSON data
 }
 
@@ -20,6 +22,7 @@ export class SettingsDatasource extends BaseDatasource<'settings'> {
     return await this.model.create({
       data: {
         name: data.name,
+        description: data.description,
         values: data.values,
       },
     });
@@ -30,6 +33,7 @@ export class SettingsDatasource extends BaseDatasource<'settings'> {
       where: { id },
       data: {
         ...(data.name && { name: data.name }),
+        ...(data.description !== undefined && { description: data.description }),
         ...(data.values !== undefined && { values: data.values }),
         updatedAt: new Date(),
       },

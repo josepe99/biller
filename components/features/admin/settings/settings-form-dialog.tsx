@@ -14,11 +14,12 @@ interface SettingsFormDialogProps {
   isOpen: boolean;
   onClose: () => void;
   editingSettings: Settings | null;
-  onSubmit: (data: { name: string; values: any }) => Promise<void>;
+  onSubmit: (data: { name: string; description?: string; values: any }) => Promise<void>;
 }
 
 interface FormData {
   name: string;
+  description: string;
   values: string; // JSON as string for editing
 }
 
@@ -28,7 +29,7 @@ export function SettingsFormDialog({
   editingSettings,
   onSubmit
 }: SettingsFormDialogProps) {
-  const [formData, setFormData] = useState<FormData>({ name: '', values: '' });
+  const [formData, setFormData] = useState<FormData>({ name: '', description: '', values: '' });
   const [saving, setSaving] = useState(false);
   const [jsonError, setJsonError] = useState<string>('');
 
@@ -38,11 +39,13 @@ export function SettingsFormDialog({
       if (editingSettings) {
         setFormData({
           name: editingSettings.name,
+          description: editingSettings.description || '',
           values: JSON.stringify(editingSettings.values, null, 2)
         });
       } else {
         setFormData({
           name: '',
+          description: '',
           values: '{\n  \n}'
         });
       }
@@ -98,6 +101,7 @@ export function SettingsFormDialog({
       setSaving(true);
       await onSubmit({
         name: formData.name.trim(),
+        description: formData.description.trim() || undefined,
         values: validation.parsed
       });
     } catch (error) {
@@ -131,6 +135,17 @@ export function SettingsFormDialog({
               value={formData.name}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
               placeholder="Ej: theme_config, payment_settings"
+              disabled={saving}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="description">Descripción (opcional)</Label>
+            <Input
+              id="description"
+              value={formData.description}
+              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+              placeholder="Describe el propósito de esta configuración"
               disabled={saving}
             />
           </div>

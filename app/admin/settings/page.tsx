@@ -120,7 +120,7 @@ export default function SettingsPage() {
     setIsViewDialogOpen(true);
   };
 
-  const handleSubmitSettings = async (data: { name: string; values: any }) => {
+  const handleSubmitSettings = async (data: { name: string; description?: string; values: any }) => {
     setError(null);
     try {
       const result = editingSettings
