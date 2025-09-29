@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import DashboardLayout from "@/components/layout/dashboard-layout";
@@ -49,7 +49,7 @@ function mapCustomersResponse(data: unknown): CustomerListItem[] {
   }));
 }
 
-export default function CustomersPage() {
+function CustomersPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialQuery = searchParams?.get("q") ?? "";
@@ -245,6 +245,10 @@ export default function CustomersPage() {
   );
 }
 
-
-
-
+export default function CustomersPage() {
+  return (
+    <Suspense fallback={<div className="p-6">Cargando clientes...</div>}>
+      <CustomersPageContent />
+    </Suspense>
+  );
+}
