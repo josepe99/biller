@@ -391,12 +391,13 @@ model Transaction {
   deletedAt        DateTime?
 
   // Relaciones
-  user           User?         @relation("TransactionUser", fields: [userId], references: [id])
-  checkout       Checkout?     @relation("TransactionCheckout", fields: [checkoutId], references: [id])
-  checkoutSource Checkout?     @relation("TransactionCheckoutSource", fields: [checkoutSourceId], references: [id])
-  checkoutTarget Checkout?     @relation("TransactionCheckoutTarget", fields: [checkoutTargetId], references: [id])
-  cashRegister   CashRegister? @relation("TransactionCashRegister", fields: [cashRegisterId], references: [id])
-  sale           Sale?         @relation(fields: [saleId], references: [id])
+  user              User?         @relation("TransactionUser", fields: [userId], references: [id])
+  checkout          Checkout?     @relation("TransactionCheckout", fields: [checkoutId], references: [id])
+  checkoutSource    Checkout?     @relation("TransactionCheckoutSource", fields: [checkoutSourceId], references: [id])
+  checkoutTarget    Checkout?     @relation("TransactionCheckoutTarget", fields: [checkoutTargetId], references: [id])
+  cashRegister      CashRegister? @relation("TransactionCashRegister", fields: [cashRegisterId], references: [id])
+  sale              Sale?         @relation(fields: [saleId], references: [id])
+  voucherIdentifier String? // Identificador de comprobante para pagos no efectivos
 
   @@index([userId])
   @@index([checkoutId])

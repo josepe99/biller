@@ -20,6 +20,7 @@ const PAYMENT_METHODS = [
 interface Payment {
   method: string;
   amount: number;
+  voucherIdentifier?: string; // Identificador de comprobante para pagos no efectivos
 }
 
 interface PaymentMethodsDialogProps {
@@ -67,7 +68,8 @@ export function PaymentMethodsDialog({
     return Number(str.replace(/\./g, '').replace(',', '.')) || 0;
   }
   // Update payment method or amount
-  const updatePayment = (idx: number, field: 'method' | 'amount', value: any) => {
+  type PaymentField = 'method' | 'amount' | 'voucherIdentifier';
+  const updatePayment = (idx: number, field: PaymentField, value: any) => {
     setPayments(payments.map((p, i) => i === idx ? { ...p, [field]: value } : p));
   };
   const totalPaid = payments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
@@ -118,22 +120,29 @@ export function PaymentMethodsDialog({
                 inputMode="numeric"
                 min={0}
                 value={
-                  // Remove 'Gs' or any non-digit, non-dot, non-comma prefix from formatted value
                   formatParaguayanCurrency(Number.isNaN(p.amount) ? 0 : p.amount).replace(/^\D+/, '')
                 }
                 onChange={e => {
-                  // Remove all non-digit, non-dot, non-comma chars
                   const raw = e.target.value.replace(/[^\d.,]/g, '');
                   updatePayment(idx, 'amount', parseParaguayanNumber(raw));
                 }}
                 onBlur={e => {
-                  // Format on blur
                   const val = parseParaguayanNumber(e.target.value);
                   updatePayment(idx, 'amount', val);
                 }}
                 className="w-28"
                 placeholder="Monto"
               />
+              {/* Campo identificador de comprobante si no es efectivo */}
+              {p.method !== 'CASH' && (
+                <Input
+                  type="text"
+                  value={p.voucherIdentifier || ''}
+                  onChange={e => updatePayment(idx, 'voucherIdentifier', e.target.value)}
+                  className="w-40"
+                  placeholder="N° comprobante / referencia"
+                />
+              )}
               {payments.length > 1 && (
                 <Button variant="ghost" size="icon" onClick={() => removePayment(idx)}>
                   <X className="w-4 h-4" />
