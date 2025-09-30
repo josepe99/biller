@@ -1,9 +1,10 @@
 "use client";
 
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Download } from 'lucide-react';
 import { useState } from "react";
 import Link from "next/link";
+import { generateCashRegisterDetailPDF } from '@/lib/actions/pdf.actions';
 
 type CashRegister = {
   id: string;
@@ -48,6 +49,7 @@ export default function CashRegisterForm({ cashRegister, editableFields }: CashR
   };
 
   const [form, setForm] = useState(initialForm);
+  const [pdfLoading, setPdfLoading] = useState(false);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
     const { name, value } = e.target;
@@ -64,9 +66,33 @@ export default function CashRegisterForm({ cashRegister, editableFields }: CashR
     setForm(initialForm);
   }
 
+  const handleDownloadPDF = async () => {
+    setPdfLoading(true);
+    try {
+      const result = await generateCashRegisterDetailPDF(cashRegister.id);
+      if (!result || !result.dataUrl) {
+        throw new Error('No se recibio el PDF');
+      }
+
+      const { dataUrl, fileName } = result;
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = fileName;
+      link.rel = 'noopener';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Error al generar el PDF de la caja:', error);
+      alert('Error al generar el PDF de la caja');
+    } finally {
+      setPdfLoading(false);
+    }
+  };
+
   return (
     <div className="bg-white shadow-lg rounded-xl p-8">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <Link href="/cash-registers">
             <Button variant="outline" size="icon" className="border-orange-200 text-orange-600 hover:bg-orange-50">
@@ -76,6 +102,22 @@ export default function CashRegisterForm({ cashRegister, editableFields }: CashR
           <span className="font-semibold text-lg text-orange-500">
             {cashRegister.checkout?.name}
           </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDownloadPDF}
+            disabled={pdfLoading}
+          >
+            {pdfLoading ? (
+              'Generando PDF...'
+            ) : (
+              <span className="flex items-center gap-2">
+                <Download className="h-4 w-4" /> Descargar PDF
+              </span>
+            )}
+          </Button>
         </div>
       </div>
       <form className="grid grid-cols-1 md:grid-cols-2 gap-6" onSubmit={handleSave}>

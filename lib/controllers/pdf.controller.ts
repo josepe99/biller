@@ -1,5 +1,6 @@
 import PDFDocument from "pdfkit/js/pdfkit.standalone.js";
 import { SaleController } from "@/lib/controllers/sale.controller";
+import { CashRegisterController } from "@/lib/controllers/cashRegister.controller";
 import type {
   InvoiceFilters,
   InvoiceListItem,
@@ -27,6 +28,7 @@ type SaleItemWithProduct = SaleDetailResult extends { saleItems: infer Items }
     ? Item
     : never
   : never;
+type CashRegisterResult = Awaited<ReturnType<CashRegisterController["getById"]>>;
 
 const STATUS_LABELS: Record<InvoiceStatus, string> = {
   COMPLETED: "Completada",
@@ -116,8 +118,32 @@ interface InvoiceDetail {
   items: InvoiceDetailItem[];
 }
 
+interface CashRegisterBreakdownItem {
+  method: string;
+  expected: number;
+  missing: number;
+  actual: number;
+}
+
+interface CashRegisterDetail {
+  id: string;
+  status: string;
+  openedBy: string | null;
+  openedAt: string | null;
+  closedBy: string | null;
+  closedAt: string | null;
+  checkoutName: string | null;
+  initialCash: number;
+  expectedTotal: number;
+  missingTotal: number;
+  actualTotal: number;
+  openingNotes: string | null;
+  closingNotes: string | null;
+  breakdown: CashRegisterBreakdownItem[];
+}
 export class PDFController {
   private readonly saleController = new SaleController();
+  private readonly cashRegisterController = new CashRegisterController();
 
   async generateInvoiceList(params: GenerateInvoiceListParams = {}) {
     const filters = { ...(params.filters ?? {}) };
@@ -166,6 +192,21 @@ export class PDFController {
     };
   }
 
+
+  async generateCashRegisterDetail(cashRegisterId: string) {
+    const cashRegister = await this.cashRegisterController.getById(cashRegisterId);
+    if (!cashRegister) {
+      throw new Error(`No se encontro la caja ${cashRegisterId}`);
+    }
+
+    const detail = this.mapCashRegisterToDetail(cashRegister);
+    const pdfBuffer = await this.buildCashRegisterDetailPDF(detail);
+
+    return {
+      cashRegister: detail,
+      pdfBuffer,
+    };
+  }
   private mapSaleToInvoice(sale: SaleWithRelations): InvoiceListItem {
     const cashier = sale.user
       ? {
@@ -213,6 +254,7 @@ export class PDFController {
       checkout,
     };
   }
+
 
   private mapSaleToInvoiceDetail(sale: SaleDetailResult): InvoiceDetail {
     const createdAt =
@@ -344,7 +386,42 @@ export class PDFController {
     return bufferPromise;
   }
 
-  private async streamToBuffer(doc: PDFDocument): Promise<Buffer> {
+
+  private async buildCashRegisterDetailPDF(detail: CashRegisterDetail): Promise<Buffer> {
+    const doc = new PDFDocument({ size: "A4", margin: 40 });
+    const bufferPromise = this.streamToBuffer(doc);
+
+    this.drawCashRegisterHeader(doc, detail);
+    this.drawCashRegisterSummary(doc, detail);
+    this.drawCashRegisterBreakdown(doc, detail.breakdown);
+
+    if (detail.openingNotes && detail.openingNotes.trim().length > 0) {
+      doc.moveDown();
+      doc.font("Helvetica-Bold").fontSize(12).text("Notas de apertura");
+      doc.moveDown(0.25);
+      doc
+        .font("Helvetica")
+        .fontSize(10)
+        .text(detail.openingNotes, {
+          width: doc.page.width - doc.page.margins.left - doc.page.margins.right,
+        });
+    }
+
+    if (detail.closingNotes && detail.closingNotes.trim().length > 0) {
+      doc.moveDown();
+      doc.font("Helvetica-Bold").fontSize(12).text("Notas de cierre");
+      doc.moveDown(0.25);
+      doc
+        .font("Helvetica")
+        .fontSize(10)
+        .text(detail.closingNotes, {
+          width: doc.page.width - doc.page.margins.left - doc.page.margins.right,
+        });
+    }
+
+    doc.end();
+    return bufferPromise;
+  }  private async streamToBuffer(doc: PDFDocument): Promise<Buffer> {
     return await new Promise((resolve, reject) => {
       const chunks: Buffer[] = [];
       doc.on("data", (chunk) => {
@@ -569,7 +646,82 @@ export class PDFController {
     return Math.max(...heights, 0);
   }
 
-  private drawInvoiceDetailHeader(doc: PDFDocument, invoice: InvoiceDetail) {
+
+  private drawCashRegisterHeader(doc: PDFDocument, detail: CashRegisterDetail) {
+    doc.font("Helvetica-Bold").fontSize(18).text("Reporte de caja", {
+      align: "center",
+    });
+    doc.moveDown(0.75);
+
+    doc.font("Helvetica").fontSize(10);
+    doc.text(`Caja: ${detail.checkoutName ?? "-"}`);
+    doc.text(`Identificador: ${detail.id}`);
+    doc.text(`Estado: ${detail.status || "-"}`);
+    doc.text(`Apertura: ${this.formatDateTime(detail.openedAt)}`);
+    doc.text(`Cierre: ${this.formatDateTime(detail.closedAt)}`);
+    doc.text(`Abierta por: ${detail.openedBy ?? "-"}`);
+    doc.text(`Cerrada por: ${detail.closedBy ?? "-"}`);
+    doc.moveDown();
+  }
+
+  private drawCashRegisterSummary(doc: PDFDocument, detail: CashRegisterDetail) {
+    doc.font("Helvetica-Bold").fontSize(12).text("Resumen de montos");
+    doc.moveDown(0.25);
+    doc.font("Helvetica").fontSize(10);
+    doc.text(`Monto inicial: ${this.formatCurrency(detail.initialCash)}`);
+    doc.text(`Total esperado: ${this.formatCurrency(detail.expectedTotal)}`);
+    doc.text(`Total faltante: ${this.formatCurrency(detail.missingTotal)}`);
+    doc.text(`Total real: ${this.formatCurrency(detail.actualTotal)}`);
+    doc.moveDown();
+  }
+
+  private drawCashRegisterBreakdown(
+    doc: PDFDocument,
+    breakdown: CashRegisterBreakdownItem[],
+  ) {
+    doc.font("Helvetica-Bold").fontSize(12).text("Detalle por metodo");
+    doc.moveDown(0.5);
+    doc.font("Helvetica").fontSize(10);
+
+    if (breakdown.length === 0) {
+      doc.text("No hay datos de metodos de pago para esta caja.");
+      doc.moveDown();
+      return;
+    }
+
+    const columns: TableColumn<CashRegisterBreakdownItem>[] = [
+      {
+        title: "Metodo",
+        width: 150,
+        getValue: (item) => item.method,
+      },
+      {
+        title: "Esperado",
+        width: 110,
+        align: "right",
+        getValue: (item) => this.formatCurrency(item.expected),
+      },
+      {
+        title: "Faltante",
+        width: 110,
+        align: "right",
+        getValue: (item) => this.formatCurrency(item.missing),
+      },
+      {
+        title: "Real",
+        width: 110,
+        align: "right",
+        getValue: (item) => this.formatCurrency(item.actual),
+      },
+    ];
+
+    const columnPositions = this.getColumnPositions(doc, columns);
+    this.drawTableHeader(doc, columns, columnPositions);
+    breakdown.forEach((item) => {
+      this.drawTableRow(doc, columns, columnPositions, item);
+    });
+    doc.moveDown();
+  }  private drawInvoiceDetailHeader(doc: PDFDocument, invoice: InvoiceDetail) {
     doc.font("Helvetica-Bold").fontSize(18).text("Factura de venta", {
       align: "center",
     });
@@ -659,6 +811,154 @@ export class PDFController {
     });
   }
 
+
+  private mapCashRegisterToDetail(cashRegister: CashRegisterResult): CashRegisterDetail {
+    const record = cashRegister as unknown as {
+      id?: string;
+      status?: string;
+      openedBy?: { name?: string | null } | null;
+      openedById?: string | null;
+      openedAt?: unknown;
+      closedBy?: { name?: string | null } | null;
+      closedById?: string | null;
+      closedAt?: unknown;
+      checkout?: { name?: string | null } | null;
+      checkoutId?: string | null;
+      initialCash?: unknown;
+      expectedMoney?: unknown;
+      missingMoney?: unknown;
+      openingNotes?: unknown;
+      closingNotes?: unknown;
+    };
+
+    const expectedEntries = this.normalizeMoneyEntries(record?.expectedMoney);
+    const missingEntries = this.normalizeMoneyEntries(record?.missingMoney);
+    const missingMap = new Map(missingEntries.map((entry) => [entry.key, entry.amount] as const));
+    const seen = new Set<string>();
+    const breakdown: CashRegisterBreakdownItem[] = [];
+
+    expectedEntries.forEach((entry) => {
+      const missing = missingMap.get(entry.key) ?? 0;
+      seen.add(entry.key);
+      breakdown.push({
+        method: entry.label,
+        expected: entry.amount,
+        missing,
+        actual: entry.amount - missing,
+      });
+    });
+
+    missingEntries.forEach((entry) => {
+      if (!seen.has(entry.key)) {
+        const missing = entry.amount;
+        breakdown.push({
+          method: entry.label,
+          expected: 0,
+          missing,
+          actual: -missing,
+        });
+      }
+    });
+
+    const expectedTotal = breakdown.reduce((sum, item) => sum + item.expected, 0);
+    const missingTotal = breakdown.reduce((sum, item) => sum + item.missing, 0);
+    const actualTotal = breakdown.reduce((sum, item) => sum + item.actual, 0);
+
+    return {
+      id: this.normalizeString(record?.id) ?? "",
+      status: this.normalizeString(record?.status) ?? "",
+      openedBy:
+        this.normalizeString(record?.openedBy?.name) ??
+        this.normalizeString(record?.openedById),
+      openedAt: this.normalizeDateValue(record?.openedAt),
+      closedBy:
+        this.normalizeString(record?.closedBy?.name) ??
+        this.normalizeString(record?.closedById),
+      closedAt: this.normalizeDateValue(record?.closedAt),
+      checkoutName: this.normalizeString(record?.checkout?.name) ?? null,
+      initialCash: this.toFiniteNumber(record?.initialCash),
+      expectedTotal,
+      missingTotal,
+      actualTotal,
+      openingNotes: this.normalizeString(record?.openingNotes),
+      closingNotes: this.normalizeString(record?.closingNotes),
+      breakdown,
+    };
+  }
+
+  private normalizeMoneyEntries(value: unknown): Array<{ key: string; label: string; amount: number }> {
+    if (!value || typeof value !== "object") {
+      return [];
+    }
+
+    if (Array.isArray(value)) {
+      return value
+        .map((entry, index) => {
+          if (!entry || typeof entry !== "object") {
+            return null;
+          }
+          const record = entry as { method?: unknown; amount?: unknown };
+          const keySource = this.normalizeString(record.method) ?? `metodo_${index}`;
+          return {
+            key: keySource,
+            label: this.formatMethodLabel(keySource),
+            amount: this.toFiniteNumber(record.amount),
+          };
+        })
+        .filter((entry): entry is { key: string; label: string; amount: number } => Boolean(entry));
+    }
+
+    return Object.entries(value as Record<string, unknown>).map(([key, amount]) => ({
+      key,
+      label: this.formatMethodLabel(key),
+      amount: this.toFiniteNumber(amount),
+    }));
+  }
+
+  private formatMethodLabel(method: string): string {
+    if (!method) {
+      return "Metodo";
+    }
+
+    const spaced = method
+      .replace(/([a-z])([A-Z])/g, "$1 $2")
+      .replace(/[_-]+/g, " ")
+      .toLowerCase();
+
+    return spaced
+      .split(" ")
+      .filter(Boolean)
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ") || method;
+  }
+
+  private normalizeDateValue(value: unknown): string | null {
+    if (!value) {
+      return null;
+    }
+
+    const date = value instanceof Date ? value : new Date(String(value));
+    if (Number.isNaN(date.getTime())) {
+      return null;
+    }
+
+    return date.toISOString();
+  }
+
+  private normalizeString(value: unknown): string | null {
+    if (typeof value !== "string") {
+      return null;
+    }
+
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? trimmed : null;
+  }
+
+  private toFiniteNumber(value: unknown): number {
+    const parsed = typeof value === "number" ? value : Number(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
   private calculateTotal(invoices: InvoiceListItem[]): number {
     return invoices.reduce(
       (sum, invoice) => sum + Number(invoice.total ?? 0),
@@ -741,6 +1041,15 @@ export class PDFController {
 
 export const pdfController = new PDFController();
 export default pdfController;
+
+
+
+
+
+
+
+
+
 
 
 

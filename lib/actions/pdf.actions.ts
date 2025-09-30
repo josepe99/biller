@@ -76,3 +76,25 @@ export async function generateInvoiceDetailPDF(
     metadata: { invoice },
   };
 }
+
+export async function generateCashRegisterDetailPDF(
+  cashRegisterId: string,
+): Promise<PDFDownloadResult> {
+  const { pdfBuffer, cashRegister } = await pdfController.generateCashRegisterDetail(
+    cashRegisterId,
+  );
+
+  const base64 = pdfBuffer.toString("base64");
+  const fileName = buildFileName("caja", cashRegisterId);
+  const dataUrl = `data:application/pdf;base64,${base64}`;
+
+  return {
+    fileName,
+    mimeType: "application/pdf",
+    base64,
+    dataUrl,
+    size: pdfBuffer.length,
+    metadata: { cashRegister },
+  };
+}
+
