@@ -43,6 +43,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { INVOICE_STATUS_OPTIONS } from "@/lib/types/invoices";
 import { useAuth } from "@/components/auth/auth-provider";
 import { Button } from "@/components/ui/button";
+import { generateInvoiceListPDF } from "@/lib/actions/pdf.actions";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -110,6 +111,7 @@ function formatDate(value: string) {
 export default function InvoiceManagement({
   standalone,
 }: InvoiceManagementProps) {
+  const [pdfLoading, setPdfLoading] = useState(false);
   const { permissions, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   const canRead = permissions.includes("sales:manage");
@@ -388,6 +390,36 @@ export default function InvoiceManagement({
     );
   }
 
+  // Handler para descargar PDF con los datos actuales
+  const handleDownloadPDF = async () => {
+    setPdfLoading(true);
+    try {
+      const result = await generateInvoiceListPDF({
+        filters,
+        invoices,
+        totalCount,
+        page,
+        pageRange,
+      });
+
+      if (!result || !result.dataUrl) {
+        throw new Error("No se recibio el PDF");
+      }
+
+      const link = document.createElement("a");
+      link.href = result.dataUrl;
+      link.download = result.fileName;
+      link.rel = "noopener";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error("Error al generar el PDF", err);
+      alert("Error al generar el PDF");
+    }
+    setPdfLoading(false);
+  };
+
   return (
     <Card className="h-full flex flex-col">
       <CardHeader className="flex flex-col gap-4">
@@ -411,6 +443,14 @@ export default function InvoiceManagement({
             >
               <RefreshCcw className="mr-2 h-4 w-4" />
               Actualizar
+            </Button>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={handleDownloadPDF}
+              disabled={pdfLoading || loading || invoices.length === 0}
+            >
+              {pdfLoading ? "Generando PDF..." : "Descargar PDF"}
             </Button>
           </div>
         </div>
@@ -569,3 +609,6 @@ export default function InvoiceManagement({
     </Card>
   );
 }
+
+
+
