@@ -1,20 +1,22 @@
 "use client";
 
-import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
-import { getSaleBySaleNumber } from '@/lib/actions/saleActions';
-import { getSaleNavigationLink } from '@/lib/utils/sale-navigation';
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { getSaleBySaleNumber } from "@/lib/actions/saleActions";
+import { generateInvoiceDetailPDF } from "@/lib/actions/pdf.actions";
 import {
   SaleDetailHeader,
   SaleInvoiceHeader,
   SaleDetails,
   SaleSummary,
   SaleItemsTable,
-  SaleNavigation
-} from '@/components/features/sales';
-import { SaleEditModal } from '@/components/features/sales/SaleEditModal';
-import { SaleDetailWrapper } from '@/components/auth/sale-detail-wrapper';
-import { Card, CardContent } from '@/components/ui/card';
+  SaleNavigation,
+} from "@/components/features/sales";
+import { SaleEditModal } from "@/components/features/sales/SaleEditModal";
+import { SaleDetailWrapper } from "@/components/auth/sale-detail-wrapper";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Download } from "lucide-react";
 
 interface Sale {
   id: string;
@@ -37,10 +39,16 @@ interface SaleDetailClientProps {
   nextLink?: string | null;
 }
 
-export function SaleDetailClient({ initialSale, saleNumber, beforeLink, nextLink }: SaleDetailClientProps) {
+export function SaleDetailClient({
+  initialSale,
+  saleNumber,
+  beforeLink,
+  nextLink,
+}: SaleDetailClientProps) {
   const router = useRouter();
   const [sale, setSale] = useState<Sale>(initialSale);
   const [isLoading, setIsLoading] = useState(false);
+  const [pdfLoading, setPdfLoading] = useState(false);
 
   const handleUpdate = async () => {
     setIsLoading(true);
@@ -49,12 +57,35 @@ export function SaleDetailClient({ initialSale, saleNumber, beforeLink, nextLink
       if (updatedSale) {
         setSale(updatedSale);
       }
-      // Refresh the page to ensure all data is up to date
       router.refresh();
     } catch (error) {
-      console.error('Error refreshing sale data:', error);
+      console.error("Error refreshing sale data:", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    setPdfLoading(true);
+    try {
+      const result = await generateInvoiceDetailPDF(sale.saleNumber);
+      if (!result || !result.dataUrl) {
+        throw new Error("No se recibio el PDF");
+      }
+
+      const { dataUrl, fileName } = result;
+      const link = document.createElement("a");
+      link.href = dataUrl;
+      link.download = fileName;
+      link.rel = "noopener";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("Error al generar el PDF de la factura:", error);
+      alert("Error al generar el PDF de la factura");
+    } finally {
+      setPdfLoading(false);
     }
   };
 
@@ -81,14 +112,29 @@ export function SaleDetailClient({ initialSale, saleNumber, beforeLink, nextLink
         <SaleDetailHeader />
 
         <div className="bg-white rounded-lg shadow p-0 md:p-6 border">
-          <div className="flex justify-between items-start mb-4">
-            <div className="flex-1">
+          <div className="flex flex-wrap justify-between items-start gap-3 mb-4">
+            <div className="flex-1 min-w-[220px]">
               <SaleInvoiceHeader
                 saleNumber={sale.saleNumber}
                 createdAt={sale.createdAt}
               />
             </div>
-            <div className="ml-4">
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDownloadPDF}
+                disabled={pdfLoading}
+              >
+                {pdfLoading ? (
+                  "Generando PDF..."
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <Download className="h-4 w-4" />
+                    Descargar PDF
+                  </span>
+                )}
+              </Button>
               <SaleEditModal
                 saleId={sale.id}
                 saleNumber={sale.saleNumber}
@@ -118,10 +164,7 @@ export function SaleDetailClient({ initialSale, saleNumber, beforeLink, nextLink
           <SaleItemsTable items={sale.saleItems} />
         </div>
 
-        <SaleNavigation
-          beforeLink={beforeLink}
-          nextLink={nextLink}
-        />
+        <SaleNavigation beforeLink={beforeLink} nextLink={nextLink} />
       </div>
     </SaleDetailWrapper>
   );

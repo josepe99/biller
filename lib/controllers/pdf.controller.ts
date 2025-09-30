@@ -21,6 +21,12 @@ type GenerateInvoiceListParams = {
 
 type InvoicesQueryResult = Awaited<ReturnType<SaleController["getInvoices"]>>;
 type SaleWithRelations = InvoicesQueryResult["sales"][number];
+type SaleDetailResult = Awaited<ReturnType<SaleController["getBySaleNumber"]>>;
+type SaleItemWithProduct = SaleDetailResult extends { saleItems: infer Items }
+  ? Items extends Array<infer Item>
+    ? Item
+    : never
+  : never;
 
 const STATUS_LABELS: Record<InvoiceStatus, string> = {
   COMPLETED: "Completada",
@@ -34,6 +40,11 @@ const currencyFormatter = new Intl.NumberFormat("es-PY", {
   currency: "PYG",
   minimumFractionDigits: 0,
   maximumFractionDigits: 0,
+});
+
+const quantityFormatter = new Intl.NumberFormat("es-PY", {
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 2,
 });
 
 const dateTimeFormatter = new Intl.DateTimeFormat("es-PY", {
@@ -50,11 +61,11 @@ const dateFormatter = new Intl.DateTimeFormat("es-PY", {
   year: "numeric",
 });
 
-interface TableColumn {
+interface TableColumn<T> {
   title: string;
   width: number;
   align?: "left" | "center" | "right";
-  getValue: (invoice: InvoiceListItem) => string;
+  getValue: (row: T) => string;
 }
 
 interface BuildInvoiceListPDFParams {
@@ -72,6 +83,39 @@ interface DocumentHeaderParams {
   invoices: InvoiceListItem[];
 }
 
+interface InvoiceDetailItem {
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+}
+
+interface InvoiceDetail {
+  saleNumber: string;
+  createdAt: string;
+  status: InvoiceStatus;
+  subtotal: number;
+  tax: number;
+  discount: number;
+  total: number;
+  notes: string | null;
+  cashier: {
+    id: string;
+    name: string;
+    lastname: string | null;
+  };
+  customer: {
+    id: string;
+    name: string | null;
+    ruc: string | null;
+  } | null;
+  checkout: {
+    id: string;
+    name: string | null;
+  } | null;
+  items: InvoiceDetailItem[];
+}
+
 export class PDFController {
   private readonly saleController = new SaleController();
 
@@ -81,7 +125,7 @@ export class PDFController {
     const { sales, totalCount } = await this.saleController.getInvoices(
       filters,
       fetchLimit,
-      0
+      0,
     );
     const invoices = sales.map((sale) => this.mapSaleToInvoice(sale));
 
@@ -103,6 +147,21 @@ export class PDFController {
       totalCount,
       page,
       pageRange,
+      pdfBuffer,
+    };
+  }
+
+  async generateInvoiceDetail(saleNumber: string) {
+    const sale = await this.saleController.getBySaleNumber(saleNumber);
+    if (!sale) {
+      throw new Error(`No se encontro la factura ${saleNumber}`);
+    }
+
+    const invoice = this.mapSaleToInvoiceDetail(sale);
+    const pdfBuffer = await this.buildInvoiceDetailPDF(invoice);
+
+    return {
+      invoice,
       pdfBuffer,
     };
   }
@@ -136,9 +195,7 @@ export class PDFController {
       : null;
 
     const createdAt =
-      sale.createdAt instanceof Date
-        ? sale.createdAt
-        : new Date(sale.createdAt);
+      sale.createdAt instanceof Date ? sale.createdAt : new Date(sale.createdAt);
 
     return {
       id: sale.id,
@@ -157,6 +214,84 @@ export class PDFController {
     };
   }
 
+  private mapSaleToInvoiceDetail(sale: SaleDetailResult): InvoiceDetail {
+    const createdAt =
+      sale?.createdAt instanceof Date
+        ? sale.createdAt
+        : new Date(sale?.createdAt ?? Date.now());
+
+    const cashier = sale?.user
+      ? {
+          id: String(sale.user.id ?? "unknown"),
+          name: sale.user.name ?? "Sin nombre",
+          lastname: sale.user.lastname ?? null,
+        }
+      : {
+          id: "unknown",
+          name: "Sin cajero",
+          lastname: null,
+        };
+
+    const customer = sale?.customer
+      ? {
+          id: String(sale.customer.id ?? "unknown"),
+          name: sale.customer.name ?? null,
+          ruc: sale.customer.ruc ?? null,
+        }
+      : null;
+
+    const checkout = sale?.checkout
+      ? {
+          id: String(sale.checkout.id ?? "unknown"),
+          name: sale.checkout.name ?? null,
+        }
+      : null;
+
+    const items = Array.isArray(sale?.saleItems)
+      ? sale.saleItems.map((item) => this.mapSaleItemToInvoiceDetail(item))
+      : [];
+
+    return {
+      saleNumber: sale?.saleNumber ?? "N/A",
+      createdAt: Number.isNaN(createdAt.getTime())
+        ? new Date(0).toISOString()
+        : createdAt.toISOString(),
+      status: (sale?.status ?? "PENDING") as InvoiceStatus,
+      subtotal: Number(sale?.subtotal ?? 0),
+      tax: Number(sale?.tax ?? 0),
+      discount: Number(sale?.discount ?? 0),
+      total: Number(sale?.total ?? 0),
+      notes: sale?.notes ?? null,
+      cashier,
+      customer,
+      checkout,
+      items,
+    };
+  }
+
+  private mapSaleItemToInvoiceDetail(item: SaleItemWithProduct): InvoiceDetailItem {
+    const data = item as unknown as {
+      quantity?: number;
+      unitPrice?: number;
+      total?: number;
+      product?: { name?: string | null; sku?: string | null };
+    };
+
+    const quantity = Number(data?.quantity ?? 0);
+    const unitPrice = Number(data?.unitPrice ?? 0);
+    const total = Number(data?.total ?? quantity * unitPrice);
+    const name = (data?.product?.name ?? "Producto sin nombre").trim();
+    const skuValue = data?.product?.sku ?? null;
+    const description = `${name}${skuValue ? ` (${skuValue})` : ""}`.trim();
+
+    return {
+      description: description.length > 0 ? description : "Producto",
+      quantity,
+      unitPrice,
+      total,
+    };
+  }
+
   private buildDefaultPageRange(count: number): InvoiceListPageRange {
     if (count === 0) {
       return { from: 0, to: 0 };
@@ -165,7 +300,7 @@ export class PDFController {
   }
 
   private async buildInvoiceListPDF(
-    params: BuildInvoiceListPDFParams
+    params: BuildInvoiceListPDFParams,
   ): Promise<Buffer> {
     const doc = new PDFDocument({ size: "A4", margin: 40 });
     const bufferPromise = this.streamToBuffer(doc);
@@ -184,6 +319,31 @@ export class PDFController {
     return bufferPromise;
   }
 
+  private async buildInvoiceDetailPDF(invoice: InvoiceDetail): Promise<Buffer> {
+    const doc = new PDFDocument({ size: "A4", margin: 40 });
+    const bufferPromise = this.streamToBuffer(doc);
+
+    this.drawInvoiceDetailHeader(doc, invoice);
+    this.drawInvoiceDetailSummary(doc, invoice);
+    this.drawInvoiceItemsTable(doc, invoice.items);
+
+    if (invoice.notes && invoice.notes.trim()) {
+      doc.moveDown();
+      doc.font("Helvetica-Bold").fontSize(12).text("Notas");
+      doc.moveDown(0.25);
+      doc
+        .font("Helvetica")
+        .fontSize(10)
+        .text(invoice.notes, {
+          width:
+            doc.page.width - doc.page.margins.left - doc.page.margins.right,
+        });
+    }
+
+    doc.end();
+    return bufferPromise;
+  }
+
   private async streamToBuffer(doc: PDFDocument): Promise<Buffer> {
     return await new Promise((resolve, reject) => {
       const chunks: Buffer[] = [];
@@ -196,10 +356,9 @@ export class PDFController {
   }
 
   private drawDocumentHeader(doc: PDFDocument, params: DocumentHeaderParams) {
-    doc
-      .font("Helvetica-Bold")
-      .fontSize(18)
-      .text("Reporte de facturas", { align: "center" });
+    doc.font("Helvetica-Bold").fontSize(18).text("Reporte de facturas", {
+      align: "center",
+    });
     doc.moveDown(0.5);
     doc.font("Helvetica").fontSize(10);
 
@@ -207,8 +366,8 @@ export class PDFController {
     doc.text(`Total de facturas: ${params.totalCount}`);
     doc.text(
       `Suma de totales: ${this.formatCurrency(
-        this.calculateTotal(params.invoices)
-      )}`
+        this.calculateTotal(params.invoices),
+      )}`,
     );
     doc.text(`Pagina actual: ${params.page}`);
     doc.text(`Rango visible: ${params.pageRange.from}-${params.pageRange.to}`);
@@ -225,7 +384,10 @@ export class PDFController {
     doc.moveDown();
   }
 
-  private drawInvoiceTable(doc: PDFDocument, invoices: InvoiceListItem[]) {
+  private drawInvoiceTable(
+    doc: PDFDocument,
+    invoices: InvoiceListItem[],
+  ) {
     doc.font("Helvetica-Bold").fontSize(12).text("Detalle de facturas");
     doc.moveDown(0.5);
     doc.font("Helvetica").fontSize(10);
@@ -245,7 +407,7 @@ export class PDFController {
     });
   }
 
-  private getTableColumns(): TableColumn[] {
+  private getTableColumns(): TableColumn<InvoiceListItem>[] {
     return [
       {
         title: "Factura",
@@ -298,9 +460,9 @@ export class PDFController {
     ];
   }
 
-  private getColumnPositions(
+  private getColumnPositions<T>(
     doc: PDFDocument,
-    columns: TableColumn[]
+    columns: TableColumn<T>[],
   ): number[] {
     const positions: number[] = [];
     let currentX = doc.page.margins.left;
@@ -311,10 +473,10 @@ export class PDFController {
     return positions;
   }
 
-  private drawTableHeader(
+  private drawTableHeader<T>(
     doc: PDFDocument,
-    columns: TableColumn[],
-    columnPositions: number[]
+    columns: TableColumn<T>[],
+    columnPositions: number[],
   ) {
     const headerY = doc.y;
     doc.font("Helvetica-Bold").fontSize(10);
@@ -327,12 +489,9 @@ export class PDFController {
       doc.y = headerY;
     });
 
-    const headerHeight = this.measureRowHeight(
-      doc,
-      columns,
-      columnPositions,
-      (column) => column.title
-    );
+    const headerHeight = this.measureRowHeight(doc, columns, columnPositions, (
+      column,
+    ) => column.title);
     const lineY = headerY + headerHeight + 2;
 
     doc.save();
@@ -348,18 +507,19 @@ export class PDFController {
     doc.font("Helvetica").fontSize(10);
   }
 
-  private drawTableRow(
+  private drawTableRow<T>(
     doc: PDFDocument,
-    columns: TableColumn[],
+    columns: TableColumn<T>[],
     columnPositions: number[],
-    invoice: InvoiceListItem
+    row: T,
   ) {
-    const availableHeight = doc.page.height - doc.page.margins.bottom - doc.y;
+    const availableHeight =
+      doc.page.height - doc.page.margins.bottom - doc.y;
     const rowHeight = this.measureRowHeight(
       doc,
       columns,
       columnPositions,
-      (column) => column.getValue(invoice)
+      (column) => column.getValue(row),
     );
 
     if (rowHeight + 6 > availableHeight) {
@@ -370,7 +530,7 @@ export class PDFController {
     const rowTop = doc.y;
 
     columns.forEach((column, index) => {
-      const value = column.getValue(invoice);
+      const value = column.getValue(row);
       doc.text(value, columnPositions[index], rowTop, {
         width: column.width,
         align: column.align ?? "left",
@@ -392,13 +552,13 @@ export class PDFController {
     doc.y = rowBottom + 6;
   }
 
-  private measureRowHeight(
+  private measureRowHeight<T>(
     doc: PDFDocument,
-    columns: TableColumn[],
+    columns: TableColumn<T>[],
     columnPositions: number[],
-    getText: (column: TableColumn) => string
+    getText: (column: TableColumn<T>) => string,
   ): number {
-    const heights = columns.map((column, index) => {
+    const heights = columns.map((column) => {
       const text = getText(column);
       return doc.heightOfString(text, {
         width: column.width,
@@ -409,10 +569,100 @@ export class PDFController {
     return Math.max(...heights, 0);
   }
 
+  private drawInvoiceDetailHeader(doc: PDFDocument, invoice: InvoiceDetail) {
+    doc.font("Helvetica-Bold").fontSize(18).text("Factura de venta", {
+      align: "center",
+    });
+    doc.moveDown(0.75);
+
+    doc.font("Helvetica").fontSize(10);
+    doc.text(`Numero: ${invoice.saleNumber}`);
+    doc.text(`Fecha: ${this.formatDateTime(invoice.createdAt)}`);
+    doc.text(`Estado: ${STATUS_LABELS[invoice.status] ?? invoice.status}`);
+    doc.moveDown();
+
+    doc.font("Helvetica-Bold").fontSize(12).text("Cliente");
+    doc.moveDown(0.25);
+    doc.font("Helvetica").fontSize(10);
+    doc.text(`Nombre: ${invoice.customer?.name ?? "-"}`);
+    doc.text(`RUC: ${invoice.customer?.ruc ?? "-"}`);
+    doc.moveDown();
+
+    doc.font("Helvetica-Bold").fontSize(12).text("Cajero");
+    doc.moveDown(0.25);
+    doc.font("Helvetica").fontSize(10);
+    const lastname = invoice.cashier.lastname
+      ? ` ${invoice.cashier.lastname}`
+      : "";
+    doc.text(`Nombre: ${invoice.cashier.name}${lastname}`);
+    if (invoice.checkout?.name) {
+      doc.text(`Caja: ${invoice.checkout.name}`);
+    }
+    doc.moveDown();
+  }
+
+  private drawInvoiceDetailSummary(doc: PDFDocument, invoice: InvoiceDetail) {
+    doc.font("Helvetica-Bold").fontSize(12).text("Resumen de montos");
+    doc.moveDown(0.25);
+    doc.font("Helvetica").fontSize(10);
+    doc.text(`Subtotal: ${this.formatCurrency(invoice.subtotal)}`);
+    doc.text(`Impuesto: ${this.formatCurrency(invoice.tax)}`);
+    doc.text(`Descuento: ${this.formatCurrency(invoice.discount)}`);
+    doc.text(`Total: ${this.formatCurrency(invoice.total)}`);
+    doc.moveDown();
+  }
+
+  private drawInvoiceItemsTable(
+    doc: PDFDocument,
+    items: InvoiceDetailItem[],
+  ) {
+    doc.font("Helvetica-Bold").fontSize(12).text("Detalle de items");
+    doc.moveDown(0.5);
+    doc.font("Helvetica").fontSize(10);
+
+    if (items.length === 0) {
+      doc.text("No hay items registrados en esta venta.");
+      return;
+    }
+
+    const columns: TableColumn<InvoiceDetailItem>[] = [
+      {
+        title: "Producto",
+        width: 240,
+        getValue: (item) => item.description,
+      },
+      {
+        title: "Cantidad",
+        width: 80,
+        align: "right",
+        getValue: (item) => quantityFormatter.format(item.quantity),
+      },
+      {
+        title: "Precio",
+        width: 90,
+        align: "right",
+        getValue: (item) => this.formatCurrency(item.unitPrice),
+      },
+      {
+        title: "Total",
+        width: 90,
+        align: "right",
+        getValue: (item) => this.formatCurrency(item.total),
+      },
+    ];
+
+    const columnPositions = this.getColumnPositions(doc, columns);
+    this.drawTableHeader(doc, columns, columnPositions);
+
+    items.forEach((item) => {
+      this.drawTableRow(doc, columns, columnPositions, item);
+    });
+  }
+
   private calculateTotal(invoices: InvoiceListItem[]): number {
     return invoices.reduce(
       (sum, invoice) => sum + Number(invoice.total ?? 0),
-      0
+      0,
     );
   }
 
@@ -491,7 +741,6 @@ export class PDFController {
 
 export const pdfController = new PDFController();
 export default pdfController;
-
 
 
 

@@ -16,26 +16,34 @@ type GenerateInvoiceListPDFInput = {
   pageRange?: InvoiceListPageRange;
 };
 
-type GenerateInvoiceListPDFResult = {
+type PDFDownloadResult = {
   fileName: string;
   mimeType: string;
   base64: string;
   dataUrl: string;
   size: number;
+  metadata?: unknown;
 };
 
-function buildFileName(): string {
+export type GenerateInvoiceListPDFResult = PDFDownloadResult;
+
+function buildFileName(prefix: string, suffix?: string): string {
   const timestamp = new Date().toISOString().replace(/[:]/g, "-");
-  return `reporte-facturas-${timestamp}.pdf`;
+  const normalizedSuffix = suffix
+    ? `-${suffix.replace(/[^a-zA-Z0-9_-]/g, "_")}`
+    : "";
+  return `${prefix}${normalizedSuffix}-${timestamp}.pdf`;
 }
 
 export async function generateInvoiceListPDF(
-  invoiceData: GenerateInvoiceListPDFInput = {}
+  invoiceData: GenerateInvoiceListPDFInput = {},
 ): Promise<GenerateInvoiceListPDFResult> {
-  const { pdfBuffer } = await pdfController.generateInvoiceList(invoiceData);
+  const { pdfBuffer, ...rest } = await pdfController.generateInvoiceList(
+    invoiceData,
+  );
 
   const base64 = pdfBuffer.toString("base64");
-  const fileName = buildFileName();
+  const fileName = buildFileName("reporte-facturas");
   const dataUrl = `data:application/pdf;base64,${base64}`;
 
   return {
@@ -44,5 +52,27 @@ export async function generateInvoiceListPDF(
     base64,
     dataUrl,
     size: pdfBuffer.length,
+    metadata: rest,
+  };
+}
+
+export async function generateInvoiceDetailPDF(
+  saleNumber: string,
+): Promise<PDFDownloadResult> {
+  const { pdfBuffer, invoice } = await pdfController.generateInvoiceDetail(
+    saleNumber,
+  );
+
+  const base64 = pdfBuffer.toString("base64");
+  const fileName = buildFileName("factura", saleNumber);
+  const dataUrl = `data:application/pdf;base64,${base64}`;
+
+  return {
+    fileName,
+    mimeType: "application/pdf",
+    base64,
+    dataUrl,
+    size: pdfBuffer.length,
+    metadata: { invoice },
   };
 }
