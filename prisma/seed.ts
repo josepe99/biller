@@ -118,7 +118,9 @@ async function main() {
       // Checkout operations
       (p.resource === 'checkout' && ['create', 'read'].includes(p.action)) ||
       // Credit notes creation and adjustments
-      (p.resource === 'creditNotes' && ['create', 'read', 'update'].includes(p.action))
+      (p.resource === 'creditNotes' && ['create', 'read', 'update'].includes(p.action)) ||
+      // Reports read only
+      (p.resource === 'reports' && p.action === 'read')
     )
     .map(p => p.name)
 
