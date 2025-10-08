@@ -2,6 +2,7 @@
 
 import type { InvoiceFilters, InvoiceListItem } from "@/lib/types/invoices";
 import pdfController from "@/lib/controllers/pdf.controller";
+import { SaleStatus } from "@prisma/client";
 
 type InvoiceListPageRange = {
   from: number;
@@ -23,6 +24,38 @@ type PDFDownloadResult = {
   dataUrl: string;
   size: number;
   metadata?: unknown;
+};
+
+type StatusFilterInput = SaleStatus | string | Array<SaleStatus | string>;
+
+type DailyReportPDFInput = {
+  year: number | string;
+  month: number | string;
+  status?: StatusFilterInput;
+  checkoutId?: string | null;
+  userId?: string | null;
+  customerId?: string | null;
+};
+
+type ProductReportPDFInput = {
+  from?: string | Date | null;
+  to?: string | Date | null;
+  limit?: number | string | null;
+  status?: StatusFilterInput;
+  checkoutId?: string | null;
+  userId?: string | null;
+  customerId?: string | null;
+  productId?: string | null;
+};
+
+type UserReportPDFInput = {
+  from?: string | Date | null;
+  to?: string | Date | null;
+  limit?: number | string | null;
+  status?: StatusFilterInput;
+  checkoutId?: string | null;
+  userId?: string | null;
+  customerId?: string | null;
 };
 
 export type GenerateInvoiceListPDFResult = PDFDownloadResult;
@@ -98,3 +131,81 @@ export async function generateCashRegisterDetailPDF(
   };
 }
 
+export async function generateDailySalesReportPDF(
+  filters: DailyReportPDFInput,
+): Promise<PDFDownloadResult> {
+  const result = await pdfController.generateDailySalesReport({ filters });
+  const { pdfBuffer, ...metadata } = result;
+  const base64 = pdfBuffer.toString("base64");
+
+  const monthNumber = Number(filters.month);
+  const yearNumber = Number(filters.year);
+  const periodSuffix =
+    Number.isFinite(monthNumber) && Number.isFinite(yearNumber)
+      ? `${yearNumber}-${String(monthNumber).padStart(2, "0")}`
+      : undefined;
+
+  const fileName = buildFileName("reporte-ventas-diarias", periodSuffix);
+  const dataUrl = `data:application/pdf;base64,${base64}`;
+
+  return {
+    fileName,
+    mimeType: "application/pdf",
+    base64,
+    dataUrl,
+    size: pdfBuffer.length,
+    metadata,
+  };
+}
+
+export async function generateProductSalesReportPDF(
+  filters: ProductReportPDFInput,
+): Promise<PDFDownloadResult> {
+  const result = await pdfController.generateProductSalesReport({ filters });
+  const { pdfBuffer, ...metadata } = result;
+  const base64 = pdfBuffer.toString("base64");
+
+  const limitValue =
+    filters.limit !== undefined && filters.limit !== null
+      ? String(filters.limit).trim()
+      : "";
+  const limitSuffix = limitValue ? `top-${limitValue}` : undefined;
+
+  const fileName = buildFileName("reporte-productos", limitSuffix);
+  const dataUrl = `data:application/pdf;base64,${base64}`;
+
+  return {
+    fileName,
+    mimeType: "application/pdf",
+    base64,
+    dataUrl,
+    size: pdfBuffer.length,
+    metadata,
+  };
+}
+
+export async function generateUserSalesReportPDF(
+  filters: UserReportPDFInput,
+): Promise<PDFDownloadResult> {
+  const result = await pdfController.generateUserSalesReport({ filters });
+  const { pdfBuffer, ...metadata } = result;
+  const base64 = pdfBuffer.toString("base64");
+
+  const limitValue =
+    filters.limit !== undefined && filters.limit !== null
+      ? String(filters.limit).trim()
+      : "";
+  const limitSuffix = limitValue ? `top-${limitValue}` : undefined;
+
+  const fileName = buildFileName("reporte-usuarios", limitSuffix);
+  const dataUrl = `data:application/pdf;base64,${base64}`;
+
+  return {
+    fileName,
+    mimeType: "application/pdf",
+    base64,
+    dataUrl,
+    size: pdfBuffer.length,
+    metadata,
+  };
+}

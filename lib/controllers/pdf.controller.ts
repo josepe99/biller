@@ -1,11 +1,23 @@
 import PDFDocument from "pdfkit/js/pdfkit.standalone.js";
 import { SaleController } from "@/lib/controllers/sale.controller";
 import { CashRegisterController } from "@/lib/controllers/cashRegister.controller";
+import { ReportsController } from "@/lib/controllers/reports.controller";
 import type {
   InvoiceFilters,
   InvoiceListItem,
   InvoiceStatus,
 } from "@/lib/types/invoices";
+
+import type {
+  DailySalesReportFilters,
+  DailySalesReportRow,
+  ProductSalesReportFilters,
+  ProductSalesReportRow,
+  UserSalesReportFilters,
+  UserSalesReportRow,
+} from "@/lib/datasources/reports.datasource";
+
+import { SaleStatus } from "@prisma/client";
 
 type InvoiceListPageRange = {
   from: number;
@@ -30,12 +42,83 @@ type SaleItemWithProduct = SaleDetailResult extends { saleItems: infer Items }
   : never;
 type CashRegisterResult = Awaited<ReturnType<CashRegisterController["getById"]>>;
 
+type DailyReportFiltersInput = Partial<DailySalesReportFilters> & {
+  year: number | string;
+  month: number | string;
+  status?: Array<SaleStatus | string> | SaleStatus | string;
+};
+
+type ProductReportFiltersInput = Partial<ProductSalesReportFilters> & {
+  status?: Array<SaleStatus | string> | SaleStatus | string;
+};
+
+type UserReportFiltersInput = Partial<UserSalesReportFilters> & {
+  status?: Array<SaleStatus | string> | SaleStatus | string;
+};
+
+interface DailyReportSummary {
+  total: number;
+  saleCount: number;
+  averageTicket: number;
+  bestDay: DailySalesReportRow | null;
+}
+
+interface ProductReportSummary {
+  totalQuantity: number;
+  totalAmount: number;
+}
+
+interface UserReportSummary {
+  totalAmount: number;
+  saleCount: number;
+}
+
+interface BuildDailySalesReportPDFParams {
+  filters: DailyReportFiltersInput;
+  rows: DailySalesReportRow[];
+  summary: DailyReportSummary;
+}
+
+interface BuildProductSalesReportPDFParams {
+  filters: ProductReportFiltersInput;
+  rows: ProductSalesReportRow[];
+  summary: ProductReportSummary;
+}
+
+interface BuildUserSalesReportPDFParams {
+  filters: UserReportFiltersInput;
+  rows: UserSalesReportRow[];
+  summary: UserReportSummary;
+}
+
 const STATUS_LABELS: Record<InvoiceStatus, string> = {
   COMPLETED: "Completada",
   PENDING: "Pendiente",
   CANCELLED: "Cancelada",
   REFUNDED: "Reembolsada",
 };
+
+const REPORT_STATUS_LABELS: Record<SaleStatus, string> = {
+  COMPLETED: "Completada",
+  PENDING: "Pendiente",
+  CANCELLED: "Cancelada",
+  REFUNDED: "Reembolsada",
+};
+
+const MONTH_NAMES = [
+  "Enero",
+  "Febrero",
+  "Marzo",
+  "Abril",
+  "Mayo",
+  "Junio",
+  "Julio",
+  "Agosto",
+  "Septiembre",
+  "Octubre",
+  "Noviembre",
+  "Diciembre",
+] as const;
 
 const currencyFormatter = new Intl.NumberFormat("es-PY", {
   style: "currency",
@@ -145,6 +228,8 @@ export class PDFController {
   private readonly saleController = new SaleController();
   private readonly cashRegisterController = new CashRegisterController();
 
+  private readonly reportsController = new ReportsController();
+
   async generateInvoiceList(params: GenerateInvoiceListParams = {}) {
     const filters = { ...(params.filters ?? {}) };
     const fetchLimit = Math.min(Math.max(params.totalCount ?? 200, 1), 200);
@@ -180,7 +265,7 @@ export class PDFController {
   async generateInvoiceDetail(saleNumber: string) {
     const sale = await this.saleController.getBySaleNumber(saleNumber);
     if (!sale) {
-      throw new Error(`No se encontro la factura ${saleNumber}`);
+      throw new Error(`No se encontró la factura ${saleNumber}`);
     }
 
     const invoice = this.mapSaleToInvoiceDetail(sale);
@@ -196,7 +281,7 @@ export class PDFController {
   async generateCashRegisterDetail(cashRegisterId: string) {
     const cashRegister = await this.cashRegisterController.getById(cashRegisterId);
     if (!cashRegister) {
-      throw new Error(`No se encontro la caja ${cashRegisterId}`);
+      throw new Error(`No se encontró la caja ${cashRegisterId}`);
     }
 
     const detail = this.mapCashRegisterToDetail(cashRegister);
@@ -207,6 +292,64 @@ export class PDFController {
       pdfBuffer,
     };
   }
+
+  async generateDailySalesReport(params: { filters: DailyReportFiltersInput; rows?: DailySalesReportRow[] }) {
+    const rows =
+      params.rows ??
+      (await this.reportsController.getDailySalesReport(params.filters));
+    const summary = this.buildDailyReportSummary(rows);
+    const pdfBuffer = await this.buildDailySalesReportPDF({
+      filters: params.filters,
+      rows,
+      summary,
+    });
+
+    return {
+      filters: params.filters,
+      rows,
+      summary,
+      pdfBuffer,
+    };
+  }
+
+  async generateProductSalesReport(params: { filters: ProductReportFiltersInput; rows?: ProductSalesReportRow[] }) {
+    const rows =
+      params.rows ??
+      (await this.reportsController.getSalesByProduct(params.filters));
+    const summary = this.buildProductReportSummary(rows);
+    const pdfBuffer = await this.buildProductSalesReportPDF({
+      filters: params.filters,
+      rows,
+      summary,
+    });
+
+    return {
+      filters: params.filters,
+      rows,
+      summary,
+      pdfBuffer,
+    };
+  }
+
+  async generateUserSalesReport(params: { filters: UserReportFiltersInput; rows?: UserSalesReportRow[] }) {
+    const rows =
+      params.rows ??
+      (await this.reportsController.getSalesByUser(params.filters));
+    const summary = this.buildUserReportSummary(rows);
+    const pdfBuffer = await this.buildUserSalesReportPDF({
+      filters: params.filters,
+      rows,
+      summary,
+    });
+
+    return {
+      filters: params.filters,
+      rows,
+      summary,
+      pdfBuffer,
+    };
+  }
+
   private mapSaleToInvoice(sale: SaleWithRelations): InvoiceListItem {
     const cashier = sale.user
       ? {
@@ -421,7 +564,476 @@ export class PDFController {
 
     doc.end();
     return bufferPromise;
-  }  private async streamToBuffer(doc: PDFDocument): Promise<Buffer> {
+  }  private buildDailyReportSummary(rows: DailySalesReportRow[]): DailyReportSummary {
+    if (!rows.length) {
+      return {
+        total: 0,
+        saleCount: 0,
+        averageTicket: 0,
+        bestDay: null,
+      };
+    }
+
+    let total = 0;
+    let saleCount = 0;
+    let bestDay: DailySalesReportRow | null = null;
+
+    rows.forEach((row) => {
+      total += row.total;
+      saleCount += row.saleCount;
+      if (!bestDay || row.total > bestDay.total) {
+        bestDay = row;
+      }
+    });
+
+    const averageTicket = saleCount > 0 ? total / saleCount : 0;
+
+    return {
+      total,
+      saleCount,
+      averageTicket,
+      bestDay,
+    };
+  }
+
+  private buildProductReportSummary(rows: ProductSalesReportRow[]): ProductReportSummary {
+    return rows.reduce<ProductReportSummary>(
+      (acc, row) => ({
+        totalQuantity: acc.totalQuantity + row.quantity,
+        totalAmount: acc.totalAmount + row.total,
+      }),
+      { totalQuantity: 0, totalAmount: 0 },
+    );
+  }
+
+  private buildUserReportSummary(rows: UserSalesReportRow[]): UserReportSummary {
+    return rows.reduce<UserReportSummary>(
+      (acc, row) => ({
+        totalAmount: acc.totalAmount + row.total,
+        saleCount: acc.saleCount + row.saleCount,
+      }),
+      { totalAmount: 0, saleCount: 0 },
+    );
+  }
+
+  private async buildDailySalesReportPDF(params: BuildDailySalesReportPDFParams): Promise<Buffer> {
+    const doc = new PDFDocument({ size: "A4", margin: 40 });
+    const bufferPromise = this.streamToBuffer(doc);
+
+    this.drawDailyReportHeader(doc, params.filters);
+    this.drawDailyReportSummary(doc, params.summary);
+    this.drawDailyReportTable(doc, params.rows);
+
+    doc.end();
+    return bufferPromise;
+  }
+
+  private async buildProductSalesReportPDF(params: BuildProductSalesReportPDFParams): Promise<Buffer> {
+    const doc = new PDFDocument({ size: "A4", margin: 40 });
+    const bufferPromise = this.streamToBuffer(doc);
+
+    this.drawProductReportHeader(doc, params.filters);
+    this.drawProductReportSummary(doc, params.summary);
+    this.drawProductReportTable(doc, params.rows);
+
+    doc.end();
+    return bufferPromise;
+  }
+
+  private async buildUserSalesReportPDF(params: BuildUserSalesReportPDFParams): Promise<Buffer> {
+    const doc = new PDFDocument({ size: "A4", margin: 40 });
+    const bufferPromise = this.streamToBuffer(doc);
+
+    this.drawUserReportHeader(doc, params.filters);
+    this.drawUserReportSummary(doc, params.summary);
+    this.drawUserReportTable(doc, params.rows);
+
+    doc.end();
+    return bufferPromise;
+  }
+
+  private drawDailyReportHeader(doc: PDFDocument, filters: DailyReportFiltersInput) {
+    doc.font("Helvetica-Bold").fontSize(18).text("Reporte de ventas diarias", {
+      align: "center",
+    });
+    doc.moveDown(0.5);
+    doc.font("Helvetica").fontSize(10);
+
+    const monthNumber = Number(filters.month);
+    const yearNumber = Number(filters.year);
+    const periodLabel =
+      !Number.isNaN(monthNumber) && monthNumber >= 1 && monthNumber <= MONTH_NAMES.length && !Number.isNaN(yearNumber)
+        ? `${this.getMonthLabel(monthNumber)} ${yearNumber}`
+        : `${filters.month}/${filters.year}`;
+
+    doc.text(`Periodo: ${periodLabel}`);
+
+    const statuses = this.normalizeStatusList(filters.status);
+    doc.text(`Estados incluidos: ${this.formatStatusLabelList(statuses)}`);
+
+    if (filters.checkoutId) {
+      doc.text(`Caja: ${filters.checkoutId}`);
+    }
+    if (filters.userId) {
+      doc.text(`Usuario: ${filters.userId}`);
+    }
+    if (filters.customerId) {
+      doc.text(`Cliente: ${filters.customerId}`);
+    }
+
+    doc.moveDown();
+  }
+
+  private drawDailyReportSummary(doc: PDFDocument, summary: DailyReportSummary) {
+    doc.font("Helvetica-Bold").fontSize(12).text("Resumen del periodo");
+    doc.moveDown(0.25);
+    doc.font("Helvetica").fontSize(10);
+
+    doc.text(`Total facturado: ${this.formatCurrency(summary.total)}`);
+    doc.text(`Cantidad de ventas: ${this.formatQuantity(summary.saleCount)}`);
+    doc.text(`Ticket promedio: ${this.formatCurrency(summary.averageTicket)}`);
+
+    if (summary.bestDay) {
+      doc.text(
+        `Mejor d�a: ${this.formatFilterDate(summary.bestDay.date)} - ${this.formatCurrency(summary.bestDay.total)} (${this.formatQuantity(summary.bestDay.saleCount)} ventas)`,
+      );
+    }
+
+    doc.moveDown();
+  }
+
+  private drawDailyReportTable(doc: PDFDocument, rows: DailySalesReportRow[]) {
+    doc.font("Helvetica-Bold").fontSize(12).text("Detalle diario");
+    doc.moveDown(0.5);
+    doc.font("Helvetica").fontSize(10);
+
+    if (!rows.length) {
+      doc.text("No hay ventas registradas para el periodo.");
+      doc.moveDown();
+      return;
+    }
+
+    const columns: TableColumn<DailySalesReportRow>[] = [
+      {
+        title: "Fecha",
+        width: 90,
+        getValue: (row) => this.formatFilterDate(row.date),
+      },
+      {
+        title: "Ventas",
+        width: 60,
+        align: "right",
+        getValue: (row) => this.formatQuantity(row.saleCount),
+      },
+      {
+        title: "Ticket promedio",
+        width: 90,
+        align: "right",
+        getValue: (row) => this.formatCurrency(row.averageTicket),
+      },
+      {
+        title: "Descuento",
+        width: 90,
+        align: "right",
+        getValue: (row) => this.formatCurrency(row.discount),
+      },
+      {
+        title: "Subtotal",
+        width: 90,
+        align: "right",
+        getValue: (row) => this.formatCurrency(row.subtotal),
+      },
+      {
+        title: "Total",
+        width: 90,
+        align: "right",
+        getValue: (row) => this.formatCurrency(row.total),
+      },
+    ];
+
+    const columnPositions = this.getColumnPositions(doc, columns);
+    this.drawTableHeader(doc, columns, columnPositions);
+
+    rows.forEach((row) => {
+      this.drawTableRow(doc, columns, columnPositions, row);
+    });
+
+    doc.moveDown();
+  }
+
+  private drawProductReportHeader(doc: PDFDocument, filters: ProductReportFiltersInput) {
+    doc.font("Helvetica-Bold").fontSize(18).text("Reporte de productos vendidos", {
+      align: "center",
+    });
+    doc.moveDown(0.5);
+    doc.font("Helvetica").fontSize(10);
+
+    const statuses = this.normalizeStatusList(filters.status);
+    doc.text(`Estados incluidos: ${this.formatStatusLabelList(statuses)}`);
+
+    const from = filters.from ? this.formatFilterDate(String(filters.from)) : null;
+    const to = filters.to ? this.formatFilterDate(String(filters.to)) : null;
+    if (from || to) {
+      doc.text(`Periodo: ${from ?? "-"} - ${to ?? "-"}`);
+    }
+
+    const limit = this.parseLimit(filters.limit);
+    if (limit) {
+      doc.text(`Top solicitado: ${limit}`);
+    }
+
+    if (filters.productId) {
+      doc.text(`Producto filtrado: ${filters.productId}`);
+    }
+    if (filters.checkoutId) {
+      doc.text(`Caja: ${filters.checkoutId}`);
+    }
+    if (filters.userId) {
+      doc.text(`Usuario: ${filters.userId}`);
+    }
+    if (filters.customerId) {
+      doc.text(`Cliente: ${filters.customerId}`);
+    }
+
+    doc.moveDown();
+  }
+
+  private drawProductReportSummary(doc: PDFDocument, summary: ProductReportSummary) {
+    doc.font("Helvetica-Bold").fontSize(12).text("Resumen");
+    doc.moveDown(0.25);
+    doc.font("Helvetica").fontSize(10);
+
+    doc.text(`Cantidad total vendida: ${this.formatQuantity(summary.totalQuantity)}`);
+    doc.text(`Monto total: ${this.formatCurrency(summary.totalAmount)}`);
+
+    doc.moveDown();
+  }
+
+  private drawProductReportTable(doc: PDFDocument, rows: ProductSalesReportRow[]) {
+    doc.font("Helvetica-Bold").fontSize(12).text("Detalle por producto");
+    doc.moveDown(0.5);
+    doc.font("Helvetica").fontSize(10);
+
+    if (!rows.length) {
+      doc.text("No hay productos registrados para los filtros seleccionados.");
+      doc.moveDown();
+      return;
+    }
+
+    const columns: TableColumn<ProductSalesReportRow>[] = [
+      {
+        title: "Producto",
+        width: 190,
+        getValue: (row) => {
+          const lines: string[] = [];
+          if (row.name) {
+            lines.push(row.name);
+          }
+          if (row.barcode) {
+            lines.push(`C�digo: ${row.barcode}`);
+          }
+          return lines.length ? lines.join("\n") : "Sin nombre";
+        },
+      },
+      {
+        title: "Cantidad",
+        width: 60,
+        align: "right",
+        getValue: (row) => this.formatQuantity(row.quantity),
+      },
+      {
+        title: "Precio prom.",
+        width: 85,
+        align: "right",
+        getValue: (row) => this.formatCurrency(row.averageUnitPrice),
+      },
+      {
+        title: "Total",
+        width: 90,
+        align: "right",
+        getValue: (row) => this.formatCurrency(row.total),
+      },
+      {
+        title: "�ltima venta",
+        width: 90,
+        getValue: (row) => (row.lastSaleAt ? this.formatDateTime(row.lastSaleAt) : "-"),
+      },
+    ];
+
+    const columnPositions = this.getColumnPositions(doc, columns);
+    this.drawTableHeader(doc, columns, columnPositions);
+
+    rows.forEach((row) => {
+      this.drawTableRow(doc, columns, columnPositions, row);
+    });
+
+    doc.moveDown();
+  }
+
+  private drawUserReportHeader(doc: PDFDocument, filters: UserReportFiltersInput) {
+    doc.font("Helvetica-Bold").fontSize(18).text("Reporte de ventas por usuario", {
+      align: "center",
+    });
+    doc.moveDown(0.5);
+    doc.font("Helvetica").fontSize(10);
+
+    const statuses = this.normalizeStatusList(filters.status);
+    doc.text(`Estados incluidos: ${this.formatStatusLabelList(statuses)}`);
+
+    const from = filters.from ? this.formatFilterDate(String(filters.from)) : null;
+    const to = filters.to ? this.formatFilterDate(String(filters.to)) : null;
+    if (from || to) {
+      doc.text(`Periodo: ${from ?? "-"} - ${to ?? "-"}`);
+    }
+
+    const limit = this.parseLimit(filters.limit);
+    if (limit) {
+      doc.text(`Top solicitado: ${limit}`);
+    }
+
+    if (filters.checkoutId) {
+      doc.text(`Caja: ${filters.checkoutId}`);
+    }
+    if (filters.userId) {
+      doc.text(`Usuario filtrado: ${filters.userId}`);
+    }
+    if (filters.customerId) {
+      doc.text(`Cliente: ${filters.customerId}`);
+    }
+
+    doc.moveDown();
+  }
+
+  private drawUserReportSummary(doc: PDFDocument, summary: UserReportSummary) {
+    doc.font("Helvetica-Bold").fontSize(12).text("Resumen");
+    doc.moveDown(0.25);
+    doc.font("Helvetica").fontSize(10);
+
+    doc.text(`Ventas totales: ${this.formatQuantity(summary.saleCount)}`);
+    doc.text(`Monto total: ${this.formatCurrency(summary.totalAmount)}`);
+
+    doc.moveDown();
+  }
+
+  private drawUserReportTable(doc: PDFDocument, rows: UserSalesReportRow[]) {
+    doc.font("Helvetica-Bold").fontSize(12).text("Detalle por usuario");
+    doc.moveDown(0.5);
+    doc.font("Helvetica").fontSize(10);
+
+    if (!rows.length) {
+      doc.text("No hay usuarios con ventas para los filtros seleccionados.");
+      doc.moveDown();
+      return;
+    }
+
+    const columns: TableColumn<UserSalesReportRow>[] = [
+      {
+        title: "Usuario",
+        width: 180,
+        getValue: (row) => {
+          const nameParts = [row.name, row.lastname].filter(Boolean);
+          const lines: string[] = [];
+          if (nameParts.length) {
+            lines.push(nameParts.join(" "));
+          }
+          if (row.email) {
+            lines.push(row.email);
+          }
+          return lines.length ? lines.join("\n") : row.userId;
+        },
+      },
+      {
+        title: "Ventas",
+        width: 60,
+        align: "right",
+        getValue: (row) => this.formatQuantity(row.saleCount),
+      },
+      {
+        title: "Ticket prom.",
+        width: 90,
+        align: "right",
+        getValue: (row) => this.formatCurrency(row.averageTicket),
+      },
+      {
+        title: "Total",
+        width: 90,
+        align: "right",
+        getValue: (row) => this.formatCurrency(row.total),
+      },
+      {
+        title: "�ltima venta",
+        width: 90,
+        getValue: (row) => (row.lastSaleAt ? this.formatDateTime(row.lastSaleAt) : "-"),
+      },
+    ];
+
+    const columnPositions = this.getColumnPositions(doc, columns);
+    this.drawTableHeader(doc, columns, columnPositions);
+
+    rows.forEach((row) => {
+      this.drawTableRow(doc, columns, columnPositions, row);
+    });
+
+    doc.moveDown();
+  }
+
+  private normalizeStatusList(
+    status?: Array<SaleStatus | string> | SaleStatus | string,
+  ): SaleStatus[] {
+    if (!status) {
+      return [SaleStatus.COMPLETED];
+    }
+
+    const source = Array.isArray(status) ? status : [status];
+    const parsed = source
+      .map((value) =>
+        typeof value === "string"
+          ? (value.trim().toUpperCase() as SaleStatus)
+          : value,
+      )
+      .filter((value): value is SaleStatus =>
+        Object.values(SaleStatus).includes(value),
+      );
+
+    return parsed.length ? parsed : [SaleStatus.COMPLETED];
+  }
+
+  private formatStatusLabelList(statuses: SaleStatus[]): string {
+    if (!statuses.length) {
+      return REPORT_STATUS_LABELS[SaleStatus.COMPLETED];
+    }
+
+    return statuses
+      .map((status) => REPORT_STATUS_LABELS[status] ?? status)
+      .join(", ");
+  }
+
+  private parseLimit(value: unknown): number | null {
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return value > 0 ? Math.floor(value) : null;
+    }
+
+    if (typeof value === "string" && value.trim()) {
+      const parsed = Number(value.trim());
+      return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : null;
+    }
+
+    return null;
+  }
+
+  private formatQuantity(value: number | null | undefined): string {
+    const amount = typeof value === "number" && Number.isFinite(value) ? value : 0;
+    return quantityFormatter.format(amount);
+  }
+
+  private getMonthLabel(month: number): string {
+    if (Number.isNaN(month) || month < 1 || month > MONTH_NAMES.length) {
+      return String(month);
+    }
+    return MONTH_NAMES[month - 1];
+  }
+
+  private async streamToBuffer(doc: PDFDocument): Promise<Buffer> {
     return await new Promise((resolve, reject) => {
       const chunks: Buffer[] = [];
       doc.on("data", (chunk) => {
@@ -691,7 +1303,7 @@ export class PDFController {
 
     const columns: TableColumn<CashRegisterBreakdownItem>[] = [
       {
-        title: "Metodo",
+        title: "Método",
         width: 150,
         getValue: (item) => item.method,
       },
@@ -728,7 +1340,7 @@ export class PDFController {
     doc.moveDown(0.75);
 
     doc.font("Helvetica").fontSize(10);
-    doc.text(`Numero: ${invoice.saleNumber}`);
+    doc.text(`Número: ${invoice.saleNumber}`);
     doc.text(`Fecha: ${this.formatDateTime(invoice.createdAt)}`);
     doc.text(`Estado: ${STATUS_LABELS[invoice.status] ?? invoice.status}`);
     doc.moveDown();
@@ -917,7 +1529,7 @@ export class PDFController {
 
   private formatMethodLabel(method: string): string {
     if (!method) {
-      return "Metodo";
+      return "Método";
     }
 
     const spaced = method
