@@ -148,12 +148,14 @@ const buildSaleMatch = (filters: BaseSaleFilters = {}) => {
   if (fromDate || toDate) {
     const range: Record<string, unknown> = {};
     if (fromDate) {
-      // Use the Date object directly - Prisma should handle the conversion
-      range.$gte = fromDate;
+      // Use MongoDB Extended JSON format for aggregateRaw
+      range.$gte = { $date: { $numberLong: fromDate.getTime().toString() } };
     }
     if (toDate) {
-      // Use the Date object directly - Prisma should handle the conversion
-      range.$lte = endOfDay(toDate);
+      // Use MongoDB Extended JSON format for aggregateRaw
+      range.$lte = {
+        $date: { $numberLong: endOfDay(toDate).getTime().toString() },
+      };
     }
     match.createdAt = range;
   }
