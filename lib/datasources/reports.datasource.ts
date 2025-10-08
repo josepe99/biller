@@ -3,7 +3,18 @@ import { prisma } from "../prisma";
 
 export type DateInput = Date | string;
 
-const toObjectId = (value: string) => ({ $oid: value });
+const toObjectId = (value: string) => {
+  // For MongoDB aggregation, we need to use the ObjectId constructor format
+  try {
+    // If it's already a valid ObjectId string, use the proper MongoDB ObjectId format
+    if (value.match(/^[0-9a-fA-F]{24}$/)) {
+      return { $oid: value };
+    }
+    return value; // Fallback to string if not a valid ObjectId format
+  } catch {
+    return value;
+  }
+};
 
 const parseDate = (value?: DateInput) => {
   if (!value) {
@@ -135,11 +146,13 @@ const buildSaleMatch = (filters: BaseSaleFilters = {}) => {
   const toDate = parseDate(to);
 
   if (fromDate || toDate) {
-    const range: Record<string, Date> = {};
+    const range: Record<string, unknown> = {};
     if (fromDate) {
+      // Use the Date object directly - Prisma should handle the conversion
       range.$gte = fromDate;
     }
     if (toDate) {
+      // Use the Date object directly - Prisma should handle the conversion
       range.$lte = endOfDay(toDate);
     }
     match.createdAt = range;
@@ -178,7 +191,7 @@ export class ReportsDatasource {
       to,
     });
 
-    const pipeline: Record<string, unknown>[] = [
+    const pipeline = [
       { $match: match },
       {
         $group: {
@@ -220,11 +233,11 @@ export class ReportsDatasource {
         },
       },
       { $sort: { year: 1, month: 1, day: 1 } },
-    ];
+    ] as const;
 
     const rows = (await prisma.sale.aggregateRaw({
-      pipeline,
-    })) as Array<Record<string, unknown>>;
+      pipeline: pipeline as any,
+    })) as unknown as Array<Record<string, unknown>>;
 
     return rows.map((row) => {
       const yearValue = ensureNumber(row.year);
@@ -268,7 +281,7 @@ export class ReportsDatasource {
     const saleMatch = prefixMatch(buildSaleMatch(rest), "sale");
     const resolvedLimit = sanitizeLimit(limit ?? 50, 50, 500);
 
-    const pipeline: Record<string, unknown>[] = [
+    const pipeline = [
       { $match: saleItemMatch },
       {
         $lookup: {
@@ -319,11 +332,11 @@ export class ReportsDatasource {
       },
       { $sort: { total: -1 } },
       { $limit: resolvedLimit },
-    ];
+    ] as const;
 
     const rows = (await prisma.saleItem.aggregateRaw({
-      pipeline,
-    })) as Array<Record<string, unknown>>;
+      pipeline: pipeline as any,
+    })) as unknown as Array<Record<string, unknown>>;
 
     return rows.map((row) => {
       const quantity = ensureNumber(row.quantity);
@@ -351,7 +364,7 @@ export class ReportsDatasource {
     const match = buildSaleMatch(rest);
     const resolvedLimit = sanitizeLimit(limit ?? 25, 25, 200);
 
-    const pipeline: Record<string, unknown>[] = [
+    const pipeline = [
       { $match: match },
       {
         $lookup: {
@@ -387,11 +400,11 @@ export class ReportsDatasource {
       },
       { $sort: { total: -1 } },
       { $limit: resolvedLimit },
-    ];
+    ] as const;
 
     const rows = (await prisma.sale.aggregateRaw({
-      pipeline,
-    })) as Array<Record<string, unknown>>;
+      pipeline: pipeline as any,
+    })) as unknown as Array<Record<string, unknown>>;
 
     return rows.map((row) => {
       const total = ensureNumber(row.total);

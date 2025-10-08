@@ -1,12 +1,18 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
-import DashboardLayout from "@/components/layout/dashboard-layout";
-import { getSalesByProductAction } from "@/lib/actions/reportsActions";
-import { generateProductSalesReportPDF } from "@/lib/actions/pdf.actions";
 import type { ProductSalesReportRow } from "@/lib/datasources/reports.datasource";
+import { generateProductSalesReportPDF } from "@/lib/actions/pdf.actions";
+import { getSalesByProductAction } from "@/lib/actions/reportsActions";
+import DashboardLayout from "@/components/layout/dashboard-layout";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useCallback, useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
 import { SaleStatus } from "@prisma/client";
+import Link from "next/link";
 import {
   Card,
   CardContent,
@@ -14,7 +20,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -23,8 +28,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -38,8 +41,6 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   ArrowLeft,
   Download,
@@ -48,7 +49,6 @@ import {
   Filter,
   BarChart3,
 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 
 const STATUS_LABELS: Record<SaleStatus, string> = {
   COMPLETED: "Completada",
@@ -84,7 +84,10 @@ export default function BestSellersReportPage() {
       const reportData = await getSalesByProductAction({
         from: filters.from || undefined,
         to: filters.to || undefined,
-        limit: filters.limit ? parseInt(filters.limit) : undefined,
+        limit:
+          filters.limit && filters.limit !== "all"
+            ? parseInt(filters.limit)
+            : undefined,
         status: filters.status,
         checkoutId: filters.checkoutId || undefined,
         userId: filters.userId || undefined,
@@ -110,7 +113,10 @@ export default function BestSellersReportPage() {
       const result = await generateProductSalesReportPDF({
         from: filters.from || undefined,
         to: filters.to || undefined,
-        limit: filters.limit ? parseInt(filters.limit) : undefined,
+        limit:
+          filters.limit && filters.limit !== "all"
+            ? parseInt(filters.limit)
+            : undefined,
         status: filters.status,
         checkoutId: filters.checkoutId || undefined,
         userId: filters.userId || undefined,
@@ -142,14 +148,17 @@ export default function BestSellersReportPage() {
     }
   }, [filters, toast]);
 
-  const handleStatusChange = useCallback((status: SaleStatus, checked: boolean) => {
-    setFilters((prev) => ({
-      ...prev,
-      status: checked
-        ? [...prev.status, status]
-        : prev.status.filter((s) => s !== status),
-    }));
-  }, []);
+  const handleStatusChange = useCallback(
+    (status: SaleStatus, checked: boolean) => {
+      setFilters((prev) => ({
+        ...prev,
+        status: checked
+          ? [...prev.status, status]
+          : prev.status.filter((s) => s !== status),
+      }));
+    },
+    []
+  );
 
   useEffect(() => {
     loadData();
@@ -253,7 +262,7 @@ export default function BestSellersReportPage() {
                     <SelectItem value="10">Top 10</SelectItem>
                     <SelectItem value="20">Top 20</SelectItem>
                     <SelectItem value="50">Top 50</SelectItem>
-                    <SelectItem value="">Todos</SelectItem>
+                    <SelectItem value="all">Todos</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -315,9 +324,15 @@ export default function BestSellersReportPage() {
                       <TableHead>Posición</TableHead>
                       <TableHead>Producto</TableHead>
                       <TableHead>Código de Barras</TableHead>
-                      <TableHead className="text-right">Cantidad Vendida</TableHead>
-                      <TableHead className="text-right">Total Vendido</TableHead>
-                      <TableHead className="text-right">Precio Promedio</TableHead>
+                      <TableHead className="text-right">
+                        Cantidad Vendida
+                      </TableHead>
+                      <TableHead className="text-right">
+                        Total Vendido
+                      </TableHead>
+                      <TableHead className="text-right">
+                        Precio Promedio
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>

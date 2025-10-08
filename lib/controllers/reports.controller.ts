@@ -52,7 +52,10 @@ export class ReportsController extends BaseController<ReportsDatasource> {
   }
 
   async getDailySalesReport(
-    filters: Partial<DailySalesReportFilters> & { year: number | string; month: number | string }
+    filters: Partial<DailySalesReportFilters> & {
+      year: number | string;
+      month: number | string;
+    }
   ): Promise<DailySalesReportRow[]> {
     const year = toOptionalNumber(filters.year);
     const month = toOptionalNumber(filters.month);
