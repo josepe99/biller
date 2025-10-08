@@ -65,15 +65,17 @@ export default function OverviewModule({ onSelect }: OverviewModuleProps) {
         </Link>
       )}
 
-      {/* Reportes: requiere reports:view */}
-      {permissions.includes('reports:view') && (
-        <Card className="hover:shadow-xl transition-shadow duration-200 cursor-pointer" onClick={() => onSelect('reports')}>
-          <CardContent className="flex flex-col items-center justify-center p-6 text-center">
-            <BarChart className="h-12 w-12 text-orange-500 mb-3" />
-            <h3 className="text-lg font-semibold">Reportes</h3>
-            <p className="text-sm text-muted-foreground">Ventas diarias/mensuales.</p>
-          </CardContent>
-        </Card>
+      {/* Reportes: requiere reports:manage */}
+      {permissions.includes('reports:manage') && (
+        <Link href="/admin/reports">
+          <Card className="hover:shadow-xl transition-shadow duration-200 cursor-pointer h-56">
+            <CardContent className="flex flex-col items-center justify-center p-6 text-center">
+              <BarChart className="h-12 w-12 text-orange-500 mb-3" />
+              <h3 className="text-lg font-semibold">Reportes</h3>
+              <p className="text-sm text-muted-foreground">Productos más vendidos, cajeros top.</p>
+            </CardContent>
+          </Card>
+        </Link>
       )}
 
       {/* Facturas: requiere sales:read o sales:manage */}

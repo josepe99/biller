@@ -6,6 +6,7 @@ export enum PermissionAction {
   READ = 'read',
   UPDATE = 'update',
   DELETE = 'delete',
+  EXPORT = 'export',
   MANAGE = 'manage' // Full access
 }
 
@@ -303,8 +304,9 @@ export async function createDefaultPermissions(): Promise<void> {
     { resource: PermissionResource.INVENTORY, action: PermissionAction.MANAGE, description: 'Full inventory management access' },
 
     // Reports
-    { resource: PermissionResource.REPORTS, action: PermissionAction.READ, description: 'View reports' },
-    { resource: PermissionResource.REPORTS, action: PermissionAction.MANAGE, description: 'Full reports access' },
+    { resource: PermissionResource.REPORTS, action: PermissionAction.READ, description: 'Ver reportes del sistema' },
+    { resource: PermissionResource.REPORTS, action: PermissionAction.EXPORT, description: 'Exportar reportes a diferentes formatos' },
+    { resource: PermissionResource.REPORTS, action: PermissionAction.MANAGE, description: 'Administrar configuraciones de reportes' },
 
     // Settings
     { resource: PermissionResource.SETTINGS, action: PermissionAction.READ, description: 'View settings' },

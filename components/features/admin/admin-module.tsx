@@ -1,7 +1,6 @@
 'use client'
 
 import { Card, CardHeader, CardTitle } from '@/components/ui/card'
-import { useAuth } from '@/components/auth/auth-provider'
 import OverviewModule from './overview-module'
 import ReportsModule from './reports-module'
 import { useState } from 'react'
