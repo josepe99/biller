@@ -1,12 +1,18 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
-import DashboardLayout from "@/components/layout/dashboard-layout";
-import { getSalesByUserAction } from "@/lib/actions/reportsActions";
-import { generateUserSalesReportPDF } from "@/lib/actions/pdf.actions";
 import type { UserSalesReportRow } from "@/lib/datasources/reports.datasource";
+import { generateUserSalesReportPDF } from "@/lib/actions/pdf.actions";
+import { getSalesByUserAction } from "@/lib/actions/reportsActions";
+import DashboardLayout from "@/components/layout/dashboard-layout";
+import { useCallback, useEffect, useState } from "react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 import { SaleStatus } from "@prisma/client";
+import Link from "next/link";
 import {
   Card,
   CardContent,
@@ -14,7 +20,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -23,8 +28,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -38,8 +41,6 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   ArrowLeft,
   Download,
@@ -50,7 +51,6 @@ import {
   Trophy,
   TrendingUp,
 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 
 const STATUS_LABELS: Record<SaleStatus, string> = {
   COMPLETED: "Completada",
@@ -85,7 +85,10 @@ export default function TopCashiersReportPage() {
       const reportData = await getSalesByUserAction({
         from: filters.from || undefined,
         to: filters.to || undefined,
-        limit: filters.limit ? parseInt(filters.limit) : undefined,
+        limit:
+          filters.limit && filters.limit !== "all"
+            ? parseInt(filters.limit)
+            : undefined,
         status: filters.status,
         checkoutId: filters.checkoutId || undefined,
         userId: filters.userId || undefined,
@@ -110,7 +113,10 @@ export default function TopCashiersReportPage() {
       const result = await generateUserSalesReportPDF({
         from: filters.from || undefined,
         to: filters.to || undefined,
-        limit: filters.limit ? parseInt(filters.limit) : undefined,
+        limit:
+          filters.limit && filters.limit !== "all"
+            ? parseInt(filters.limit)
+            : undefined,
         status: filters.status,
         checkoutId: filters.checkoutId || undefined,
         userId: filters.userId || undefined,
@@ -141,14 +147,17 @@ export default function TopCashiersReportPage() {
     }
   }, [filters, toast]);
 
-  const handleStatusChange = useCallback((status: SaleStatus, checked: boolean) => {
-    setFilters((prev) => ({
-      ...prev,
-      status: checked
-        ? [...prev.status, status]
-        : prev.status.filter((s) => s !== status),
-    }));
-  }, []);
+  const handleStatusChange = useCallback(
+    (status: SaleStatus, checked: boolean) => {
+      setFilters((prev) => ({
+        ...prev,
+        status: checked
+          ? [...prev.status, status]
+          : prev.status.filter((s) => s !== status),
+      }));
+    },
+    []
+  );
 
   useEffect(() => {
     loadData();
@@ -274,7 +283,7 @@ export default function TopCashiersReportPage() {
                     <SelectItem value="10">Top 10</SelectItem>
                     <SelectItem value="20">Top 20</SelectItem>
                     <SelectItem value="50">Top 50</SelectItem>
-                    <SelectItem value="">Todos</SelectItem>
+                    <SelectItem value="all">Todos</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -337,8 +346,12 @@ export default function TopCashiersReportPage() {
                       <TableHead>Cajero</TableHead>
                       <TableHead>Email</TableHead>
                       <TableHead className="text-right">Nº de Ventas</TableHead>
-                      <TableHead className="text-right">Total Vendido</TableHead>
-                      <TableHead className="text-right">Ticket Promedio</TableHead>
+                      <TableHead className="text-right">
+                        Total Vendido
+                      </TableHead>
+                      <TableHead className="text-right">
+                        Ticket Promedio
+                      </TableHead>
                       <TableHead className="text-right">Última Venta</TableHead>
                     </TableRow>
                   </TableHeader>
